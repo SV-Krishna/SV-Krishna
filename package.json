@@ -1,0 +1,25 @@
+{
+  "name": "sv-krishna",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Offline Raspberry Pi 5 voice assistant controller for SV Krishna.",
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "test": "npm run build --silent && node --test dist/test"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}
