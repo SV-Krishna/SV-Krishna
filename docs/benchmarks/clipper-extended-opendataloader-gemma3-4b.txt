@@ -1,0 +1,294 @@
+=== CLIPPER EXTENDED BENCHMARK ===
+extractor=opendataloader model=gemma3:4b embed_model=nomic-embed-text:latest
+source_dir=/tmp/clipper-only-inbox
+rag_store=/tmp/clipper-extended-opendataloader/store.json
+embedding_store=/tmp/clipper-extended-opendataloader/embeddings.json
+
+Indexing timings (first run / cold store):
+  index.lexical=0.83s
+  index.embedding=12.28s
+  index.hybrid=0.01s
+  index.chat=0.00s
+
+--- BASELINE ---
+According to the Clipper Duet manual, what does the depth display show?
+
+[lexical] retrieval=0.01s answer=26.50s
+  - clipper-duet.pdf p.unknown score=86.000 heading=SETTING THE KEEL OFFSET
+  - clipper-duet.pdf p.unknown score=83.000 heading=TO SELECT THE OPERATING UNITS
+  - clipper-duet.pdf p.unknown score=82.000 heading=CLIPPER DUET
+  reply: The Echo Sounder measures the depth from the transducer to the seabed. Sources: [1] Pages: unknown
+
+[embedding] retrieval=0.14s answer=0.00s
+  - clipper-duet.pdf p.unknown score=0.702 heading=SETTING THE KEEL OFFSET
+  - clipper-duet.pdf p.unknown score=0.698 heading=TO SELECT THE OPERATING UNITS
+  - clipper-duet.pdf p.unknown score=0.677 heading=USING THE INSTRUMENT
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.18s answer=4.46s
+  - clipper-duet.pdf p.unknown score=60.914 heading=SETTING THE KEEL OFFSET
+  - clipper-duet.pdf p.unknown score=59.087 heading=TO SELECT THE OPERATING UNITS
+  - clipper-duet.pdf p.unknown score=57.415 heading=CLIPPER DUET
+  reply: The Echo Sounder measures the depth from the transducer to the seabed. Sources: [1] Clipper-duet.pdf, Page: unknown
+
+--- BASELINE ---
+According to the Clipper Duet manual, how do you change the shallow alarm setting?
+
+[lexical] retrieval=0.01s answer=26.99s
+  - clipper-duet.pdf p.unknown score=84.000 heading=CLIPPER DUET
+  - clipper-duet.pdf p.unknown score=73.000 heading=INTRODUCTION
+  - clipper-duet.pdf p.unknown score=72.000 heading=SETTING THE MINIMUM DEPTH ALARM
+  reply: Use TRIP to decrement the setting and TOTAL to increment the setting. When the required minimum depth setting has been selected press SPEED.  Sources: [3], Page 8
+
+[embedding] retrieval=0.09s answer=0.00s
+  - clipper-duet.pdf p.unknown score=0.750 heading=SETTING THE MINIMUM DEPTH ALARM
+  - clipper-duet.pdf p.unknown score=0.658 heading=SETTING THE SPEED ALARM
+  - clipper-duet.pdf p.unknown score=0.635 heading=CHANGING THE OPERATION CONFIGURATION
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.17s answer=11.95s
+  - clipper-duet.pdf p.unknown score=58.757 heading=CLIPPER DUET
+  - clipper-duet.pdf p.unknown score=52.997 heading=SETTING THE MINIMUM DEPTH ALARM
+  - clipper-duet.pdf p.unknown score=52.400 heading=INTRODUCTION
+  reply: Use TRIP to decrement the setting and TOTAL to increment the setting. When the required minimum depth setting has been selected, press SPEED.  Sources: [2] Page 8
+
+--- BASELINE ---
+According to the Clipper Duet manual, what power supply voltage does the instrument use?
+
+[lexical] retrieval=0.01s answer=14.08s
+  - clipper-duet.pdf p.unknown score=79.000 heading=CLIPPER DUET
+  - clipper-duet.pdf p.unknown score=74.000 heading=USING THE INSTRUMENT
+  - clipper-duet.pdf p.unknown score=73.000 heading=CHANGING THE OPERATION CONFIGURATION
+  reply: The manual does not specify the power supply voltage.  Sources: [1], [2], [3]
+
+[embedding] retrieval=0.15s answer=0.00s
+  - clipper-duet.pdf p.unknown score=0.666 heading=CHANGING THE OPERATION CONFIGURATION
+  - clipper-duet.pdf p.unknown score=0.661 heading=TO SELECT THE OPERATING UNITS
+  - clipper-duet.pdf p.unknown score=0.638 heading=INTRODUCTION
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.25s answer=3.67s
+  - clipper-duet.pdf p.unknown score=55.720 heading=CLIPPER DUET
+  - clipper-duet.pdf p.unknown score=53.260 heading=USING THE INSTRUMENT
+  - clipper-duet.pdf p.unknown score=52.893 heading=CHANGING THE OPERATION CONFIGURATION
+  reply: The excerpts do not specify the power supply voltage.   Sources: [1], [2], [3]
+
+--- NEW ---
+According to the Clipper Duet manual, what does the display show when the echo is completely lost?
+
+[lexical] retrieval=0.00s answer=25.71s
+  - clipper-duet.pdf p.unknown score=96.000 heading=USING THE INSTRUMENT
+  - clipper-duet.pdf p.unknown score=90.000 heading=CLIPPER DUET
+  - clipper-duet.pdf p.unknown score=89.000 heading=USING THE INSTRUMENT
+  reply: The display will show OUT. 7  Sources: [2], Page 7
+
+[embedding] retrieval=0.17s answer=0.00s
+  - clipper-duet.pdf p.unknown score=0.708 heading=USING THE INSTRUMENT
+  - clipper-duet.pdf p.unknown score=0.701 heading=USING THE INSTRUMENT
+  - clipper-duet.pdf p.unknown score=0.666 heading=CHANGING THE GAIN THRESHOLD
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.28s answer=15.68s
+  - clipper-duet.pdf p.unknown score=66.906 heading=USING THE INSTRUMENT
+  - clipper-duet.pdf p.unknown score=62.706 heading=USING THE INSTRUMENT
+  - clipper-duet.pdf p.unknown score=62.007 heading=CLIPPER DUET
+  reply: The display will show OUT. 7  Sources: [2] Pages: unknown
+
+--- NEW ---
+According to the Clipper Duet manual, how do you turn the display backlight on and off?
+
+[lexical] retrieval=0.01s answer=26.54s
+  - clipper-duet.pdf p.unknown score=89.000 heading=USING THE INSTRUMENT
+  - clipper-duet.pdf p.unknown score=87.000 heading=CHANGING THE OPERATION CONFIGURATION
+  - clipper-duet.pdf p.unknown score=85.000 heading=CLIPPER DUET
+  reply: Pressing ILLUM will turn on the display backlight. The lighting is concentrated over the top corners of the display.  Sources: [1], Page: unknown
+
+[embedding] retrieval=0.17s answer=0.00s
+  - clipper-duet.pdf p.unknown score=0.676 heading=TO SELECT THE OPERATING UNITS
+  - clipper-duet.pdf p.unknown score=0.651 heading=CHANGING THE GAIN THRESHOLD
+  - clipper-duet.pdf p.unknown score=0.622 heading=TO SELECT THE OPERATING UNITS
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.22s answer=6.34s
+  - clipper-duet.pdf p.unknown score=61.933 heading=USING THE INSTRUMENT
+  - clipper-duet.pdf p.unknown score=60.814 heading=CHANGING THE OPERATION CONFIGURATION
+  - clipper-duet.pdf p.unknown score=59.169 heading=CLIPPER DUET
+  reply: Pressing ILLUM will turn on the display backlight. The lighting is concentrated over the top corners of the display.  Sources: [1] clipper-duet.pdf, Page: unknown
+
+--- NEW ---
+According to the Clipper Duet manual, what are the panel cutout dimensions for installing the display?
+
+[lexical] retrieval=0.01s answer=29.10s
+  - clipper-duet.pdf p.unknown score=87.000 heading=CLIPPER DUET
+  - clipper-duet.pdf p.unknown score=73.000 heading=INSTALLING THE DISPLAY
+  - clipper-duet.pdf p.unknown score=73.000 heading=Figure 1 - Wiring Installation
+  reply: Cut a hole in the panel 87mm wide and 67mm high. (Source: [2], Page: unknown)
+
+[embedding] retrieval=0.15s answer=0.00s
+  - clipper-duet.pdf p.unknown score=0.692 heading=INSTALLING THE DISPLAY
+  - clipper-duet.pdf p.unknown score=0.635 heading=Figure 1 - Wiring Installation
+  - clipper-duet.pdf p.unknown score=0.631 heading=TO SELECT THE OPERATING UNITS
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.13s answer=3.32s
+  - clipper-duet.pdf p.unknown score=60.449 heading=CLIPPER DUET
+  - clipper-duet.pdf p.unknown score=53.252 heading=INSTALLING THE DISPLAY
+  - clipper-duet.pdf p.unknown score=52.708 heading=Figure 1 - Wiring Installation
+  reply: The panel cutout dimensions are 87mm wide and 67mm high.  Sources: [2], Page unknown
+
+--- NEW ---
+According to the Clipper Duet manual, which wire connects to negative and which to positive?
+
+[lexical] retrieval=0.01s answer=23.28s
+  - clipper-duet.pdf p.unknown score=77.000 heading=INSTALLING THE DISPLAY
+  - clipper-duet.pdf p.unknown score=69.000 heading=CLIPPER DUET
+  - clipper-duet.pdf p.unknown score=67.000 heading=INTRODUCTION
+  reply: The black wire connects to negative and the red wire connects to positive.  Sources: [1] clipper-duet.pdf, Page: unknown
+
+[embedding] retrieval=0.21s answer=0.00s
+  - clipper-duet.pdf p.unknown score=0.641 heading=NOTES ON ELECTRICAL INTERFERENCE
+  - clipper-duet.pdf p.unknown score=0.627 heading=INSTALLING THE DISPLAY
+  - clipper-duet.pdf p.unknown score=0.594 heading=Figure 1 - Wiring Installation
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.12s answer=4.28s
+  - clipper-duet.pdf p.unknown score=55.061 heading=INSTALLING THE DISPLAY
+  - clipper-duet.pdf p.unknown score=49.947 heading=CLIPPER DUET
+  - clipper-duet.pdf p.unknown score=48.488 heading=INTRODUCTION
+  reply: The black wire connects to negative and the red wire connects to positive.  Sources: [1] clipper-duet.pdf, Page: unknown
+
+--- NEW ---
+According to the Clipper Duet manual, what fuse rating is suggested for the power supply?
+
+[lexical] retrieval=0.01s answer=26.78s
+  - clipper-duet.pdf p.unknown score=69.000 heading=CLIPPER DUET
+  - clipper-duet.pdf p.unknown score=67.000 heading=INTRODUCTION
+  - clipper-duet.pdf p.unknown score=65.000 heading=CHANGING THE OPERATION CONFIGURATION
+  reply: The manual does not specify a fuse rating for the power supply.  Sources: None.
+
+[embedding] retrieval=0.19s answer=0.00s
+  - clipper-duet.pdf p.unknown score=0.723 heading=INSTALLING THE DISPLAY
+  - clipper-duet.pdf p.unknown score=0.645 heading=INSTALLING THE DISPLAY
+  - clipper-duet.pdf p.unknown score=0.608 heading=CON
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.15s answer=2.11s
+  - clipper-duet.pdf p.unknown score=49.939 heading=CLIPPER DUET
+  - clipper-duet.pdf p.unknown score=48.614 heading=INTRODUCTION
+  - clipper-duet.pdf p.unknown score=47.634 heading=CHANGING THE OPERATION CONFIGURATION
+  reply: The manual does not specify a fuse rating for the power supply.  Sources: None
+
+--- NEW ---
+According to the Clipper Duet manual, how do you enter configuration mode?
+
+[lexical] retrieval=0.01s answer=26.92s
+  - clipper-duet.pdf p.unknown score=77.000 heading=CHANGING THE OPERATION CONFIGURATION
+  - clipper-duet.pdf p.unknown score=75.000 heading=CLIPPER DUET
+  - clipper-duet.pdf p.unknown score=75.000 heading=TO SELECT THE OPERATING UNITS
+  reply: Turn the power off, press and keep depressed the ILLUM key, then turn the power to the instrument on. When the key is released the display will show SET ENG.  Sources: [1] pages: unknown
+
+[embedding] retrieval=0.20s answer=0.00s
+  - clipper-duet.pdf p.unknown score=0.723 heading=CHANGING THE GAIN THRESHOLD
+  - clipper-duet.pdf p.unknown score=0.712 heading=TO SELECT THE OPERATING UNITS
+  - clipper-duet.pdf p.unknown score=0.692 heading=TO SELECT THE OPERATING UNITS
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.21s answer=21.62s
+  - clipper-duet.pdf p.unknown score=55.444 heading=CHANGING THE OPERATION CONFIGURATION
+  - clipper-duet.pdf p.unknown score=54.252 heading=TO SELECT THE OPERATING UNITS
+  - clipper-duet.pdf p.unknown score=53.249 heading=SETTING THE KEEL OFFSET
+  reply: Turn the power off, then press and keep depressed the ILLUM key, then turn the power to the instrument on. When the key is released the display will show SET ENG.  Sources: [1], Page: unknown
+
+--- NEW ---
+According to the Clipper Duet manual, how do you disable the speed alarm?
+
+[lexical] retrieval=0.01s answer=27.89s
+  - clipper-duet.pdf p.unknown score=87.000 heading=CLIPPER DUET
+  - clipper-duet.pdf p.unknown score=87.000 heading=SETTING THE SPEED ALARM
+  - clipper-duet.pdf p.unknown score=76.000 heading=SETTING THE MINIMUM DEPTH ALARM
+  reply: Press TRIP and TOTAL simultaneously. (To disable the speed alarm decrement the value to zero where upon the display will show OFF). Sources: [2] Page: unknown
+
+[embedding] retrieval=0.13s answer=0.00s
+  - clipper-duet.pdf p.unknown score=0.770 heading=SETTING THE SPEED ALARM
+  - clipper-duet.pdf p.unknown score=0.706 heading=SETTING THE MINIMUM DEPTH ALARM
+  - clipper-duet.pdf p.unknown score=0.646 heading=TO SELECT THE OPERATING UNITS
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.16s answer=27.01s
+  - clipper-duet.pdf p.unknown score=62.117 heading=SETTING THE SPEED ALARM
+  - clipper-duet.pdf p.unknown score=60.207 heading=CLIPPER DUET
+  - clipper-duet.pdf p.unknown score=55.034 heading=SETTING THE MINIMUM DEPTH ALARM
+  reply: Pressing TRIP and TOTAL simultaneously a second time will disable the alarm (without altering the alarm setting).  Sources: [3], Page 12
+
+--- NEW ---
+According to the Clipper Duet manual, how do you arm and then disable the minimum depth alarm without changing the setting?
+
+[lexical] retrieval=0.01s answer=33.03s
+  - clipper-duet.pdf p.unknown score=121.000 heading=CLIPPER DUET
+  - clipper-duet.pdf p.unknown score=114.000 heading=SETTING THE MINIMUM DEPTH ALARM
+  - clipper-duet.pdf p.unknown score=79.000 heading=INTRODUCTION
+  reply: To arm the alarm, press TRIP and TOTAL simultaneously. Pressing TRIP and TOTAL simultaneously a second time will disable the alarm (without altering the alarm setting). The bell symbol will show only when the alarm is armed and will flash when the alarm is active.  Sources: [2], Page: unknown
+
+[embedding] retrieval=0.18s answer=0.00s
+  - clipper-duet.pdf p.unknown score=0.831 heading=SETTING THE MINIMUM DEPTH ALARM
+  - clipper-duet.pdf p.unknown score=0.686 heading=SETTING THE SPEED ALARM
+  - clipper-duet.pdf p.unknown score=0.646 heading=SETTING THE KEEL OFFSET
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.15s answer=7.74s
+  - clipper-duet.pdf p.unknown score=80.697 heading=CLIPPER DUET
+  - clipper-duet.pdf p.unknown score=78.886 heading=SETTING THE MINIMUM DEPTH ALARM
+  - clipper-duet.pdf p.unknown score=56.135 heading=INTRODUCTION
+  reply: To arm the alarm, press TRIP and TOTAL simultaneously. Pressing TRIP and TOTAL simultaneously a second time will disable the alarm (without altering the alarm setting). The bell symbol will show only when the alarm is armed and will flash when the alarm is active.  Sources: [2], Page: unknown
+
+--- NEW ---
+According to the Clipper Duet manual, what are the three mounting options for the echo sounder transducer?
+
+[lexical] retrieval=0.01s answer=16.27s
+  - clipper-duet.pdf p.unknown score=97.000 heading=CLIPPER DUET
+  - clipper-duet.pdf p.unknown score=86.000 heading=HULL
+  - clipper-duet.pdf p.unknown score=84.000 heading=CHANGING THE GAIN THRESHOLD
+  reply: The transducer can be mounted in one of three ways: 1. Bonded directly to the inside of the hull.  Sources: clipper-duet.pdf, HULL, page unknown
+
+[embedding] retrieval=0.12s answer=0.00s
+  - clipper-duet.pdf p.unknown score=0.693 heading=HULL
+  - clipper-duet.pdf p.unknown score=0.686 heading=HULL
+  - clipper-duet.pdf p.unknown score=0.667 heading=HULL
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.18s answer=5.76s
+  - clipper-duet.pdf p.unknown score=66.324 heading=CLIPPER DUET
+  - clipper-duet.pdf p.unknown score=60.818 heading=HULL
+  - clipper-duet.pdf p.unknown score=59.081 heading=CHANGING THE GAIN THRESHOLD
+  reply: The transducer can be mounted in one of three ways: 1. Bonded directly to the inside of the hull.  Sources: clipper-duet.pdf, HULL, page 8
+
+--- NEW ---
+According to the Clipper Duet manual, how is external electrical interference characterised on the display?
+
+[lexical] retrieval=0.00s answer=30.91s
+  - clipper-duet.pdf p.unknown score=103.000 heading=NOTES ON ELECTRICAL INTERFERENCE
+  - clipper-duet.pdf p.unknown score=97.000 heading=CLIPPER DUET
+  - clipper-duet.pdf p.unknown score=68.000 heading=HULL
+  reply: Persistent, random numbers on the display which obscure the true depth reading on the depth sounder.  Sources: [2], Page 2 - 3
+
+[embedding] retrieval=0.18s answer=0.00s
+  - clipper-duet.pdf p.unknown score=0.754 heading=NOTES ON ELECTRICAL INTERFERENCE
+  - clipper-duet.pdf p.unknown score=0.645 heading=INSTALLING THE DISPLAY
+  - clipper-duet.pdf p.unknown score=0.644 heading=HULL
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.20s answer=11.85s
+  - clipper-duet.pdf p.unknown score=71.622 heading=NOTES ON ELECTRICAL INTERFERENCE
+  - clipper-duet.pdf p.unknown score=66.285 heading=CLIPPER DUET
+  - clipper-duet.pdf p.unknown score=49.576 heading=HULL
+  reply: Persistent, random numbers on the display which obscure the true depth reading on the depth sounder.  Sources: [2], Page 12
+
+Averages (all 13 questions):
+  lexical: retrieval_avg=0.01s answer_avg=25.69s
+  embedding: retrieval_avg=0.16s answer_avg=0.00s
+  hybrid: retrieval_avg=0.19s answer_avg=9.68s
+
+Averages (new 10 questions only):
+  lexical: retrieval_avg=0.01s answer_avg=26.64s
+  embedding: retrieval_avg=0.17s answer_avg=0.00s
+  hybrid: retrieval_avg=0.18s answer_avg=10.57s

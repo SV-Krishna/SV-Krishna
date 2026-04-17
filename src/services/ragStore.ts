@@ -18,6 +18,17 @@ interface RagStoreFile {
 
 interface ExtractionPayload {
   text?: string;
+  pages?: Array<{
+    page?: number;
+    text?: string;
+  }>;
+  sections?: Array<{
+    heading?: string;
+    sectionPath?: string[];
+    text?: string;
+    pageStart?: number;
+    pageEnd?: number;
+  }>;
   error?: string;
 }
 
@@ -57,6 +68,36 @@ const STOP_WORDS = new Set([
   "tell",
   "me",
 ]);
+
+const normalizeKey = (value: string): string => value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
+export const inferDocumentKey = (source: string): string => {
+  const normalized = normalizeKey(source);
+  if (normalized.includes("bukh")) {
+    return "bukh";
+  }
+  if (normalized.includes("clipper duet") || normalized.includes("clipper")) {
+    return "clipper";
+  }
+  if (normalized.includes("test manual")) {
+    return "test-manual";
+  }
+
+  return normalized.split(" ").slice(0, 3).join("-");
+};
+
+export const getDocumentHints = (query: string): string[] => {
+  const normalized = normalizeKey(query);
+  const hints: string[] = [];
+  if (normalized.includes("bukh")) {
+    hints.push("bukh");
+  }
+  if (normalized.includes("clipper duet") || normalized.includes("clipper")) {
+    hints.push("clipper");
+  }
+
+  return hints;
+};
 
 export const tokenize = (text: string): string[] => {
   const matches = text.toLowerCase().match(TOKEN_PATTERN) ?? [];
@@ -104,24 +145,176 @@ export const rankChunks = (
     return [];
   }
 
+  const normalizedQuery = query.toLowerCase().replace(/\s+/g, " ").trim();
+  const queryWords = normalizedQuery.split(" ").filter(Boolean);
+  const documentHints = new Set(getDocumentHints(query));
+  const seen = new Set<string>();
+
   return chunks
     .map((chunk) => {
-      let score = 0;
-      for (const token of chunk.tokens) {
-        if (queryTerms.has(token)) {
-          score += 1;
+      const excerpt = narrowExcerpt(chunk.text, queryTerms);
+      const uniqueChunkTerms = new Set(chunk.tokens);
+      const uniqueMatches = [...uniqueChunkTerms].filter((token) => queryTerms.has(token));
+      const totalMatches = chunk.tokens.filter((token) => queryTerms.has(token)).length;
+      let score = uniqueMatches.length * 5 + totalMatches;
+
+      const normalizedChunk = excerpt.toLowerCase().replace(/\s+/g, " ").trim();
+      if (normalizedQuery.length > 8 && normalizedChunk.includes(normalizedQuery)) {
+        score += 30;
+      }
+
+      if (queryWords.length >= 2) {
+        for (let index = 0; index < queryWords.length - 1; index += 1) {
+          const phrase = `${queryWords[index]} ${queryWords[index + 1]}`;
+          if (normalizedChunk.includes(phrase)) {
+            score += 4;
+          }
         }
       }
 
+      if (chunk.heading) {
+        const normalizedHeading = normalizeKey(chunk.heading);
+        for (const word of queryWords) {
+          if (word.length > 3 && normalizedHeading.includes(word)) {
+            score += 3;
+          }
+        }
+      }
+
+      if (documentHints.size > 0 && documentHints.has(chunk.docKey)) {
+        score += 40;
+      }
+
       return {
+        docKey: chunk.docKey,
         source: chunk.source,
-        text: chunk.text,
+        text: excerpt,
         score,
+        pageStart: chunk.pageStart,
+        pageEnd: chunk.pageEnd,
+        heading: chunk.heading,
+        sectionPath: chunk.sectionPath,
       };
     })
     .filter((result) => result.score > 0)
     .sort((left, right) => right.score - left.score)
+    .filter((result) => {
+      const signature = [
+        result.source,
+        result.pageStart,
+        result.pageEnd,
+        result.text.slice(0, 160).toLowerCase(),
+      ].join("|");
+      if (seen.has(signature)) {
+        return false;
+      }
+
+      seen.add(signature);
+      return true;
+    })
     .slice(0, Math.max(1, topK));
+};
+
+export const hasTrustedSources = (sources: RagSearchResult[]): boolean => {
+  if (sources.length === 0) {
+    return false;
+  }
+
+  const topScore = sources[0]?.score ?? 0;
+  if (topScore < 8) {
+    return false;
+  }
+
+  return true;
+};
+
+const detectHeading = (text: string): string | undefined => {
+  const firstSentence = text
+    .split(/(?<=[.!?])\s+/)
+    .map((part) => part.trim())
+    .find(Boolean);
+
+  if (!firstSentence) {
+    return undefined;
+  }
+
+  const compact = firstSentence.replace(/\s+/g, " ").trim();
+  return compact.length > 90 ? `${compact.slice(0, 87).trimEnd()}...` : compact;
+};
+
+const classifySection = (heading: string | undefined, text: string): string[] => {
+  const normalized = normalizeKey(`${heading ?? ""} ${text}`);
+  const sections: string[] = [];
+
+  if (normalized.includes("fuel injection pump") || normalized.includes("fuel pump")) {
+    sections.push("Fuel System", "Fuel Injection Pump");
+  } else if (normalized.includes("fuel")) {
+    sections.push("Fuel System");
+  }
+
+  if (normalized.includes("cylinder head")) {
+    sections.push("Cylinder Head");
+  }
+
+  if (normalized.includes("gearbox") || normalized.includes("bw7") || normalized.includes("gear wheel")) {
+    sections.push("Gearbox");
+  }
+
+  if (normalized.includes("alarm")) {
+    sections.push("Alarm");
+  }
+
+  if (normalized.includes("speed alarm")) {
+    sections.push("Speed Alarm");
+  }
+
+  if (normalized.includes("minimum depth alarm") || normalized.includes("shallow alarm")) {
+    sections.push("Depth Alarm");
+  }
+
+  if (normalized.includes("keel offset")) {
+    sections.push("Keel Offset");
+  }
+
+  if (normalized.includes("power") || normalized.includes("battery") || normalized.includes("volt")) {
+    sections.push("Power");
+  }
+
+  if (normalized.includes("using the instrument") || normalized.includes("trip distance")) {
+    sections.push("Operation");
+  }
+
+  return sections.length > 0 ? sections : ["General"];
+};
+
+const splitIntoSentences = (text: string): string[] => {
+  return text
+    .split(/(?<=[.!?])\s+/)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean);
+};
+
+const narrowExcerpt = (text: string, queryTerms: Set<string>): string => {
+  const sentences = splitIntoSentences(text);
+  if (sentences.length <= 2) {
+    return text;
+  }
+
+  let bestIndex = 0;
+  let bestScore = -1;
+
+  for (const [index, sentence] of sentences.entries()) {
+    const sentenceTokens = tokenize(sentence);
+    const uniqueMatches = new Set(sentenceTokens.filter((token) => queryTerms.has(token)));
+    const score = uniqueMatches.size * 5 + sentenceTokens.filter((token) => queryTerms.has(token)).length;
+    if (score > bestScore) {
+      bestScore = score;
+      bestIndex = index;
+    }
+  }
+
+  const excerpt = sentences.slice(Math.max(0, bestIndex - 1), Math.min(sentences.length, bestIndex + 2));
+  return excerpt.join(" ");
 };
 
 export class RagStore {
@@ -133,6 +326,7 @@ export class RagStore {
   private readonly topK: number;
   private readonly extractorPython: string;
   private readonly extractorScript: string;
+  private readonly extractorMode: AppConfig["ragExtractorMode"];
   private cache: RagStoreFile = {
     indexedAt: "",
     documents: [],
@@ -148,6 +342,7 @@ export class RagStore {
     this.topK = config.ragTopK;
     this.extractorPython = config.ragExtractorPython;
     this.extractorScript = resolve(process.cwd(), "python", "extract_pdf_text.py");
+    this.extractorMode = config.ragExtractorMode;
   }
 
   isEnabled(): boolean {
@@ -239,6 +434,15 @@ export class RagStore {
     return rankChunks(this.cache.chunks, query, this.topK);
   }
 
+  async getChunks(): Promise<RagChunk[]> {
+    if (!this.enabled) {
+      return [];
+    }
+
+    await this.ensureIndexed();
+    return this.cache.chunks;
+  }
+
   buildPrompt(query: string, results: RagSearchResult[]): string {
     if (results.length === 0) {
       return query;
@@ -247,13 +451,31 @@ export class RagStore {
     const context = results
       .map(
         (result, index) =>
-          `[${index + 1}] Source: ${result.source}\n${result.text}`,
+          [
+            `[${index + 1}] Source: ${result.source}`,
+            result.pageStart > 0
+              ? `Pages: ${result.pageStart}${result.pageEnd > result.pageStart ? `-${result.pageEnd}` : ""}`
+              : "Pages: unknown",
+            result.sectionPath?.length ? `Section path: ${result.sectionPath.join(" > ")}` : "",
+            result.heading ? `Section: ${result.heading}` : "",
+            `Excerpt: ${result.text}`,
+          ]
+            .filter(Boolean)
+            .join("\n"),
       )
       .join("\n\n");
 
     return [
-      "Use the following local reference material if it is relevant. If the material is not relevant, ignore it.",
+      "You are answering with local reference material.",
+      "Rules:",
+      "1. Use the reference excerpts when they are relevant.",
+      "2. If the excerpts are insufficient, say so plainly.",
+      "3. Prefer direct, factual language over paraphrasing when describing procedures or specifications.",
+      "4. For procedural questions, give concise step-by-step instructions using only supported steps.",
+      "5. If button names, values, or settings are present in the excerpts, preserve them exactly.",
+      "6. End the answer with a 'Sources:' line that cites the relevant document and page numbers.",
       "",
+      "Reference excerpts:",
       context,
       "",
       `User question: ${query}`,
@@ -275,19 +497,47 @@ export class RagStore {
     const chunks: RagChunk[] = [];
 
     for (const file of files) {
-      const rawText = await this.extractPdfText(file.fullPath);
-      const chunkTexts = splitIntoChunks(rawText, this.chunkSize, this.chunkOverlap);
       const chunkIds: string[] = [];
+      const extraction = await this.extractPdfText(file.fullPath);
+      const docKey = inferDocumentKey(file.fileName);
+      const sectionEntries =
+        extraction.sections.length > 0
+          ? extraction.sections
+          : [
+              {
+                heading: undefined,
+                sectionPath: [],
+                text: extraction.text,
+                pageStart: 1,
+                pageEnd: 1,
+              },
+            ];
 
-      for (const [index, text] of chunkTexts.entries()) {
-        const id = `${file.fileName}:${index}`;
-        chunkIds.push(id);
-        chunks.push({
-          id,
-          source: file.fileName,
-          text,
-          tokens: tokenize(text),
-        });
+      let chunkIndex = 0;
+      for (const sectionEntry of sectionEntries) {
+        const chunkTexts = splitIntoChunks(sectionEntry.text, this.chunkSize, this.chunkOverlap);
+        for (const text of chunkTexts) {
+          const id = `${file.fileName}:${chunkIndex}`;
+          const heading = sectionEntry.heading ?? detectHeading(text);
+          const derivedSectionPath =
+            sectionEntry.sectionPath && sectionEntry.sectionPath.length > 0
+              ? sectionEntry.sectionPath
+              : classifySection(heading, text);
+          const sectionPath = derivedSectionPath[0] === docKey ? derivedSectionPath : [docKey, ...derivedSectionPath];
+          chunkIds.push(id);
+          chunks.push({
+            id,
+            docKey,
+            source: file.fileName,
+            text,
+            tokens: tokenize(text),
+            pageStart: sectionEntry.pageStart,
+            pageEnd: sectionEntry.pageEnd,
+            heading,
+            sectionPath,
+          });
+          chunkIndex += 1;
+        }
       }
 
       documents.push({
@@ -314,7 +564,11 @@ export class RagStore {
       this.cache = {
         indexedAt: parsed.indexedAt ?? "",
         documents: parsed.documents ?? [],
-        chunks: parsed.chunks ?? [],
+        chunks: (parsed.chunks ?? []).map((chunk) => ({
+          ...chunk,
+          docKey: chunk.docKey ?? inferDocumentKey(chunk.source),
+          sectionPath: chunk.sectionPath ?? [inferDocumentKey(chunk.source), "General"],
+        })),
       };
     } catch {
       this.cache = {
@@ -348,14 +602,52 @@ export class RagStore {
     return files;
   }
 
-  private async extractPdfText(pdfPath: string): Promise<string> {
-    const stdout = await this.runCommand([this.extractorScript, pdfPath]);
-    const payload = JSON.parse(stdout) as ExtractionPayload;
+  private async extractPdfText(pdfPath: string): Promise<{
+    text: string;
+    pages: Array<{ page: number; text: string }>;
+    sections: Array<{
+      heading?: string;
+      sectionPath: string[];
+      text: string;
+      pageStart: number;
+      pageEnd: number;
+    }>;
+  }> {
+    const stdout = await this.runCommand([this.extractorScript, "--mode", this.extractorMode, pdfPath]);
+    let payload: ExtractionPayload;
+    try {
+      payload = JSON.parse(stdout) as ExtractionPayload;
+    } catch {
+      // Some extractors (or their dependencies) log to stdout. Recover by parsing the JSON object
+      // from the first '{' onwards.
+      const start = stdout.indexOf("{");
+      if (start === -1) {
+        throw new Error(`RAG extraction returned non-JSON output for ${pdfPath}.`);
+      }
+      payload = JSON.parse(stdout.slice(start)) as ExtractionPayload;
+    }
     if (payload.error) {
       throw new Error(`RAG extraction failed for ${pdfPath}: ${payload.error}`);
     }
 
-    return (payload.text ?? "").trim();
+    return {
+      text: (payload.text ?? "").trim(),
+      pages: (payload.pages ?? [])
+        .map((entry) => ({
+          page: entry.page ?? 0,
+          text: (entry.text ?? "").trim(),
+        }))
+        .filter((entry) => entry.page > 0 && entry.text.length > 0),
+      sections: (payload.sections ?? [])
+        .map((entry) => ({
+          heading: entry.heading,
+          sectionPath: entry.sectionPath ?? [],
+          text: (entry.text ?? "").trim(),
+          pageStart: entry.pageStart ?? 0,
+          pageEnd: entry.pageEnd ?? entry.pageStart ?? 0,
+        }))
+        .filter((entry) => entry.text.length > 0),
+    };
   }
 
   private async runCommand(args: string[]): Promise<string> {
@@ -382,7 +674,8 @@ export class RagStore {
           return;
         }
 
-        rejectPromise(new Error(stderr.trim() || `Command exited with ${code}.`));
+        const detail = stderr.trim() || stdout.trim() || `Command exited with ${code}.`;
+        rejectPromise(new Error(detail));
       });
     });
   }

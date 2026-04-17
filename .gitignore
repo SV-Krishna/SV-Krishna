@@ -2,3 +2,23 @@ node_modules/
 dist/
 .env
 npm-debug.log*
+experiments/**/storage/
+experiments/**/ollama/
+experiments/privategpt/private-gpt/
+
+# Local build artifacts / caches
+python/.venv/
+python/__pycache__/
+python/**/*.pyc
+
+# Hardware/firmware local tooling venv
+.venv-esptool/
+
+# Local runtime data (PDFs, stores, audio exports, etc.)
+local/
+
+# Firmware build outputs
+firmware/**/build/
+firmware/**/*.bin
+firmware/**/*.elf
+firmware/**/*.map

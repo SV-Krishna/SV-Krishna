@@ -1,0 +1,124 @@
+{
+  "cases": [
+    {
+      "manual": "bukh",
+      "question": "Where is the fuel injection pump described in the BUKH DV20 manual?",
+      "seconds": 6.62,
+      "answer": "The fuel injection pump is described in the BUKH DV20 manual under section 3.1.2.",
+      "sources": [
+        {
+          "score": 0.7013408205624094,
+          "file_name": "Work Shop Manual - BUKH DV 20 ME.pdf",
+          "page_label": "247",
+          "window": "For special purposes it can be delivered with  a reduction ratio of 2.47:1 for AHEAD and \n2.36:1 for REVERSE.                         \n \n  Oil Change\n \n \nThe gear will need no othe"
+        },
+        {
+          "score": 0.6780849495834534,
+          "file_name": "Work Shop Manual - BUKH DV 20 ME.pdf",
+          "page_label": "277",
+          "window": " \n \nR33 \n009W2229-R01      Picture 55  \n Fit the screws M8x25 with washers in the \ngearbox.  Put the gear shift lever in \u201cneutral\u201d (the sliding sleeve is also in \u201cneutral\u201d position"
+        }
+      ]
+    },
+    {
+      "manual": "bukh",
+      "question": "What should be checked before dismantling the fuel injection pump on the BUKH DV20?",
+      "seconds": 7.44,
+      "answer": "According to the provided manual, before dismantling the fuel injection pump on the BUKH DV20, you should check the following:\n\n*   Mark the adjusting washer(s) which lie below the bearing rings in proportion to the bore.\n*   Loosen the nuts at the wheel and press out the bolt of the housing.",
+      "sources": [
+        {
+          "score": 0.6416352338669953,
+          "file_name": "Work Shop Manual - BUKH DV 20 ME.pdf",
+          "page_label": "252",
+          "window": " \n \nR8 \n009W2229-R01  \n \nGeneral Information for Work with the Gear  \n \nShow cleanliness when repairing the gear and before the gear is  opened it must be \ncarefully cleaned. \n \n U"
+        },
+        {
+          "score": 0.6375139455793599,
+          "file_name": "Work Shop Manual - BUKH DV 20 ME.pdf",
+          "page_label": "258",
+          "window": "1 x 56 122 208 and auxiliary tool No.  1 x 56 122 227 and take up the washers.   At the fitting the taper ed roller bearing outer \ncollars have been smeared with Loctite 601 and so"
+        }
+      ]
+    },
+    {
+      "manual": "bukh",
+      "question": "What is the tightening torque for the cylinder head nuts on the BUKH DV20?",
+      "seconds": 3.49,
+      "answer": "The provided manual states to secure the nut with a torque of 100 Nm (10 Kpm).",
+      "sources": [
+        {
+          "score": 0.730517190366432,
+          "file_name": "Work Shop Manual - BUKH DV 20 ME.pdf",
+          "page_label": "276",
+          "window": " \n \nR32 \n009W2229-R01  \n  Heat the output flange to about \n85\u00b0C and fit it on the output shaft. \n                  \n \n          Smear the nut with permanently \nplastic liquid joint"
+        },
+        {
+          "score": 0.7282009949808919,
+          "file_name": "Work Shop Manual - BUKH DV 20 ME.pdf",
+          "page_label": "263",
+          "window": "See picture No.  33 overleaf too).           \n \n        \u201cNote\u201d: Fix the tapered roller bearing for \u201cASTERN\u201d with supporting washer and original hexagon nut.   The torque of the nut"
+        }
+      ]
+    },
+    {
+      "manual": "clipper",
+      "question": "According to the Clipper Duet manual, what does the depth display show?",
+      "seconds": 5.58,
+      "answer": "According to the Clipper Duet manual, the depth display shows depth at all times.",
+      "sources": [
+        {
+          "score": 0.780589719623476,
+          "file_name": "Clipper-Duet-manual-19.pdf",
+          "page_label": "11",
+          "window": "Use the TOT AL key to roster through the\nspeed units.  Press SPEED to enter the desired units.  The\ndisplay will briefly show CON to confirm the operation.  The\ndisplay will now sh"
+        },
+        {
+          "score": 0.7757249016725152,
+          "file_name": "Clipper-Duet-manual-19.pdf",
+          "page_label": "9",
+          "window": "The\nlighting is concentrated over the active part of the display , the\ntop corners being omitted.  Pressing ILL UM again will turn the\nbacklight off .  Pressing SPEED will return t"
+        }
+      ]
+    },
+    {
+      "manual": "clipper",
+      "question": "According to the Clipper Duet manual, how do you change the shallow alarm setting?",
+      "seconds": 4.32,
+      "answer": "According to the Clipper Duet manual, you use \u201cT\u201d to change the shallow alarm setting.",
+      "sources": [
+        {
+          "score": 0.7196025868306439,
+          "file_name": "Clipper-Duet-manual-19.pdf",
+          "page_label": "10",
+          "window": "When the required \nminimum depth setting has been selected press SPEED .  This\nwill enter the new value into the memory and return to normal\noperation.  T o arm the alarm press TRI"
+        },
+        {
+          "score": 0.6787178822677824,
+          "file_name": "Clipper-Duet-manual-19.pdf",
+          "page_label": "10",
+          "window": "Use TRIP to decrement the\nsetting and TOT AL to increment the setting.  When the required \nminimum depth setting has been selected press SPEED .  This\nwill enter the new value into"
+        }
+      ]
+    },
+    {
+      "manual": "clipper",
+      "question": "According to the Clipper Duet manual, what power supply voltage does the instrument use?",
+      "seconds": 5.33,
+      "answer": "The Clipper Duet manual does not specify the power supply voltage.",
+      "sources": [
+        {
+          "score": 0.7248695417708723,
+          "file_name": "Clipper-Duet-manual-19.pdf",
+          "page_label": "4",
+          "window": "Bring the\nwiring through the hole in the panel and connect the black wire\nto negative and red to positive.  (See Figure 1).  It is wise to use a\nfused supply to provide protection "
+        },
+        {
+          "score": 0.721931801523974,
+          "file_name": "Clipper-Duet-manual-19.pdf",
+          "page_label": "10",
+          "window": "CHANGING THE OPERA TION CONFIGURA TION\nThis allows the user to program the instrument to operate in the\nunits of choice i.e.  feet/metres, miles, nautical miles or\nkilometres.  It "
+        }
+      ]
+    }
+  ]
+}

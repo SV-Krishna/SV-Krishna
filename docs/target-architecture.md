@@ -28,6 +28,7 @@ These should run directly on the Raspberry Pi host in phase one:
 - audio capture
 - audio playback
 - boot/service management
+- prebuilt RAG stores copied from a build machine (recommended for Docling-based extraction)
 
 ### Optional containerized components
 
@@ -153,6 +154,7 @@ Recommended host layout:
   data/
   audio/
   models/
+  rag/
 ```
 
 Suggested meaning:
@@ -163,6 +165,7 @@ Suggested meaning:
 - `/opt/svkrishna/data` stores runtime state and future knowledge assets
 - `/opt/svkrishna/audio` stores temporary recordings and synthesized responses
 - `/opt/svkrishna/models` stores any non-Ollama model artifacts you manage directly
+- `/opt/svkrishna/rag` stores the PDF inbox and generated stores (`store.json`, `embeddings.json`)
 
 Ollama models should remain in the standard Ollama storage location unless there is a clear reason to override it.
 

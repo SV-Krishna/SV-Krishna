@@ -1,0 +1,63 @@
+
+=== CLIPPER (OpenDataLoader) ===
+According to the Clipper Duet manual, what does the depth display show?
+
+[lexical] retrieval=0.00s answer=14.46s
+  - clipper-duet.pdf p.1 score=96.000 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=89.000 heading=OFFSET The Echo Sounder measures the depth from the transducer to the seabed.
+  - clipper-duet.pdf p.1 score=85.000 heading=INTRODUCTION The Clipper Duet is a combined log and depth sounder.
+  reply: The Echo Sounder measures the depth from the transducer to the seabed.  Sources: [2] Page 1
+
+[embedding] retrieval=0.07s answer=0.00s
+  - clipper-duet.pdf p.1 score=0.704 heading=OFFSET The Echo Sounder measures the depth from the transducer to the seabed.
+  - clipper-duet.pdf p.1 score=0.672 heading=instrument it will show the depth and boat speed.
+  - clipper-duet.pdf p.1 score=0.668 heading=INTRODUCTION The Clipper Duet is a combined log and depth sounder.
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.12s answer=18.44s
+  - clipper-duet.pdf p.1 score=66.300 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=62.201 heading=To arm the alarm press TRIP and TOTAL simultaneously.
+  - clipper-duet.pdf p.1 score=59.700 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  reply: The Echo Sounder measures the depth from the transducer to the seabed. If the craft has a keel it is often more convenient to show the depth from the keel to the seabed. Sources: [2], Page 1
+
+=== CLIPPER (OpenDataLoader) ===
+According to the Clipper Duet manual, how do you change the shallow alarm setting?
+
+[lexical] retrieval=0.01s answer=15.15s
+  - clipper-duet.pdf p.1 score=95.000 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=82.000 heading=INTRODUCTION The Clipper Duet is a combined log and depth sounder.
+  - clipper-duet.pdf p.1 score=76.000 heading=To arm the alarm press TRIP and TOTAL simultaneously.
+  reply: To set the minimum depth alarm, press TRIP and TOTAL simultaneously. The display will briefly show CON and then return to the SET ENG display. Sources: [1], Page 9
+
+[embedding] retrieval=0.10s answer=0.00s
+  - clipper-duet.pdf p.1 score=0.737 heading=power to the instrument on.
+  - clipper-duet.pdf p.1 score=0.729 heading=alarm decrement the value to zero where upon the display will show OFF).
+  - clipper-duet.pdf p.1 score=0.729 heading=To arm the alarm press TRIP and TOTAL simultaneously.
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.11s answer=16.52s
+  - clipper-duet.pdf p.1 score=65.862 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=58.062 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=55.172 heading=To arm the alarm press TRIP and TOTAL simultaneously.
+  reply: To set the minimum depth alarm, press TRIP and TOTAL simultaneously. The display will briefly show CON to confirm the operation and then return to the SET ENG display. Sources: [2] Page 9
+
+=== CLIPPER (OpenDataLoader) ===
+According to the Clipper Duet manual, what power supply voltage does the instrument use?
+
+[lexical] retrieval=0.01s answer=9.48s
+  - clipper-duet.pdf p.1 score=89.000 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=78.000 heading=power to the instrument on.
+  - clipper-duet.pdf p.1 score=76.000 heading=INTRODUCTION The Clipper Duet is a combined log and depth sounder.
+  reply: The manual does not specify the power supply voltage.   Sources: [2], [3]
+
+[embedding] retrieval=0.09s answer=0.00s
+  - clipper-duet.pdf p.1 score=0.677 heading=the panel 87mm wide and 67mm high.
+  - clipper-duet.pdf p.1 score=0.653 heading=power to the instrument on.
+  - clipper-duet.pdf p.1 score=0.644 heading=alarm decrement the value to zero where upon the display will show OFF).
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.12s answer=11.82s
+  - clipper-duet.pdf p.1 score=61.904 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=55.865 heading=alarm decrement the value to zero where upon the display will show OFF).
+  - clipper-duet.pdf p.1 score=54.104 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  reply: The manual does not state the power supply voltage.  Sources: [1], [2], [3]

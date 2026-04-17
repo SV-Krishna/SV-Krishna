@@ -20,6 +20,7 @@ The interaction model for the first build is deliberately narrow:
 - fully offline
 - push-to-talk
 - terminal UI
+- lightweight local web UI
 - local PDF drop-folder RAG
 
 ## Project goals
@@ -78,6 +79,9 @@ This project will replace those assumptions with:
 - `docs/phase1-build-plan.md` defines the adaptation boundary for the first implementation pass
 - `docs/target-architecture.md` defines the concrete runtime layout for the Raspberry Pi deployment
 - `docs/rag-drop-folder.md` explains how to feed local PDFs into the offline RAG store
+- `docs/rag-evaluation-report.md` summarizes the RAG extraction/retrieval experiments and the recommended "build machine -> Pi" workflow
+- `docs/speech-pipeline.md` describes the speech-to-text (Whisper) and text-to-speech (Piper) pipeline and configuration
+- `docs/web-ui-review.md` records the web UI review and why this repo uses a thin built-in UI
 - `docs/profile-readme-archive.md` preserves the original GitHub profile README content from this repository before repurposing it into a codebase
 
 ## License note

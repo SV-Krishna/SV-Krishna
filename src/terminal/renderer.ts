@@ -1,7 +1,9 @@
 import type { AppConfig, ControllerState, PreflightCheck, ServiceHealth } from "../types";
 
 const clearScreen = (): void => {
-  process.stdout.write("\u001Bc");
+  if (process.stdout.isTTY) {
+    process.stdout.write("\u001Bc");
+  }
 };
 
 const keyHint = (key: string): string => {

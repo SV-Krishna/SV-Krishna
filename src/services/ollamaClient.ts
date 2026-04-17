@@ -27,11 +27,11 @@ export class OllamaClient {
     this.systemPrompt = config.ollamaSystemPrompt;
   }
 
-  async respond(userText: string): Promise<string> {
+  async respond(userText: string, systemPromptOverride?: string): Promise<string> {
     const messages: OllamaChatMessage[] = [
       {
         role: "system",
-        content: this.systemPrompt,
+        content: systemPromptOverride ?? this.systemPrompt,
       },
       {
         role: "user",

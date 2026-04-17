@@ -1,0 +1,124 @@
+{
+  "cases": [
+    {
+      "manual": "bukh",
+      "question": "Where is the fuel injection pump described in the BUKH DV20 manual?",
+      "seconds": 8.71,
+      "textResponse": "The fuel injection pump is described in the BUKH DV20 manual on page 17.",
+      "sources": [
+        {
+          "title": "Clipper-Duet-manual-19.pdf",
+          "sourceDocument": null
+        },
+        {
+          "title": "Clipper-Duet-manual-19.pdf",
+          "sourceDocument": null
+        },
+        {
+          "title": "Clipper-Duet-manual-19.pdf",
+          "sourceDocument": null
+        }
+      ]
+    },
+    {
+      "manual": "bukh",
+      "question": "What should be checked before dismantling the fuel injection pump on the BUKH DV20?",
+      "seconds": 10.57,
+      "textResponse": "According to the BUKH DV20 manual, before dismantling the fuel injection pump, you should check for:\n\n*   \u201cCorrosion\u201d\n*   \u201cDamage\u201d\n*   \u201cLoose Connections\u201d",
+      "sources": [
+        {
+          "title": "Clipper-Duet-manual-19.pdf",
+          "sourceDocument": null
+        },
+        {
+          "title": "Clipper-Duet-manual-19.pdf",
+          "sourceDocument": null
+        },
+        {
+          "title": "Clipper-Duet-manual-19.pdf",
+          "sourceDocument": null
+        }
+      ]
+    },
+    {
+      "manual": "bukh",
+      "question": "What is the tightening torque for the cylinder head nuts on the BUKH DV20?",
+      "seconds": 12.0,
+      "textResponse": "According to the BUKH DV20 manual, the tightening torque for the cylinder head nuts is 11 Nm.",
+      "sources": [
+        {
+          "title": "Clipper-Duet-manual-19.pdf",
+          "sourceDocument": null
+        },
+        {
+          "title": "Clipper-Duet-manual-19.pdf",
+          "sourceDocument": null
+        },
+        {
+          "title": "Clipper-Duet-manual-19.pdf",
+          "sourceDocument": null
+        }
+      ]
+    },
+    {
+      "manual": "clipper",
+      "question": "According to the Clipper Duet manual, what does the depth display show?",
+      "seconds": 11.44,
+      "textResponse": "According to the Clipper Duet manual, the depth display shows \u201cMinimum Depth Alarm\u201d.",
+      "sources": [
+        {
+          "title": "Clipper-Duet-manual-19.pdf",
+          "sourceDocument": null
+        },
+        {
+          "title": "Clipper-Duet-manual-19.pdf",
+          "sourceDocument": null
+        },
+        {
+          "title": "Clipper-Duet-manual-19.pdf",
+          "sourceDocument": null
+        }
+      ]
+    },
+    {
+      "manual": "clipper",
+      "question": "According to the Clipper Duet manual, how do you change the shallow alarm setting?",
+      "seconds": 13.12,
+      "textResponse": "According to the Clipper Duet manual, you change the shallow alarm setting by pressing the \u201cSHIFT\u201d button on the instrument.",
+      "sources": [
+        {
+          "title": "Clipper-Duet-manual-19.pdf",
+          "sourceDocument": null
+        },
+        {
+          "title": "Clipper-Duet-manual-19.pdf",
+          "sourceDocument": null
+        },
+        {
+          "title": "Clipper-Duet-manual-19.pdf",
+          "sourceDocument": null
+        }
+      ]
+    },
+    {
+      "manual": "clipper",
+      "question": "According to the Clipper Duet manual, what power supply voltage does the instrument use?",
+      "seconds": 14.15,
+      "textResponse": "According to the Clipper Duet manual, the instrument uses a 12V DC power supply.",
+      "sources": [
+        {
+          "title": "Clipper-Duet-manual-19.pdf",
+          "sourceDocument": null
+        },
+        {
+          "title": "Clipper-Duet-manual-19.pdf",
+          "sourceDocument": null
+        },
+        {
+          "title": "Clipper-Duet-manual-19.pdf",
+          "sourceDocument": null
+        }
+      ]
+    }
+  ]
+}

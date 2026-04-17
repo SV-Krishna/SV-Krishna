@@ -3,11 +3,23 @@ import assert from "node:assert/strict";
 import { loadConfig } from "../config";
 
 test("loadConfig returns expected default service topology", () => {
+  delete process.env.NODE_ENV;
   delete process.env.OLLAMA_ENDPOINT;
   delete process.env.WHISPER_ENDPOINT;
   delete process.env.PIPER_ENDPOINT;
   delete process.env.ENABLE_WHISPER_HTTP;
   delete process.env.ENABLE_PIPER_HTTP;
+  delete process.env.ENABLE_WEB_UI;
+  delete process.env.WEB_UI_HOST;
+  delete process.env.WEB_UI_PORT;
+  delete process.env.ENABLE_EMBEDDING_POC;
+  delete process.env.EMBEDDING_MODEL;
+  delete process.env.EMBEDDING_STORE_PATH;
+  delete process.env.EMBEDDING_TOP_K;
+  delete process.env.PUSH_TO_TALK_KEY;
+  delete process.env.AUDIO_INPUT_DEVICE;
+  delete process.env.AUDIO_OUTPUT_DEVICE;
+  delete process.env.AUDIO_WORK_DIR;
   delete process.env.AUDIO_RECORD_SECONDS;
   delete process.env.AUDIO_SAMPLE_RATE;
   delete process.env.ENABLE_AUDIO_PLAYBACK_DEBUG;
@@ -20,11 +32,16 @@ test("loadConfig returns expected default service topology", () => {
   delete process.env.RAG_CHUNK_OVERLAP;
   delete process.env.RAG_TOP_K;
   delete process.env.RAG_EXTRACTOR_PYTHON;
+  delete process.env.RAG_EXTRACTOR_MODE;
   delete process.env.OLLAMA_SYSTEM_PROMPT;
+  delete process.env.RELAY_CONTROL_ENABLED;
+  delete process.env.RELAY_BASE_URL;
+  delete process.env.RELAY_REQUIRE_CONFIRMATION;
   delete process.env.PIPER_BINARY_PATH;
   delete process.env.PIPER_MODEL_PATH;
 
   const config = loadConfig();
+  assert.equal(config.nodeEnv, "development");
   assert.equal(config.services.length, 3);
   assert.equal(config.services[0]?.name, "ollama");
   assert.equal(config.services[0]?.enabled, true);
@@ -32,19 +49,34 @@ test("loadConfig returns expected default service topology", () => {
   assert.equal(config.services[1]?.enabled, true);
   assert.equal(config.services[2]?.name, "piper");
   assert.equal(config.services[2]?.enabled, false);
+  assert.equal(config.enableWebUi, true);
+  assert.equal(config.webUiHost, "0.0.0.0");
+  assert.equal(config.webUiPort, 8080);
+  assert.equal(config.enableEmbeddingPoc, false);
+  assert.equal(config.embeddingModel, "all-minilm:33m");
+  assert.equal(
+    config.embeddingStorePath,
+    `${process.cwd()}/local/svkrishna/rag/embeddings.json`,
+  );
+  assert.equal(config.embeddingTopK, 3);
+  assert.equal(config.audioWorkDir, `${process.cwd()}/local/svkrishna/audio`);
   assert.equal(config.audioRecordSeconds, 5);
   assert.equal(config.audioSampleRate, 16000);
   assert.equal(config.enableAudioPlaybackDebug, false);
   assert.equal(config.whisperLanguage, "en");
   assert.equal(config.enableTts, true);
   assert.equal(config.enableRag, true);
-  assert.equal(config.ragSourceDir, "/opt/svkrishna/rag/inbox");
-  assert.equal(config.ragStorePath, "/opt/svkrishna/rag/store.json");
+  assert.equal(config.ragSourceDir, `${process.cwd()}/local/svkrishna/rag/inbox`);
+  assert.equal(config.ragStorePath, `${process.cwd()}/local/svkrishna/rag/store.json`);
   assert.equal(config.ragChunkSize, 120);
   assert.equal(config.ragChunkOverlap, 30);
-  assert.equal(config.ragTopK, 4);
+  assert.equal(config.ragTopK, 3);
   assert.equal(config.ragExtractorPython, "python3");
+  assert.equal(config.ragExtractorMode, "pypdf");
   assert.match(config.ollamaSystemPrompt, /offline boat assistant/i);
+  assert.equal(config.relayControlEnabled, false);
+  assert.equal(config.relayBaseUrl, "http://192.168.4.1");
+  assert.equal(config.relayRequireConfirmation, true);
   assert.equal(config.piperBinaryPath, "piper");
   assert.equal(config.piperModelPath, "/path/to/piper/voice/model.onnx");
 });

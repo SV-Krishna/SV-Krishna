@@ -1,0 +1,43 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: svkrishna-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./ollama:/root/.ollama
+    restart: unless-stopped
+
+  anythingllm:
+    image: mintplexlabs/anythingllm:latest
+    container_name: svkrishna-anythingllm
+    depends_on:
+      - ollama
+    ports:
+      - "3001:3001"
+    cap_add:
+      - SYS_ADMIN
+    environment:
+      - STORAGE_DIR=/app/server/storage
+      - DISABLE_TELEMETRY=true
+      # Developer API authentication token (used as Bearer token for /api/v1/* endpoints).
+      - AUTH_TOKEN=svkrishna-local-api-token
+      # LLM (Ollama)
+      - LLM_PROVIDER=ollama
+      - OLLAMA_BASE_PATH=http://ollama:11434
+      - OLLAMA_MODEL_PREF=gemma3:4b
+      - OLLAMA_MODEL_TOKEN_LIMIT=4096
+      # Embeddings (Ollama)
+      - EMBEDDING_ENGINE=ollama
+      - EMBEDDING_BASE_PATH=http://ollama:11434
+      - EMBEDDING_MODEL_PREF=nomic-embed-text:latest
+      - EMBEDDING_MODEL_MAX_CHUNK_LENGTH=8192
+      # Vector DB (default)
+      - VECTOR_DB=lancedb
+      # App security defaults
+      - JWT_SECRET=svkrishna-dev-change-me-please-32-chars-min
+      - PASSWORDMINCHAR=8
+    volumes:
+      - ./storage:/app/server/storage
+      - ./storage/.env:/app/server/.env
+    restart: unless-stopped

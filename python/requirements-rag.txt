@@ -1,1 +1,2 @@
 pypdf==5.4.0
+cryptography>=44.0.0

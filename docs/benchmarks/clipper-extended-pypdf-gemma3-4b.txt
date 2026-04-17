@@ -1,0 +1,294 @@
+=== CLIPPER EXTENDED BENCHMARK ===
+extractor=pypdf model=gemma3:4b embed_model=nomic-embed-text:latest
+source_dir=/tmp/clipper-only-inbox
+rag_store=/tmp/clipper-extended-pypdf/store.json
+embedding_store=/tmp/clipper-extended-pypdf/embeddings.json
+
+Indexing timings (first run / cold store):
+  index.lexical=0.19s
+  index.embedding=12.61s
+  index.hybrid=0.01s
+  index.chat=0.00s
+
+--- BASELINE ---
+According to the Clipper Duet manual, what does the depth display show?
+
+[lexical] retrieval=0.01s answer=40.85s
+  - clipper-duet.pdf p.1 score=96.000 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=89.000 heading=OFFSET The Echo Sounder measures the depth from the transducer to the seabed.
+  - clipper-duet.pdf p.1 score=85.000 heading=INTRODUCTION The Clipper Duet is a combined log and depth sounder.
+  reply: The Echo Sounder measures the depth from the transducer to the seabed.  Sources: [2] Page 1
+
+[embedding] retrieval=0.15s answer=0.00s
+  - clipper-duet.pdf p.1 score=0.704 heading=OFFSET The Echo Sounder measures the depth from the transducer to the seabed.
+  - clipper-duet.pdf p.1 score=0.672 heading=instrument it will show the depth and boat speed.
+  - clipper-duet.pdf p.1 score=0.668 heading=INTRODUCTION The Clipper Duet is a combined log and depth sounder.
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.11s answer=19.39s
+  - clipper-duet.pdf p.1 score=66.300 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=62.201 heading=To arm the alarm press TRIP and TOTAL simultaneously.
+  - clipper-duet.pdf p.1 score=59.700 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  reply: The Echo Sounder measures the depth from the transducer to the seabed. If the craft has a keel it is often more convenient to show the depth from the keel to the seabed. Sources: [2], 1
+
+--- BASELINE ---
+According to the Clipper Duet manual, how do you change the shallow alarm setting?
+
+[lexical] retrieval=0.00s answer=15.82s
+  - clipper-duet.pdf p.1 score=95.000 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=82.000 heading=INTRODUCTION The Clipper Duet is a combined log and depth sounder.
+  - clipper-duet.pdf p.1 score=76.000 heading=To arm the alarm press TRIP and TOTAL simultaneously.
+  reply: To set the minimum depth alarm, press TRIP and TOTAL simultaneously. The display will briefly show CON to confirm the operation and then return to the SET ENG display. Sources: [1], page 9
+
+[embedding] retrieval=0.15s answer=0.00s
+  - clipper-duet.pdf p.1 score=0.737 heading=power to the instrument on.
+  - clipper-duet.pdf p.1 score=0.729 heading=alarm decrement the value to zero where upon the display will show OFF).
+  - clipper-duet.pdf p.1 score=0.729 heading=To arm the alarm press TRIP and TOTAL simultaneously.
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.11s answer=17.39s
+  - clipper-duet.pdf p.1 score=65.862 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=58.062 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=55.172 heading=To arm the alarm press TRIP and TOTAL simultaneously.
+  reply: To set the minimum depth alarm, press TRIP and TOTAL simultaneously. The display will briefly show CON to confirm the operation and then return to the SET ENG display. Sources: [2], Page 1
+
+--- BASELINE ---
+According to the Clipper Duet manual, what power supply voltage does the instrument use?
+
+[lexical] retrieval=0.01s answer=14.40s
+  - clipper-duet.pdf p.1 score=89.000 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=78.000 heading=power to the instrument on.
+  - clipper-duet.pdf p.1 score=76.000 heading=INTRODUCTION The Clipper Duet is a combined log and depth sounder.
+  reply: The manual states: “The Clipper Duet is a combined log and depth sounder. It is supplied complete with paddlewheel unit, transducer, and alarm bleeper.” [3] It does not specify the power supply voltage.  Sources: clipper-duet.pdf, 1
+
+[embedding] retrieval=0.13s answer=0.00s
+  - clipper-duet.pdf p.1 score=0.677 heading=the panel 87mm wide and 67mm high.
+  - clipper-duet.pdf p.1 score=0.653 heading=power to the instrument on.
+  - clipper-duet.pdf p.1 score=0.644 heading=alarm decrement the value to zero where upon the display will show OFF).
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.13s answer=12.65s
+  - clipper-duet.pdf p.1 score=61.904 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=55.865 heading=alarm decrement the value to zero where upon the display will show OFF).
+  - clipper-duet.pdf p.1 score=54.104 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  reply: The manual does not state the power supply voltage.  Sources: [1], [2], [3]
+
+--- NEW ---
+According to the Clipper Duet manual, what does the display show when the echo is completely lost?
+
+[lexical] retrieval=0.01s answer=25.24s
+  - clipper-duet.pdf p.1 score=104.000 heading=instrument it will show the depth and boat speed.
+  - clipper-duet.pdf p.1 score=100.000 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=89.000 heading=depth at all times.
+  reply: The display will show OUT.  Sources: [2], Page 7
+
+[embedding] retrieval=0.17s answer=0.00s
+  - clipper-duet.pdf p.1 score=0.686 heading=instrument it will show the depth and boat speed.
+  - clipper-duet.pdf p.1 score=0.676 heading=is low for echoes between 0 and 2 metres.
+  - clipper-duet.pdf p.1 score=0.663 heading=depth at all times.
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.14s answer=8.91s
+  - clipper-duet.pdf p.1 score=71.614 heading=instrument it will show the depth and boat speed.
+  - clipper-duet.pdf p.1 score=68.264 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=62.614 heading=instrument it will show the depth and boat speed.
+  reply: The display will show OUT.  Sources: [2], Pages: 7
+
+--- NEW ---
+According to the Clipper Duet manual, how do you turn the display backlight on and off?
+
+[lexical] retrieval=0.01s answer=28.86s
+  - clipper-duet.pdf p.1 score=95.000 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=94.000 heading=alarm decrement the value to zero where upon the display will show OFF).
+  - clipper-duet.pdf p.1 score=89.000 heading=instrument it will show the depth and boat speed.
+  reply: To turn the display backlight on, press the ILLUM key. To turn it off, the display will show OFF.  Sources: [2], Page 1
+
+[embedding] retrieval=0.14s answer=0.00s
+  - clipper-duet.pdf p.1 score=0.620 heading=power to the instrument on.
+  - clipper-duet.pdf p.1 score=0.600 heading=to decrement and TOTAL to increment this value.
+  - clipper-duet.pdf p.1 score=0.599 heading=alarm decrement the value to zero where upon the display will show OFF).
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.15s answer=35.08s
+  - clipper-duet.pdf p.1 score=65.096 heading=alarm decrement the value to zero where upon the display will show OFF).
+  - clipper-duet.pdf p.1 score=64.963 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=61.957 heading=instrument it will show the depth and boat speed.
+  reply: To turn on the display backlight, press the ILLUM key.   Sources: [1], Page 1
+
+--- NEW ---
+According to the Clipper Duet manual, what are the panel cutout dimensions for installing the display?
+
+[lexical] retrieval=0.01s answer=32.91s
+  - clipper-duet.pdf p.1 score=99.000 heading=INTRODUCTION The Clipper Duet is a combined log and depth sounder.
+  - clipper-duet.pdf p.1 score=97.000 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=76.000 heading=the panel to prevent water getting behind the unit and entering the cavity behind the p...
+  reply: The manual does not specify panel cutout dimensions. It states: “Select a convenient position for the display on a panel or bulkhead.” and “The site must be flat and the cavity behind the panel must remain dry at all times.”  Sources: clipper-duet.pdf, Page 1
+
+[embedding] retrieval=0.11s answer=0.00s
+  - clipper-duet.pdf p.1 score=0.638 heading=the panel 87mm wide and 67mm high.
+  - clipper-duet.pdf p.1 score=0.624 heading=the wing nut from the rear of the instrument and remove the stainless steel clamping br...
+  - clipper-duet.pdf p.1 score=0.621 heading=INTRODUCTION The Clipper Duet is a combined log and depth sounder.
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.15s answer=37.60s
+  - clipper-duet.pdf p.1 score=67.289 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=66.089 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=54.441 heading=the wing nut from the rear of the instrument and remove the stainless steel clamping br...
+  reply: The manual does not specify panel cutout dimensions. It states: “Select a convenient position for the display on a panel or bulkhead. The site must be flat and the cavity behind the panel must remain dry at all times.”  Sources: [1], Page 1
+
+--- NEW ---
+According to the Clipper Duet manual, which wire connects to negative and which to positive?
+
+[lexical] retrieval=0.01s answer=29.76s
+  - clipper-duet.pdf p.1 score=94.000 heading=INTRODUCTION The Clipper Duet is a combined log and depth sounder.
+  - clipper-duet.pdf p.1 score=79.000 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=77.000 heading=the panel 87mm wide and 67mm high.
+  reply: The black wire connects to negative, and the red wire connects to positive.  Sources: [1], [3]
+
+[embedding] retrieval=0.16s answer=0.00s
+  - clipper-duet.pdf p.1 score=0.630 heading=the panel 87mm wide and 67mm high.
+  - clipper-duet.pdf p.1 score=0.617 heading=In Hull Kit is available direct from NASA Marine or your local chandler.
+  - clipper-duet.pdf p.1 score=0.591 heading=the wing nut from the rear of the instrument and remove the stainless steel clamping br...
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.13s answer=8.72s
+  - clipper-duet.pdf p.1 score=64.995 heading=INTRODUCTION The Clipper Duet is a combined log and depth sounder.
+  - clipper-duet.pdf p.1 score=55.366 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=54.795 heading=INTRODUCTION The Clipper Duet is a combined log and depth sounder.
+  reply: The black wire connects to negative and the red wire connects to positive.  Sources: [1], Page 1; [3], Page 1
+
+--- NEW ---
+According to the Clipper Duet manual, what fuse rating is suggested for the power supply?
+
+[lexical] retrieval=0.00s answer=31.64s
+  - clipper-duet.pdf p.1 score=79.000 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=76.000 heading=INTRODUCTION The Clipper Duet is a combined log and depth sounder.
+  - clipper-duet.pdf p.1 score=67.000 heading=alarm decrement the value to zero where upon the display will show OFF).
+  reply: The manual does not specify a suggested fuse rating for the power supply.  Sources: [2] Page 1
+
+[embedding] retrieval=0.23s answer=0.00s
+  - clipper-duet.pdf p.1 score=0.683 heading=the panel 87mm wide and 67mm high.
+  - clipper-duet.pdf p.1 score=0.608 heading=the configuration mode.
+  - clipper-duet.pdf p.1 score=0.592 heading=to decrement and TOTAL to increment this value.
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.16s answer=19.36s
+  - clipper-duet.pdf p.1 score=55.553 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=53.753 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=48.916 heading=alarm decrement the value to zero where upon the display will show OFF).
+  reply: The manual does not specify a suggested fuse rating for the power supply.  Sources: [2] Page 1
+
+--- NEW ---
+According to the Clipper Duet manual, how do you enter configuration mode?
+
+[lexical] retrieval=0.01s answer=20.63s
+  - clipper-duet.pdf p.1 score=85.000 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=80.000 heading=to decrement and TOTAL to increment this value.
+  - clipper-duet.pdf p.1 score=78.000 heading=alarm decrement the value to zero where upon the display will show OFF).
+  reply: To enter configuration mode:  1.  Turn the power off. 2.  Keep the ILLUM key depressed. 3.  Turn the power on. 4.  Release the ILLUM key. The display will show SET ENG.  Sources: [2], Page 1
+
+[embedding] retrieval=0.12s answer=0.00s
+  - clipper-duet.pdf p.1 score=0.671 heading=to decrement and TOTAL to increment this value.
+  - clipper-duet.pdf p.1 score=0.668 heading=the configuration mode.
+  - clipper-duet.pdf p.1 score=0.628 heading=power to the instrument on.
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.21s answer=18.12s
+  - clipper-duet.pdf p.1 score=58.702 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=56.511 heading=To arm the alarm press TRIP and TOTAL simultaneously.
+  - clipper-duet.pdf p.1 score=55.633 heading=alarm decrement the value to zero where upon the display will show OFF).
+  reply: To enter configuration mode:  1.  Turn the power off. 2.  Keep the ILLUM key depressed. 3.  Turn the power on. 4.  When the key is released, the display will show SET ENG.  Sources: [2], [3]
+
+--- NEW ---
+According to the Clipper Duet manual, how do you disable the speed alarm?
+
+[lexical] retrieval=0.01s answer=15.76s
+  - clipper-duet.pdf p.1 score=101.000 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=86.000 heading=of the depth sounder in two ways: (a) Through the craft’s common power supply or (b) Th...
+  - clipper-duet.pdf p.1 score=82.000 heading=INTRODUCTION The Clipper Duet is a combined log and depth sounder.
+  reply: Decrement the value to zero. Upon doing so, the display will show OFF.  Sources: [2], Page 1
+
+[embedding] retrieval=0.14s answer=0.00s
+  - clipper-duet.pdf p.1 score=0.712 heading=alarm decrement the value to zero where upon the display will show OFF).
+  - clipper-duet.pdf p.1 score=0.688 heading=of the depth sounder in two ways: (a) Through the craft’s common power supply or (b) Th...
+  - clipper-duet.pdf p.1 score=0.675 heading=To arm the alarm press TRIP and TOTAL simultaneously.
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.18s answer=12.33s
+  - clipper-duet.pdf p.1 score=68.985 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=61.128 heading=of the depth sounder in two ways: (a) Through the craft’s common power supply or (b) Th...
+  - clipper-duet.pdf p.1 score=57.585 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  reply: To disable the speed alarm, set the value to zero. This will display “OFF” on the display.  Sources: [2] Pages: 1
+
+--- NEW ---
+According to the Clipper Duet manual, how do you arm and then disable the minimum depth alarm without changing the setting?
+
+[lexical] retrieval=0.01s answer=17.82s
+  - clipper-duet.pdf p.1 score=136.000 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=112.000 heading=To arm the alarm press TRIP and TOTAL simultaneously.
+  - clipper-duet.pdf p.1 score=108.000 heading=power to the instrument on.
+  reply: To arm the minimum depth alarm, press TRIP and TOTAL simultaneously. To disable the alarm without changing the setting, press TRIP and TOTAL simultaneously a second time.  Sources: [2], Page 9
+
+[embedding] retrieval=0.12s answer=0.00s
+  - clipper-duet.pdf p.1 score=0.784 heading=To arm the alarm press TRIP and TOTAL simultaneously.
+  - clipper-duet.pdf p.1 score=0.782 heading=power to the instrument on.
+  - clipper-duet.pdf p.1 score=0.724 heading=of the depth sounder in two ways: (a) Through the craft’s common power supply or (b) Th...
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.12s answer=4.56s
+  - clipper-duet.pdf p.1 score=90.668 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=77.106 heading=To arm the alarm press TRIP and TOTAL simultaneously.
+  - clipper-duet.pdf p.1 score=74.889 heading=power to the instrument on.
+  reply: To arm the depth alarm, press TRIP and TOTAL simultaneously. To disable the alarm without altering the setting, press TRIP and TOTAL simultaneously a second time.  Sources: [2] Page 9
+
+--- NEW ---
+According to the Clipper Duet manual, what are the three mounting options for the echo sounder transducer?
+
+[lexical] retrieval=0.01s answer=14.27s
+  - clipper-duet.pdf p.1 score=109.000 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=94.000 heading=Hole for paddle wheel unit NOT TO SCALE INSTALLING THE ECHO SOUNDER TRANSDUCER The tran...
+  - clipper-duet.pdf p.1 score=91.000 heading=INTRODUCTION The Clipper Duet is a combined log and depth sounder.
+  reply: The transducer can be mounted in one of three ways: (i) (ii) (iii).  Sources: clipper-duet.pdf, Page 1, Section clipper > Alarm > Power
+
+[embedding] retrieval=0.16s answer=0.00s
+  - clipper-duet.pdf p.1 score=0.672 heading=of the hull (it may be necessary to remove dirt and oily residue first).
+  - clipper-duet.pdf p.1 score=0.667 heading=mounting must be kept entirely free of any antifouling compound as this can also effect...
+  - clipper-duet.pdf p.1 score=0.664 heading=Hole for paddle wheel unit NOT TO SCALE INSTALLING THE ECHO SOUNDER TRANSDUCER The tran...
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.16s answer=14.59s
+  - clipper-duet.pdf p.1 score=74.183 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=65.088 heading=the vessel's speed through the water.
+  - clipper-duet.pdf p.1 score=63.383 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  reply: The transducer can be mounted in one of three ways: (i) (ii) (iii).  Sources: [2], Page 1
+
+--- NEW ---
+According to the Clipper Duet manual, how is external electrical interference characterised on the display?
+
+[lexical] retrieval=0.01s answer=20.19s
+  - clipper-duet.pdf p.1 score=111.000 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=94.000 heading=depth at all times.
+  - clipper-duet.pdf p.1 score=82.000 heading=INTRODUCTION The Clipper Duet is a combined log and depth sounder.
+  reply: Persistent, random numbers on the display which obscure the true depth reading on the depth sounder.  Sources: [2], Page 1
+
+[embedding] retrieval=0.16s answer=0.00s
+  - clipper-duet.pdf p.1 score=0.698 heading=depth at all times.
+  - clipper-duet.pdf p.1 score=0.635 heading=THE GAIN THRESHOLD The Echo Sounder emits a high frequency pulse which bounces off the...
+  - clipper-duet.pdf p.1 score=0.621 heading=In Hull Kit is available direct from NASA Marine or your local chandler.
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.16s answer=22.32s
+  - clipper-duet.pdf p.1 score=74.650 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=64.978 heading=instrument it will show the depth and boat speed.
+  - clipper-duet.pdf p.1 score=57.250 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  reply: Persistent, random numbers on the display which obscure the true depth reading on the depth sounder.  Sources: [2], Page 1
+
+Averages (all 13 questions):
+  lexical: retrieval_avg=0.01s answer_avg=23.70s
+  embedding: retrieval_avg=0.15s answer_avg=0.00s
+  hybrid: retrieval_avg=0.15s answer_avg=17.77s
+
+Averages (new 10 questions only):
+  lexical: retrieval_avg=0.01s answer_avg=23.71s
+  embedding: retrieval_avg=0.15s answer_avg=0.00s
+  hybrid: retrieval_avg=0.16s answer_avg=18.16s

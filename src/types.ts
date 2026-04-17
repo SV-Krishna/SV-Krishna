@@ -9,6 +9,13 @@ export interface ServiceEndpoint {
 export interface AppConfig {
   nodeEnv: string;
   logLevel: LogLevel;
+  enableWebUi: boolean;
+  webUiHost: string;
+  webUiPort: number;
+  enableEmbeddingPoc: boolean;
+  embeddingModel: string;
+  embeddingStorePath: string;
+  embeddingTopK: number;
   pushToTalkKey: string;
   audioInputDevice: string;
   audioOutputDevice: string;
@@ -25,8 +32,12 @@ export interface AppConfig {
   ragChunkOverlap: number;
   ragTopK: number;
   ragExtractorPython: string;
+  ragExtractorMode: "pypdf" | "docling" | "opendataloader";
   ollamaModel: string;
   ollamaSystemPrompt: string;
+  relayControlEnabled: boolean;
+  relayBaseUrl: string;
+  relayRequireConfirmation: boolean;
   piperBinaryPath: string;
   piperModelPath: string;
   services: ServiceEndpoint[];
@@ -47,15 +58,35 @@ export interface PreflightCheck {
 
 export interface RagChunk {
   id: string;
+  docKey: string;
   source: string;
   text: string;
   tokens: string[];
+  pageStart: number;
+  pageEnd: number;
+  heading?: string;
+  sectionPath: string[];
 }
 
 export interface RagSearchResult {
+  docKey?: string;
   source: string;
   text: string;
   score: number;
+  pageStart: number;
+  pageEnd: number;
+  heading?: string;
+  sectionPath?: string[];
+}
+
+export interface ChatResponse {
+  reply: string;
+  sources: RagSearchResult[];
+}
+
+export interface EmbeddingRecord {
+  chunkId: string;
+  vector: number[];
 }
 
 export type ControllerState =

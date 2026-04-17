@@ -1,0 +1,130 @@
+
+> sv-krishna@0.1.0 benchmark:rag
+> npm run build --silent && node dist/scripts/benchmarkRag.js
+
+
+=== BUKH ===
+Where is the fuel injection pump described in the BUKH DV20 manual?
+
+[lexical] retrieval=0.05s answer=50.38s
+  - bukh-dv20.pdf p.unknown score=87.000 heading=Testing of BRYCE Fuel Pumps
+  - bukh-dv20.pdf p.unknown score=84.000 heading=Exchange of Fuel Filter Element
+  - bukh-dv20.pdf p.unknown score=82.000 heading=Exchange of Fuel Filter Element
+  reply: The fuel injection pump is described in Section bukh > Testing of BRYCE Fuel Pumps.  Sources: bukh-dv20.pdf, unknown pages
+
+[embedding] retrieval=0.20s answer=0.00s
+  - bukh-dv20.pdf p.unknown score=0.740 heading=Exchange of Fuel Filter Element
+  - bukh-dv20.pdf p.unknown score=0.735 heading=Fuel System
+  - bukh-dv20.pdf p.unknown score=0.731 heading=Repair of Fuel Lift Pump Type AC-DELCO
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.58s answer=4.94s
+  - bukh-dv20.pdf p.unknown score=60.783 heading=Testing of BRYCE Fuel Pumps
+  - bukh-dv20.pdf p.unknown score=60.039 heading=Exchange of Fuel Filter Element
+  - bukh-dv20.pdf p.unknown score=58.678 heading=Exchange of Fuel Filter Element
+  reply: The fuel injection pump is described in Section bukh > Testing of BRYCE Fuel Pumps.  Sources: bukh-dv20.pdf, unknown pages
+
+=== BUKH ===
+What should be checked before dismantling the fuel injection pump on the BUKH DV20?
+
+[lexical] retrieval=0.03s answer=28.87s
+  - bukh-dv20.pdf p.unknown score=97.000 heading=The function of the fuel valve
+  - bukh-dv20.pdf p.unknown score=91.000 heading=Adjustment of Injection Timing
+  - bukh-dv20.pdf p.unknown score=85.000 heading=Assembling of the Pump
+  reply: Before dismantling the fuel injection pump on the BUKH DV20, observe the greatest cleanliness, and all parts must be cleaned carefully in pure fuel. Furthermore, the pump must be assembled according to the marks on the various pump parts.  Sources: bukh-dv20.pdf, Page: unknown, Section path: bukh > Assembling of the Pump
+
+[embedding] retrieval=0.20s answer=0.00s
+  - bukh-dv20.pdf p.unknown score=0.764 heading=Testing of BRYCE Fuel Pumps
+  - bukh-dv20.pdf p.unknown score=0.762 heading=Disassemblyof Fuel Pumps
+  - bukh-dv20.pdf p.unknown score=0.741 heading=Reassembly of Fuel Pumps
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.58s answer=9.29s
+  - bukh-dv20.pdf p.unknown score=67.320 heading=The function of the fuel valve
+  - bukh-dv20.pdf p.unknown score=63.595 heading=Adjustment of Injection Timing
+  - bukh-dv20.pdf p.unknown score=60.517 heading=Assembling of the Pump
+  reply: According to bukh-dv20.pdf, page [unknown], “When assembling the fuel pump observe the greatest cleanliness, and all parts must be cleaned carefully in pure fuel. Furthermore, the pump must be assembled according to the marks on the various pump parts.”  Sources: bukh-dv20.pdf, [unknown]
+
+=== BUKH ===
+What is the tightening torque for the cylinder head nuts on the BUKH DV20?
+
+[lexical] retrieval=0.04s answer=25.34s
+  - bukh-dv20.pdf p.unknown score=86.000 heading=Cylinder Head Gasket
+  - bukh-dv20.pdf p.unknown score=82.000 heading=Cylinder Head Gasket
+  - bukh-dv20.pdf p.unknown score=78.000 heading=Mountingof Cylinder Head
+  reply: The tightening torque for the cylinder head is specified in the excerpt. It is indicated as a formula-not-decoded. Further information is missing.  Sources: bukh-dv20.pdf, Section: Mountingof Cylinder Head, Page: unknown
+
+[embedding] retrieval=0.18s answer=0.00s
+  - bukh-dv20.pdf p.unknown score=0.728 heading=Check of Injection Timer
+  - bukh-dv20.pdf p.unknown score=0.725 heading=3.Testing with Nozzle Tester
+  - bukh-dv20.pdf p.unknown score=0.720 heading=MountingofManualGovernor
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.63s answer=3.60s
+  - bukh-dv20.pdf p.unknown score=61.147 heading=Cylinder Head Gasket
+  - bukh-dv20.pdf p.unknown score=58.552 heading=Cylinder Head Gasket
+  - bukh-dv20.pdf p.unknown score=56.362 heading=Mountingof Cylinder Head
+  reply: The tightening torque for the cylinder head is not specified in the provided excerpts.   Sources: [2] pages unknown
+
+=== CLIPPER ===
+According to the Clipper Duet manual, what does the depth display show?
+
+[lexical] retrieval=0.04s answer=21.71s
+  - clipper-duet.pdf p.unknown score=86.000 heading=SETTING THE KEEL OFFSET
+  - clipper-duet.pdf p.unknown score=83.000 heading=TO SELECT THE OPERATING UNITS
+  - clipper-duet.pdf p.unknown score=80.000 heading=USING THE INSTRUMENT
+  reply: The depth display shows the depth and boat speed. Sources: [3], Page unknown
+
+[embedding] retrieval=0.26s answer=0.00s
+  - clipper-duet.pdf p.unknown score=0.702 heading=SETTING THE KEEL OFFSET
+  - clipper-duet.pdf p.unknown score=0.698 heading=TO SELECT THE OPERATING UNITS
+  - clipper-duet.pdf p.unknown score=0.672 heading=USING THE INSTRUMENT
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.57s answer=2.72s
+  - clipper-duet.pdf p.unknown score=60.914 heading=SETTING THE KEEL OFFSET
+  - clipper-duet.pdf p.unknown score=59.087 heading=TO SELECT THE OPERATING UNITS
+  - clipper-duet.pdf p.unknown score=56.996 heading=USING THE INSTRUMENT
+  reply: The depth display shows the depth and boat speed.  Sources: [3], Page unknown
+
+=== CLIPPER ===
+According to the Clipper Duet manual, how do you change the shallow alarm setting?
+
+[lexical] retrieval=0.04s answer=18.52s
+  - clipper-duet.pdf p.unknown score=73.000 heading=INTRODUCTION
+  - clipper-duet.pdf p.unknown score=72.000 heading=SETTING THE MINIMUM DEPTH ALARM
+  - clipper-duet.pdf p.unknown score=67.000 heading=SETTING THE SPEED ALARM
+  reply: Use TRIP to decrement the setting and TOTAL to increment the setting. When the required minimum depth setting has been selected press SPEED.  Sources: [2] Pages: unknown
+
+[embedding] retrieval=0.16s answer=0.00s
+  - clipper-duet.pdf p.unknown score=0.750 heading=SETTING THE MINIMUM DEPTH ALARM
+  - clipper-duet.pdf p.unknown score=0.658 heading=SETTING THE SPEED ALARM
+  - clipper-duet.pdf p.unknown score=0.640 heading=CHANGING THE OPERATION CONFIGURATION
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.42s answer=19.49s
+  - clipper-duet.pdf p.unknown score=52.997 heading=SETTING THE MINIMUM DEPTH ALARM
+  - clipper-duet.pdf p.unknown score=52.479 heading=INTRODUCTION
+  - clipper-duet.pdf p.unknown score=49.446 heading=SETTING THE SPEED ALARM
+  reply: Use TRIP to decrement the setting and TOTAL to increment the setting. When the required minimum depth setting has been selected press SPEED.  Sources: [1] clipper-duet.pdf, Section: SETTING THE MINIMUM DEPTH ALARM, Page: unknown
+
+=== CLIPPER ===
+According to the Clipper Duet manual, what power supply voltage does the instrument use?
+
+[lexical] retrieval=0.06s answer=26.52s
+  - clipper-duet.pdf p.unknown score=74.000 heading=USING THE INSTRUMENT
+  - clipper-duet.pdf p.unknown score=73.000 heading=CHANGING THE OPERATION CONFIGURATION
+  - clipper-duet.pdf p.unknown score=72.000 heading=NOTES ON ELECTRICAL INTERFERENCE
+  reply: The manual does not specify the power supply voltage.  Sources: None
+
+[embedding] retrieval=0.19s answer=0.00s
+  - bukh-dv20.pdf p.unknown score=0.671 heading=Checking ofVoltage Relay
+  - bukh-dv20.pdf p.unknown score=0.670 heading=VoltageRelay-TypeTl4V
+  - clipper-duet.pdf p.unknown score=0.668 heading=CHANGING THE OPERATION CONFIGURATION
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.56s answer=2.22s
+  - clipper-duet.pdf p.unknown score=53.260 heading=USING THE INSTRUMENT
+  - clipper-duet.pdf p.unknown score=52.909 heading=CHANGING THE OPERATION CONFIGURATION
+  - clipper-duet.pdf p.unknown score=52.086 heading=NOTES ON ELECTRICAL INTERFERENCE
+  reply: The manual does not specify the power supply voltage.  Sources: None

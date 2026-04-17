@@ -5,22 +5,49 @@ The controller can augment prompts with locally indexed PDF content.
 ## How it works
 
 1. Copy PDF files into the configured inbox folder.
-2. The controller extracts text from each PDF, splits it into overlapping chunks, and writes a local JSON store.
-3. When you ask a question, the controller retrieves the most relevant chunks and prepends them to the Ollama prompt.
+2. The controller extracts text from each PDF, splits it into chunks, and writes a local JSON store (`store.json`).
+3. (Optional) The controller embeds each chunk and writes an embedding store (`embeddings.json`).
+4. When you ask a question, the controller retrieves the most relevant chunks and prepends them to the Ollama prompt.
 
-This first implementation is intentionally simple:
+## Retrieval modes
 
-- offline only
-- file-based store
-- PDF text extraction via `pypdf`
-- lexical retrieval rather than vector embeddings
+The project supports three retrieval modes in benchmarks:
 
-That keeps it light enough for a Raspberry Pi while giving us a clear upgrade path to embeddings later.
+- `lexical` - keyword-based scoring over chunks
+- `embedding` - cosine similarity over all chunk vectors (note: the current answer pipeline intentionally refuses if sources are not "trusted")
+- `hybrid` - lexical candidate generation followed by embedding rerank (recommended baseline)
+
+## Extractors
+
+Text extraction is pluggable. Current extractor modes:
+
+- `pypdf` - fast, lightweight, but weak structure/heading retention on manuals
+- `docling` - best quality for structured PDFs/manuals (headings/sections), but heavy to run on a Raspberry Pi
+- `opendataloader` - Java-backed extraction, relatively fast, but ranking/synonym issues still need addressing
+
+## Recommended workflow (build machine -> Pi)
+
+Docling can be expensive on a Pi 5 for large manuals. The recommended workflow is:
+
+1. On a more powerful machine, run Docling extraction and build:
+   - `store.json`
+   - `embeddings.json` (using `nomic-embed-text:latest`)
+2. Copy the resulting PDFs + stores to the Pi.
+
+Important: the controller decides whether to rebuild by comparing the inbox PDF signature
+(`fileName + mtimeMs + size`) to what is recorded in `store.json`. If you copy PDFs to the Pi
+without preserving timestamps, it may try to re-extract on the Pi.
+
+Practical tips:
+
+- prefer `rsync -t` or `cp -p` to preserve modification times
+- if timestamps change anyway, update `store.json` document `mtimeMs` values to match the inbox on the target machine
 
 ## Default paths
 
 - inbox: `/opt/svkrishna/rag/inbox`
 - store: `/opt/svkrishna/rag/store.json`
+- embeddings: `/opt/svkrishna/rag/embeddings.json`
 
 ## Terminal controls
 
@@ -36,8 +63,16 @@ The controller also checks the inbox on demand and rebuilds automatically if the
 - `RAG_STORE_PATH=/opt/svkrishna/rag/store.json`
 - `RAG_CHUNK_SIZE=120`
 - `RAG_CHUNK_OVERLAP=30`
-- `RAG_TOP_K=4`
+- `RAG_TOP_K=3`
 - `RAG_EXTRACTOR_PYTHON=python3`
+- `RAG_EXTRACTOR_MODE=pypdf|docling|opendataloader`
+
+Embedding/hybrid configuration:
+
+- `ENABLE_EMBEDDING_POC=true`
+- `EMBEDDING_MODEL=nomic-embed-text:latest`
+- `EMBEDDING_STORE_PATH=/opt/svkrishna/rag/embeddings.json`
+- `EMBEDDING_TOP_K=3`
 
 ## Current boundary
 
@@ -49,4 +84,8 @@ This is retrieval-augmented prompting, not a full knowledge graph or agent frame
 - wiring notes
 - operating guides
 
-If the corpus grows or retrieval quality becomes weak, the next step is to add a local embedding model and switch to hybrid lexical + vector retrieval.
+If the corpus grows or retrieval quality becomes weak, the next step is to keep retrieval hybrid but improve:
+
+- ranking (synonyms/intent boosts for specs like voltage/torque)
+- section-aware scoring
+- optional document filters in the UI

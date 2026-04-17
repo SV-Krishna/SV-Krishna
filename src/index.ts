@@ -1,18 +1,31 @@
 import { loadConfig } from "./config";
 import { ControllerApp } from "./controller";
+import { WebServer } from "./web/webServer";
 
 const main = async (): Promise<void> => {
   const config = loadConfig();
   const controller = new ControllerApp(config);
+  const web = new WebServer(config, {
+    voice: {
+      runOnce: async () => await controller.runVoiceOnce(),
+      executeRelay: async (command) => await controller.executeRelay(command),
+    },
+  });
 
-  const shutdown = (): void => {
+  const shutdown = async (): Promise<void> => {
     controller.stop();
+    await web.stop();
   };
 
-  process.on("SIGINT", shutdown);
-  process.on("SIGTERM", shutdown);
+  process.on("SIGINT", () => {
+    void shutdown();
+  });
+  process.on("SIGTERM", () => {
+    void shutdown();
+  });
 
-  await controller.start();
+  await web.start();
+  await controller.start({ enableTerminalInput: process.stdin.isTTY });
 };
 
 main().catch((error) => {

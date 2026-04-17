@@ -1,0 +1,130 @@
+
+> sv-krishna@0.1.0 benchmark:rag
+> npm run build --silent && node dist/scripts/benchmarkRag.js
+
+
+=== BUKH ===
+Where is the fuel injection pump described in the BUKH DV20 manual?
+
+[lexical] retrieval=0.01s answer=33.50s
+  - bukh-dv20.pdf p.1 score=64.000 heading=L” measure, then calculate the thickness of the intermediate washer “V”, this washer be...
+  - bukh-dv20.pdf p.1 score=63.000 heading=set of gear-wheels.
+  - bukh-dv20.pdf p.1 score=58.000 heading=the bore.
+  reply: The BUKH DV20 manual does not describe the fuel injection pump.  Sources: None.
+
+[embedding] retrieval=0.41s answer=0.00s
+  - bukh-dv20.pdf p.1 score=0.604 heading=009W2228 Publ.
+  - bukh-dv20.pdf p.1 score=0.600 heading=used on DV24 has normally a reduction ratio of 3.0:1 for AHEAD and 2.36:1 for REVERSE.
+  - bukh-dv20.pdf p.1 score=0.597 heading=the dip stick and the locking ring at the end of the input shaft when fitted.
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.19s answer=2.60s
+  - bukh-dv20.pdf p.1 score=46.550 heading=L” measure, then calculate the thickness of the intermediate washer “V”, this washer be...
+  - bukh-dv20.pdf p.1 score=45.942 heading=set of gear-wheels.
+  - bukh-dv20.pdf p.1 score=42.897 heading=the bore.
+  reply: The BUKH DV20 manual does not describe the fuel injection pump.  Sources: None.
+
+=== BUKH ===
+What should be checked before dismantling the fuel injection pump on the BUKH DV20?
+
+[lexical] retrieval=0.01s answer=19.39s
+  - bukh-dv20.pdf p.1 score=73.000 heading=the diagram below.
+  - bukh-dv20.pdf p.1 score=70.000 heading=output shaft flange.
+  - bukh-dv20.pdf p.1 score=68.000 heading=by remo ving the bolts of the intermediate flange between the engine and gear.
+  reply: The excerpts do not contain information on checking the fuel injection pump before dismantling.  Sources: None.
+
+[embedding] retrieval=0.17s answer=0.00s
+  - clipper-duet.pdf p.1 score=0.654 heading=the panel to prevent water getting behind the unit and entering the cavity behind the p...
+  - clipper-duet.pdf p.1 score=0.650 heading=to confirm the operation and then return to the SET ENG display.
+  - clipper-duet.pdf p.1 score=0.644 heading=that a little silicone grease is smeared over the rubber O-ring to keep the unit free.
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.22s answer=20.61s
+  - bukh-dv20.pdf p.1 score=52.682 heading=3.
+  - bukh-dv20.pdf p.1 score=50.462 heading=without any problems in either cases.
+  - bukh-dv20.pdf p.1 score=49.359 heading=by remo ving the bolts of the intermediate flange between the engine and gear.
+  reply: The excerpts do not contain information about checking the fuel injection pump before dismantling.  Sources: None
+
+=== BUKH ===
+What is the tightening torque for the cylinder head nuts on the BUKH DV20?
+
+[lexical] retrieval=0.01s answer=38.22s
+  - bukh-dv20.pdf p.1 score=80.000 heading=the contact face Torque of hexagon nut M20x1.5 on output shaft on the input side 100 Nm...
+  - bukh-dv20.pdf p.1 score=75.000 heading=N (3.89±0.24 Kp) Depth measure Weight L = length of loaded spring P = spring power R7 0...
+  - bukh-dv20.pdf p.1 score=63.000 heading=and fit the tapered bearing outer collars with Loctite No.
+  reply: The contact face Torque of hexagon nut M20x1.5 on output shaft on the input side is 100 Nm (10 Kpm). Sources: [1] Pages: 1
+
+[embedding] retrieval=0.14s answer=0.00s
+  - bukh-dv20.pdf p.1 score=0.704 heading=after the pressing on.
+  - bukh-dv20.pdf p.1 score=0.689 heading=adjustments.
+  - bukh-dv20.pdf p.1 score=0.687 heading=N (3.89±0.24 Kp) Depth measure Weight L = length of loaded spring P = spring power R7 0...
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.20s answer=39.54s
+  - bukh-dv20.pdf p.1 score=57.220 heading=N (3.89±0.24 Kp) Depth measure Weight L = length of loaded spring P = spring power R7 0...
+  - bukh-dv20.pdf p.1 score=53.666 heading=Disc / plate clearance per disc clutch 0.9 – 1.0 mm Feeler gauge To be measured two pla...
+  - bukh-dv20.pdf p.1 score=46.673 heading=of Input Shaft Heat the tapered roller bearing inner collars to about 85°C and fit it w...
+  reply: The tightening torque for hexagon nut M20x1.5 on the output shaft on the input side is 100 Nm (10 Kpm). Sources: [1], Page 1
+
+=== CLIPPER ===
+According to the Clipper Duet manual, what does the depth display show?
+
+[lexical] retrieval=0.01s answer=28.85s
+  - clipper-duet.pdf p.1 score=96.000 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=89.000 heading=OFFSET The Echo Sounder measures the depth from the transducer to the seabed.
+  - clipper-duet.pdf p.1 score=85.000 heading=INTRODUCTION The Clipper Duet is a combined log and depth sounder.
+  reply: The Echo Sounder measures the depth from the transducer to the seabed. Sources: [2], Page 1
+
+[embedding] retrieval=0.14s answer=0.00s
+  - clipper-duet.pdf p.1 score=0.704 heading=OFFSET The Echo Sounder measures the depth from the transducer to the seabed.
+  - clipper-duet.pdf p.1 score=0.672 heading=instrument it will show the depth and boat speed.
+  - clipper-duet.pdf p.1 score=0.668 heading=INTRODUCTION The Clipper Duet is a combined log and depth sounder.
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.17s answer=19.64s
+  - clipper-duet.pdf p.1 score=66.300 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=62.201 heading=To arm the alarm press TRIP and TOTAL simultaneously.
+  - clipper-duet.pdf p.1 score=59.700 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  reply: The Echo Sounder measures the depth from the transducer to the seabed. If the craft has a keel it is often more convenient to show the depth from the keel to the seabed. Sources: [2], 1
+
+=== CLIPPER ===
+According to the Clipper Duet manual, how do you change the shallow alarm setting?
+
+[lexical] retrieval=0.01s answer=16.43s
+  - clipper-duet.pdf p.1 score=95.000 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=82.000 heading=INTRODUCTION The Clipper Duet is a combined log and depth sounder.
+  - clipper-duet.pdf p.1 score=76.000 heading=To arm the alarm press TRIP and TOTAL simultaneously.
+  reply: To set the minimum depth alarm, press TRIP and TOTAL simultaneously. The display will briefly show CON to confirm the operation and then return to the SET ENG display. Sources: [1], Page 9
+
+[embedding] retrieval=0.09s answer=0.00s
+  - clipper-duet.pdf p.1 score=0.737 heading=power to the instrument on.
+  - clipper-duet.pdf p.1 score=0.729 heading=alarm decrement the value to zero where upon the display will show OFF).
+  - clipper-duet.pdf p.1 score=0.729 heading=To arm the alarm press TRIP and TOTAL simultaneously.
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.24s answer=17.11s
+  - clipper-duet.pdf p.1 score=65.862 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=58.062 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=55.172 heading=To arm the alarm press TRIP and TOTAL simultaneously.
+  reply: To set the minimum depth alarm, press TRIP and TOTAL simultaneously. The display will briefly show CON to confirm the operation and then return to the SET ENG display. Sources: [2] p. 1
+
+=== CLIPPER ===
+According to the Clipper Duet manual, what power supply voltage does the instrument use?
+
+[lexical] retrieval=0.01s answer=13.82s
+  - clipper-duet.pdf p.1 score=89.000 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=78.000 heading=power to the instrument on.
+  - clipper-duet.pdf p.1 score=76.000 heading=INTRODUCTION The Clipper Duet is a combined log and depth sounder.
+  reply: The manual states: “The Clipper Duet is a combined log and depth sounder. It is supplied complete with paddlewheel unit, transducer, and alarm bleeper.”   It does not specify the power supply voltage.  Sources: [3], 1
+
+[embedding] retrieval=0.15s answer=0.00s
+  - clipper-duet.pdf p.1 score=0.677 heading=the panel 87mm wide and 67mm high.
+  - clipper-duet.pdf p.1 score=0.653 heading=power to the instrument on.
+  - clipper-duet.pdf p.1 score=0.644 heading=alarm decrement the value to zero where upon the display will show OFF).
+  reply: I could not find sufficiently relevant material in the indexed documents to answer that reliably.
+
+[hybrid] retrieval=0.17s answer=12.47s
+  - clipper-duet.pdf p.1 score=61.904 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  - clipper-duet.pdf p.1 score=55.865 heading=alarm decrement the value to zero where upon the display will show OFF).
+  - clipper-duet.pdf p.1 score=54.104 heading=SPEED TOTALTRIPILLUM CLIPPER DUET DEPTH F E E T M P H Duet CLIPPER DUET COMBINED LOG AN...
+  reply: The manual does not specify the power supply voltage.  Sources: [2] Page 1
