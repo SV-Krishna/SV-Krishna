@@ -81,6 +81,7 @@ This project will replace those assumptions with:
 - `docs/rag-drop-folder.md` explains how to feed local PDFs into the offline RAG store
 - `docs/rag-evaluation-report.md` summarizes the RAG extraction/retrieval experiments and the recommended "build machine -> Pi" workflow
 - `docs/speech-pipeline.md` describes the speech-to-text (Whisper) and text-to-speech (Piper) pipeline and configuration
+- `docs/deploy-local-to-pi.md` describes how we deploy builds from the local machine to the Raspberry Pi
 - `docs/web-ui-review.md` records the web UI review and why this repo uses a thin built-in UI
 - `docs/profile-readme-archive.md` preserves the original GitHub profile README content from this repository before repurposing it into a codebase
 
