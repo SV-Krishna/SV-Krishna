@@ -1,0 +1,27 @@
+[Unit]
+Description=SV-Krishna Offline Voice Assistant (Node)
+Wants=network-online.target
+After=network-online.target
+
+# Optional dependencies (SV-Krishna should still run if these are down).
+Wants=ollama.service svkrishna-whisper.service
+After=ollama.service svkrishna-whisper.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/svkrishna/app
+EnvironmentFile=/opt/svkrishna/app/.env
+
+# dotenv loads /opt/svkrishna/app/.env at runtime (see src/config.ts).
+ExecStart=/usr/bin/node /opt/svkrishna/app/dist/index.js
+
+Restart=always
+RestartSec=1
+TimeoutStopSec=10
+KillSignal=SIGINT
+
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

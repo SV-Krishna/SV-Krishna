@@ -5,15 +5,14 @@ After=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=/opt/SV-Krishna
-EnvironmentFile=/etc/sv-krishna/whisper.env
-ExecStart=/opt/SV-Krishna/python/.venv/bin/python /opt/SV-Krishna/python/whisper_http.py
+WorkingDirectory=/opt/svkrishna/app
+EnvironmentFile=/opt/svkrishna/app/.env
+ExecStart=/opt/svkrishna/venvs/whisper/bin/python /opt/svkrishna/app/python/whisper_http.py
 
 Restart=always
 RestartSec=1
 TimeoutStopSec=10
 
-# Flask dev server is fine for LAN use, but swap to gunicorn for production.
 NoNewPrivileges=true
 PrivateTmp=true
 

@@ -8,24 +8,11 @@ fi
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
-mkdir -p /etc/sv-krishna
-
-if [[ ! -f /etc/sv-krishna/sv-krishna.env ]]; then
-  cp "$repo_root/deploy/systemd/sv-krishna.env.example" /etc/sv-krishna/sv-krishna.env
-  echo "Wrote /etc/sv-krishna/sv-krishna.env (edit this)."
-fi
-
-if [[ ! -f /etc/sv-krishna/whisper.env ]]; then
-  cp "$repo_root/deploy/systemd/whisper.env.example" /etc/sv-krishna/whisper.env
-  echo "Wrote /etc/sv-krishna/whisper.env (edit this)."
-fi
-
-cp "$repo_root/deploy/systemd/sv-krishna.service" /etc/systemd/system/sv-krishna.service
-cp "$repo_root/deploy/systemd/sv-krishna-whisper.service" /etc/systemd/system/sv-krishna-whisper.service
+cp "$repo_root/deploy/systemd/svkrishna.service" /etc/systemd/system/svkrishna.service
+cp "$repo_root/deploy/systemd/svkrishna-whisper.service" /etc/systemd/system/svkrishna-whisper.service
 
 systemctl daemon-reload
 
 echo "Enable services:"
-echo "  systemctl enable --now sv-krishna-whisper.service"
-echo "  systemctl enable --now sv-krishna.service"
-
+echo "  systemctl enable --now svkrishna-whisper.service"
+echo "  systemctl enable --now svkrishna.service"

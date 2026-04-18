@@ -4,7 +4,7 @@ Goal: the Pi boots into a responsive SV‑Krishna setup, and optional components
 
 ## Recommended deployment layout
 
-- Clone or copy this repo to `/opt/SV-Krishna`
+- Clone or copy this repo to `/opt/svkrishna/app`
 - Build once (do not run `tsx` in production):
   - `npm ci`
   - `npm run build`
@@ -16,27 +16,22 @@ Goal: the Pi boots into a responsive SV‑Krishna setup, and optional components
 
 Unit templates live in `deploy/systemd/`:
 
-- `deploy/systemd/sv-krishna.service` (main app)
-- `deploy/systemd/sv-krishna-whisper.service` (Whisper HTTP server)
+- `deploy/systemd/svkrishna.service` (main app)
+- `deploy/systemd/svkrishna-whisper.service` (Whisper HTTP server)
 
 Install helper:
 
 - `sudo bash deploy/systemd/install.sh`
 
-Then edit:
-
-- `/etc/sv-krishna/sv-krishna.env`
-- `/etc/sv-krishna/whisper.env`
-
 Enable + start:
 
-- `sudo systemctl enable --now sv-krishna-whisper.service`
-- `sudo systemctl enable --now sv-krishna.service`
+- `sudo systemctl enable --now svkrishna-whisper.service`
+- `sudo systemctl enable --now svkrishna.service`
 
 Logs:
 
-- `journalctl -u sv-krishna.service -f`
-- `journalctl -u sv-krishna-whisper.service -f`
+- `journalctl -u svkrishna.service -f`
+- `journalctl -u svkrishna-whisper.service -f`
 
 ## Relay addressing
 
