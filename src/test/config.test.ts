@@ -26,6 +26,7 @@ test("loadConfig returns expected default service topology", () => {
   delete process.env.WHISPER_LANGUAGE;
   delete process.env.ENABLE_TTS;
   delete process.env.ENABLE_RAG;
+  delete process.env.RAG_ALLOW_INGEST;
   delete process.env.RAG_SOURCE_DIR;
   delete process.env.RAG_STORE_PATH;
   delete process.env.RAG_CHUNK_SIZE;
@@ -66,6 +67,7 @@ test("loadConfig returns expected default service topology", () => {
   assert.equal(config.whisperLanguage, "en");
   assert.equal(config.enableTts, true);
   assert.equal(config.enableRag, true);
+  assert.equal(config.ragAllowIngest, true);
   assert.equal(config.ragSourceDir, `${process.cwd()}/local/svkrishna/rag/inbox`);
   assert.equal(config.ragStorePath, `${process.cwd()}/local/svkrishna/rag/store.json`);
   assert.equal(config.ragChunkSize, 120);

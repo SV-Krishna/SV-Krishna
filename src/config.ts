@@ -90,6 +90,7 @@ export const loadConfig = (): AppConfig => {
     whisperLanguage: readString("WHISPER_LANGUAGE", "en"),
     enableTts: readBoolean("ENABLE_TTS", true),
     enableRag: readBoolean("ENABLE_RAG", true),
+    ragAllowIngest: readBoolean("RAG_ALLOW_INGEST", nodeEnv === "development"),
     ragSourceDir: readString(
       "RAG_SOURCE_DIR",
       nodeEnv === "development" ? `${devDataRoot}/rag/inbox` : "/opt/svkrishna/rag/inbox",

@@ -19,6 +19,7 @@ interface UploadResult {
 interface VoiceApi {
   runOnce: (options?: { history?: ConversationMessage[] }) => Promise<VoiceRunResult>;
   executeRelay: (command: RelayCommand) => Promise<{ statusLine: string }>;
+  getStatus?: () => Promise<{ state: string; message: string; busy: boolean }>;
 }
 
 type RelayApiResult =
@@ -434,21 +435,28 @@ const renderPage = (config: AppConfig): string => `<!doctype html>
     }
   </style>
 </head>
-<body>
-  <div class="shell">
-    <aside class="card sidebar">
-      <div>
+	<body>
+	  <div class="shell">
+	    <aside class="card sidebar">
+	      <div>
         <div class="eyebrow">Offline bridge</div>
         <h1>SV Krishna</h1>
         <p class="subtle">Local Gemma chat with PDF-fed RAG on top of the existing offline Pi stack.</p>
       </div>
 
-      <div class="upload-form">
-        <label for="pdf">Upload PDF into the RAG inbox</label>
-        <input id="pdf" name="pdf" type="file" accept="application/pdf" />
-        <button id="uploadButton" type="button">Upload PDF</button>
-        <div id="uploadStatus" class="status"></div>
-      </div>
+	      ${
+          config.ragAllowIngest
+            ? `<div class="upload-form">
+	        <label for="pdf">Upload PDF into the RAG inbox</label>
+	        <input id="pdf" name="pdf" type="file" accept="application/pdf" />
+	        <button id="uploadButton" type="button">Upload PDF</button>
+	        <div id="uploadStatus" class="status"></div>
+	      </div>`
+            : `<div class="upload-form">
+	        <div class="eyebrow">RAG Inbox</div>
+	        <p class="meta">This Pi is in read-only mode. Copy prebuilt RAG stores from the build machine.</p>
+	      </div>`
+        }
 
       <div>
         <div class="eyebrow">Knowledge base</div>
@@ -489,8 +497,8 @@ const renderPage = (config: AppConfig): string => `<!doctype html>
     const chatForm = document.getElementById("chatForm");
     const prompt = document.getElementById("prompt");
     const chatStatus = document.getElementById("chatStatus");
-    const uploadButton = document.getElementById("uploadButton");
-    const uploadStatus = document.getElementById("uploadStatus");
+	    const uploadButton = document.getElementById("uploadButton");
+	    const uploadStatus = document.getElementById("uploadStatus");
     const refreshButton = document.getElementById("refreshButton");
     const listenButton = document.getElementById("listenButton");
     const clearContextButton = document.getElementById("clearContextButton");
@@ -642,7 +650,7 @@ const renderPage = (config: AppConfig): string => `<!doctype html>
       }
     });
 
-    uploadButton.addEventListener("click", async () => {
+    if (uploadButton) uploadButton.addEventListener("click", async () => {
       const file = fileInput.files?.[0];
       if (!file) {
         setStatus(uploadStatus, "Choose a PDF first.", "error");
@@ -679,6 +687,17 @@ const renderPage = (config: AppConfig): string => `<!doctype html>
     listenButton.addEventListener("click", async () => {
       listenButton.disabled = true;
       chatStatus.textContent = "Listening...";
+      const poller = setInterval(async () => {
+        try {
+          const statusResponse = await fetch("/api/voice/status");
+          const statusPayload = await statusResponse.json();
+          if (statusResponse.ok && statusPayload?.message) {
+            chatStatus.textContent = statusPayload.message;
+          }
+        } catch {
+          // ignore polling errors while the voice request is running
+        }
+      }, 400);
       try {
         const response = await fetch("/api/voice/run", { method: "POST" });
         const payload = await response.json();
@@ -712,6 +731,7 @@ const renderPage = (config: AppConfig): string => `<!doctype html>
         addMessage("assistant", "Voice failed: " + error.message);
         chatStatus.textContent = "Voice failed.";
       } finally {
+        clearInterval(poller);
         listenButton.disabled = false;
       }
     });
@@ -869,6 +889,10 @@ export class WebServer {
     }
 
     if (method === "POST" && url.pathname === "/api/rag/upload") {
+      if (!this.config.ragAllowIngest) {
+        json(response, 403, { error: "RAG ingestion is disabled on this device." });
+        return;
+      }
       const upload = await this.handleUpload(request);
       await this.chat.rebuildKnowledge();
       json(response, 201, { fileName: upload.fileName });
@@ -899,6 +923,17 @@ export class WebServer {
       }
 
       json(response, 200, result);
+      return;
+    }
+
+    if (method === "GET" && url.pathname === "/api/voice/status") {
+      const api = this.apis?.voice;
+      if (!api?.getStatus) {
+        json(response, 200, { state: "unknown", message: "Working...", busy: false });
+        return;
+      }
+
+      json(response, 200, await api.getStatus());
       return;
     }
 

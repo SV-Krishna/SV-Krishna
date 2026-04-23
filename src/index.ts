@@ -9,6 +9,7 @@ const main = async (): Promise<void> => {
     voice: {
       runOnce: async (options) => await controller.runVoiceOnce(options),
       executeRelay: async (command) => await controller.executeRelay(command),
+      getStatus: async () => await controller.getStatus(),
     },
   });
 

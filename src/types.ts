@@ -26,6 +26,7 @@ export interface AppConfig {
   whisperLanguage: string;
   enableTts: boolean;
   enableRag: boolean;
+  ragAllowIngest: boolean;
   ragSourceDir: string;
   ragStorePath: string;
   ragChunkSize: number;

@@ -38,6 +38,7 @@ export class ControllerApp {
   private serviceHealth: ServiceHealth[] = [];
   private healthTimer?: NodeJS.Timeout;
   private state: ControllerState = "starting";
+  private stateMessage = "Starting...";
   private busy = false;
 
   constructor(private readonly config: AppConfig) {
@@ -86,6 +87,10 @@ export class ControllerApp {
     }
     this.input.stop();
     this.logger.info("Controller stopped.");
+  }
+
+  async getStatus(): Promise<{ state: ControllerState; message: string; busy: boolean }> {
+    return { state: this.state, message: this.stateMessage, busy: this.busy };
   }
 
   async runVoiceOnce(options?: { history?: ConversationMessage[] }): Promise<VoiceRunResult> {
@@ -278,6 +283,11 @@ export class ControllerApp {
     });
 
     this.input.on("reindex-rag", async () => {
+      if (!this.config.ragAllowIngest) {
+        this.setState("idle", "RAG ingestion is disabled on this device.");
+        return;
+      }
+
       if (this.busy) {
         this.logger.warn("RAG reindex ignored while another task is running.");
         return;
@@ -300,6 +310,7 @@ export class ControllerApp {
 
   private setState(state: ControllerState, message: string): void {
     this.state = state;
+    this.stateMessage = message;
     this.renderer.renderState(state, message);
     this.logger.info(message);
   }

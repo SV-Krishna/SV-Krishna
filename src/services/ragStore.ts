@@ -2,6 +2,7 @@ import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { spawn } from "node:child_process";
 import type { AppConfig, PreflightCheck, RagChunk, RagSearchResult } from "../types";
+import { Logger } from "../logger";
 
 interface RagDocumentRecord {
   fileName: string;
@@ -328,6 +329,7 @@ const narrowExcerpt = (text: string, queryTerms: Set<string>): string => {
 
 export class RagStore {
   private readonly enabled: boolean;
+  private readonly allowIngest: boolean;
   private readonly sourceDir: string;
   private readonly storePath: string;
   private readonly chunkSize: number;
@@ -336,6 +338,7 @@ export class RagStore {
   private readonly extractorPython: string;
   private readonly extractorScript: string;
   private readonly extractorMode: AppConfig["ragExtractorMode"];
+  private readonly logger: Logger;
   private cache: RagStoreFile = {
     indexedAt: "",
     documents: [],
@@ -344,6 +347,7 @@ export class RagStore {
 
   constructor(private readonly config: AppConfig) {
     this.enabled = config.enableRag;
+    this.allowIngest = config.ragAllowIngest;
     this.sourceDir = config.ragSourceDir;
     this.storePath = config.ragStorePath;
     this.chunkSize = config.ragChunkSize;
@@ -352,6 +356,7 @@ export class RagStore {
     this.extractorPython = config.ragExtractorPython;
     this.extractorScript = resolve(process.cwd(), "python", "extract_pdf_text.py");
     this.extractorMode = config.ragExtractorMode;
+    this.logger = new Logger(config.logLevel);
   }
 
   isEnabled(): boolean {
@@ -421,12 +426,29 @@ export class RagStore {
       return;
     }
 
+    if (!this.allowIngest) {
+      if (this.cache.chunks.length === 0) {
+        throw new Error(
+          "RAG store is missing or empty, and ingestion is disabled on this device. Copy a prebuilt store.json from the build machine.",
+        );
+      }
+
+      this.logger.warn(
+        "RAG inbox signature changed but ingestion is disabled; keeping existing store.json (copy a rebuilt store from the build machine).",
+      );
+      return;
+    }
+
     await this.rebuildStore(currentFiles);
   }
 
   async rebuildNow(): Promise<number> {
     if (!this.enabled) {
       return 0;
+    }
+
+    if (!this.allowIngest) {
+      throw new Error("RAG ingestion is disabled on this device.");
     }
 
     const files = await this.getPdfFiles();
