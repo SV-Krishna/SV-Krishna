@@ -127,7 +127,7 @@ export class ControllerApp {
 
       this.logger.info(`Transcript: ${transcript}`);
 
-      const relayResult = await this.planOrExecuteRelay(transcript);
+      const relayResult = await this.planOrExecuteRelay(transcript, history);
       if (relayResult.kind !== "none") {
         if (relayResult.kind === "planned") {
           this.setState("idle", `Relay action planned: ${relayResult.summary}`);
@@ -426,13 +426,19 @@ export class ControllerApp {
     }
   }
 
-  private async planOrExecuteRelay(userText: string): Promise<RelayActionResult> {
-    if (!this.relay || !looksLikeRelayIntent(userText)) {
+  private async planOrExecuteRelay(
+    userText: string,
+    history: ConversationMessage[] = [],
+  ): Promise<RelayActionResult> {
+    if (!this.relay || !looksLikeRelayIntentWithHistory(userText, history)) {
       return { kind: "none" };
     }
 
     this.setState("thinking", "Planning relay action...");
-    const command = await this.chat.planRelayCommand(userText);
+    const command =
+      history.length > 0
+        ? await this.chat.planRelayCommandWithHistory(userText, history)
+        : await this.chat.planRelayCommand(userText);
     if (command.action === "none") {
       return { kind: "none" };
     }
@@ -464,6 +470,30 @@ const looksLikeRelayIntent = (text: string): boolean => {
   }
 
   return false;
+};
+
+const looksLikeRelayIntentWithHistory = (text: string, history: ConversationMessage[]): boolean => {
+  if (looksLikeRelayIntent(text)) {
+    return true;
+  }
+
+  const normalized = text.toLowerCase().trim();
+  const shortCommand =
+    normalized === "off" ||
+    normalized === "on" ||
+    normalized === "turn off" ||
+    normalized === "turn on" ||
+    normalized === "switch off" ||
+    normalized === "switch on" ||
+    normalized === "all off" ||
+    normalized === "all on";
+
+  if (!shortCommand || history.length === 0) {
+    return false;
+  }
+
+  const recent = history.slice(-4).map((msg) => msg.content.toLowerCase());
+  return recent.some((content) => content.includes("relay") || content.includes("ch1") || content.includes("channel 1"));
 };
 
 const isPiperReady = (checks: PreflightCheck[]): boolean => {

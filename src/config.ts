@@ -16,7 +16,7 @@ const readBoolean = (name: string, fallback: boolean): boolean => {
     return fallback;
   }
 
-  return value === "true";
+  return value === "true" || value === "1" || value === "yes" || value === "y" || value === "on";
 };
 
 const readNumber = (name: string, fallback: number): number => {

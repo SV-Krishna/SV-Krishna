@@ -21,6 +21,61 @@ interface VoiceApi {
   executeRelay: (command: RelayCommand) => Promise<{ statusLine: string }>;
 }
 
+type RelayApiResult =
+  | { kind: "none" }
+  | { kind: "planned"; summary: string; command: RelayCommand }
+  | { kind: "executed"; summary: string; statusLine: string };
+
+const looksLikeRelayIntent = (text: string): boolean => {
+  const normalized = text.toLowerCase();
+  if (normalized.includes("relay") || normalized.includes("relays")) {
+    return true;
+  }
+
+  if (/\bch\s*[1-6]\b/i.test(text) || /\bchannel\s*[1-6]\b/i.test(text)) {
+    return true;
+  }
+
+  return false;
+};
+
+const looksLikeRelayIntentWithHistory = (text: string, history: ConversationMessage[]): boolean => {
+  if (looksLikeRelayIntent(text)) {
+    return true;
+  }
+
+  const normalized = text.toLowerCase().trim();
+  const shortCommand =
+    normalized === "off" ||
+    normalized === "on" ||
+    normalized === "turn off" ||
+    normalized === "turn on" ||
+    normalized === "switch off" ||
+    normalized === "switch on" ||
+    normalized === "all off" ||
+    normalized === "all on";
+
+  if (!shortCommand || history.length === 0) {
+    return false;
+  }
+
+  const recent = history.slice(-4).map((msg) => msg.content.toLowerCase());
+  return recent.some((content) => content.includes("relay") || content.includes("ch1") || content.includes("channel 1"));
+};
+
+const summarizeRelayCommand = (command: RelayCommand): string => {
+  if (command.action === "status") {
+    return "Read relay status";
+  }
+  if (command.action === "all") {
+    return `Turn ALL relays ${command.state.toUpperCase()}`;
+  }
+  if (command.action === "set") {
+    return `Set relay CH${command.channel} ${command.state.toUpperCase()}`;
+  }
+  return "No relay action";
+};
+
 const json = (response: ServerResponse, statusCode: number, payload: unknown): void => {
   response.statusCode = statusCode;
   response.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -461,6 +516,19 @@ const renderPage = (config: AppConfig): string => `<!doctype html>
         });
         const payload = await response.json();
         if (!response.ok) throw new Error(payload.error || "Chat failed");
+
+        if (payload.relay && payload.relay.kind === "planned") {
+          addRelayPlannedMessage(payload.relay.summary, payload.relay.command);
+          chatStatus.textContent = "Relay action planned (confirm).";
+          return;
+        }
+
+        if (payload.relay && payload.relay.kind === "executed") {
+          addMessage("assistant", "Relay action executed: " + payload.relay.summary + ". " + payload.relay.statusLine);
+          chatStatus.textContent = "Relay updated.";
+          return;
+        }
+
         addMessage("assistant", payload.reply || "[empty reply]", payload.sources || []);
         chatStatus.textContent = payload.sources?.length
           ? "Used local PDF context."
@@ -660,12 +728,39 @@ export class WebServer {
       }
 
       const history = this.conversations.get(sessionId).messages;
+
+      const api = this.apis?.voice;
+      if (api && this.config.relayControlEnabled && looksLikeRelayIntentWithHistory(message, history)) {
+        const command = await this.chat.planRelayCommandWithHistory(message, history);
+        if (command.action !== "none") {
+          const summary = summarizeRelayCommand(command);
+          this.conversations.append(sessionId, "user", message);
+
+          if (this.config.relayRequireConfirmation) {
+            this.conversations.append(sessionId, "assistant", `Planned relay action: ${summary}`);
+            const relay: RelayApiResult = { kind: "planned", summary, command };
+            json(response, 200, { reply: null, sources: [], relay });
+            return;
+          }
+
+          const executed = await api.executeRelay(command);
+          this.conversations.append(
+            sessionId,
+            "assistant",
+            `Relay action executed: ${summary}. ${executed.statusLine}`,
+          );
+          const relay: RelayApiResult = { kind: "executed", summary, statusLine: executed.statusLine };
+          json(response, 200, { reply: null, sources: [], relay });
+          return;
+        }
+      }
+
       const result = await this.chat.ask(message, history);
       this.conversations.append(sessionId, "user", message);
       if (result.reply) {
         this.conversations.append(sessionId, "assistant", result.reply);
       }
-      json(response, 200, result);
+      json(response, 200, { ...result, relay: { kind: "none" } as RelayApiResult });
       return;
     }
 

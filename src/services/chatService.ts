@@ -103,36 +103,40 @@ export class ChatService {
       '- {"action":"none"}',
       "Rules:",
       "- Use relay actions ONLY if the user clearly asks about relays/channels or turning something on/off.",
+      "- If the user says something short like 'turn it off' and prior chat context is about relays, assume they mean the relays.",
       "- If the user is ambiguous (e.g. 'turn it on' with no channel), return {\"action\":\"none\"}.",
       "- Prefer explicit set/all/status over toggling.",
     ].join("\n");
 
-    const raw = await this.ollama.respond(userText, systemPrompt);
-    const parsed = parseFirstJsonObject(raw);
+    const raw = await this.ollama.respondMessages([
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userText },
+    ]);
+    return parseRelayCommand(raw);
+  }
 
-    if (!isObject(parsed) || typeof parsed.action !== "string") {
-      return { action: "none" };
-    }
+  async planRelayCommandWithHistory(userText: string, history: ConversationMessage[]): Promise<RelayCommand> {
+    const systemPrompt = [
+      "You convert user requests into relay control commands for a Waveshare ESP32-S3-Relay-6CH device.",
+      "Return ONLY a single JSON object (no markdown, no extra text).",
+      "Allowed actions:",
+      '- {"action":"set","channel":1-6,"state":"on"|"off"}',
+      '- {"action":"all","state":"on"|"off"}',
+      '- {"action":"status"}',
+      '- {"action":"none"}',
+      "Rules:",
+      "- If the user says something short like 'turn it off' and the conversation is about relays, assume they mean the relays.",
+      "- If the user is ambiguous and the conversation is not about relays, return {\"action\":\"none\"}.",
+      "- Prefer explicit set/all/status over toggling.",
+    ].join("\n");
 
-    if (parsed.action === "status") {
-      return { action: "status" };
-    }
+    const raw = await this.ollama.respondMessages([
+      { role: "system", content: systemPrompt },
+      ...toOllamaHistory(history),
+      { role: "user", content: userText },
+    ]);
 
-    if (parsed.action === "all") {
-      const state = parsed.state === "on" || parsed.state === "off" ? parsed.state : undefined;
-      return state ? { action: "all", state } : { action: "none" };
-    }
-
-    if (parsed.action === "set") {
-      const channel = Number(parsed.channel);
-      const state = parsed.state === "on" || parsed.state === "off" ? parsed.state : undefined;
-      if (!Number.isInteger(channel) || channel < 1 || channel > 6 || !state) {
-        return { action: "none" };
-      }
-      return { action: "set", channel, state };
-    }
-
-    return { action: "none" };
+    return parseRelayCommand(raw);
   }
 
   private buildGroundedSystemPrompt(): string {
@@ -163,4 +167,31 @@ const parseFirstJsonObject = (text: string): unknown => {
   } catch {
     return null;
   }
+};
+
+const parseRelayCommand = (raw: string): RelayCommand => {
+  const parsed = parseFirstJsonObject(raw);
+  if (!isObject(parsed) || typeof parsed.action !== "string") {
+    return { action: "none" };
+  }
+
+  if (parsed.action === "status") {
+    return { action: "status" };
+  }
+
+  if (parsed.action === "all") {
+    const state = parsed.state === "on" || parsed.state === "off" ? parsed.state : undefined;
+    return state ? { action: "all", state } : { action: "none" };
+  }
+
+  if (parsed.action === "set") {
+    const channel = Number(parsed.channel);
+    const state = parsed.state === "on" || parsed.state === "off" ? parsed.state : undefined;
+    if (!Number.isInteger(channel) || channel < 1 || channel > 6 || !state) {
+      return { action: "none" };
+    }
+    return { action: "set", channel, state };
+  }
+
+  return { action: "none" };
 };
