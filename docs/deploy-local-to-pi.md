@@ -65,7 +65,7 @@ npm run build
 If running via `systemd`, restart the service:
 
 ```bash
-sudo systemctl restart sv-krishna.service
+sudo systemctl restart svkrishna.service
 ```
 
 If running manually in the background:
@@ -116,4 +116,3 @@ See `docs/rag-evaluation-report.md` for details and copy-paste commands.
   - If you cannot or do not want SSH auth on the Pi, keep the Pi remote as HTTPS and rely on public read access.
 - Audio defaults:
   - Device `default` may not work for USB mics/speakers; set explicit ALSA devices via `arecord -L` / `aplay -L`.
-

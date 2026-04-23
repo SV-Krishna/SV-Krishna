@@ -6,6 +6,7 @@ import { checkServiceHealth } from "./services/health";
 import { PiperClient } from "./services/piperClient";
 import { RagStore } from "./services/ragStore";
 import type { RelayCommand } from "./services/chatService";
+import type { ConversationMessage } from "./services/conversationStore";
 import { RelayService } from "./services/relayService";
 import { WhisperClient } from "./services/whisperClient";
 import { TerminalInput } from "./terminal/input";
@@ -87,11 +88,12 @@ export class ControllerApp {
     this.logger.info("Controller stopped.");
   }
 
-  async runVoiceOnce(): Promise<VoiceRunResult> {
+  async runVoiceOnce(options?: { history?: ConversationMessage[] }): Promise<VoiceRunResult> {
     if (this.busy) {
       throw new Error("Busy.");
     }
 
+    const history = options?.history ?? [];
     const currentHealth = await this.refreshServiceHealth();
     const whisperOk = this.isServiceHealthy(currentHealth, "whisper");
     const ollamaOk = this.isServiceHealthy(currentHealth, "ollama");
@@ -137,7 +139,7 @@ export class ControllerApp {
       }
 
       this.setState("thinking", `Sending transcript to Ollama at ${this.getServiceUrl("ollama")}...`);
-      const { reply } = await this.chat.ask(transcript);
+      const { reply } = await this.chat.ask(transcript, history);
       const safeReply = reply || "";
 
       if (safeReply) {

@@ -1,13 +1,21 @@
 import type { AppConfig, ChatResponse } from "../types";
 import { Logger } from "../logger";
+import type { OllamaChatMessage } from "./ollamaClient";
 import { OllamaClient } from "./ollamaClient";
 import { hasTrustedSources, RagStore } from "./ragStore";
+import type { ConversationMessage } from "./conversationStore";
 
 export type RelayCommand =
   | { action: "none" }
   | { action: "status" }
   | { action: "all"; state: "on" | "off" }
   | { action: "set"; channel: number; state: "on" | "off" };
+
+const toOllamaHistory = (history: ConversationMessage[]): OllamaChatMessage[] =>
+  history.map((message) => ({
+    role: message.role,
+    content: message.content,
+  }));
 
 export class ChatService {
   private readonly logger: Logger;
@@ -32,7 +40,7 @@ export class ChatService {
     return await this.rag.rebuildNow();
   }
 
-  async ask(userText: string): Promise<ChatResponse> {
+  async ask(userText: string, history: ConversationMessage[] = []): Promise<ChatResponse> {
     const sources = this.config.enableRag ? await this.rag.search(userText) : [];
     const trusted = this.config.enableRag ? hasTrustedSources(sources) : false;
 
@@ -43,11 +51,32 @@ export class ChatService {
     }
 
     if (this.config.enableRag && !trusted) {
-      const reply = await this.ollama.respond(userText);
+      const messages: OllamaChatMessage[] = [
+        { role: "system", content: this.config.ollamaSystemPrompt },
+        ...toOllamaHistory(history),
+        { role: "user", content: userText },
+      ];
+      const reply = await this.ollama.respondMessages(messages);
       return { reply, sources: [] };
     }
 
-    const reply = await this.answerWithSources(userText, sources);
+    const prompt = sources.length > 0 ? this.rag.buildPrompt(userText, sources) : userText;
+    if (history.length === 0) {
+      const reply = await this.ollama.respond(
+        prompt,
+        sources.length > 0 ? this.buildGroundedSystemPrompt() : undefined,
+      );
+      return { reply, sources };
+    }
+
+    const systemPrompt =
+      sources.length > 0 ? this.buildGroundedSystemPrompt() : this.config.ollamaSystemPrompt;
+    const messages: OllamaChatMessage[] = [
+      { role: "system", content: systemPrompt },
+      ...toOllamaHistory(history),
+      { role: "user", content: prompt },
+    ];
+    const reply = await this.ollama.respondMessages(messages);
     return { reply, sources };
   }
 

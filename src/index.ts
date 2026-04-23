@@ -7,7 +7,7 @@ const main = async (): Promise<void> => {
   const controller = new ControllerApp(config);
   const web = new WebServer(config, {
     voice: {
-      runOnce: async () => await controller.runVoiceOnce(),
+      runOnce: async (options) => await controller.runVoiceOnce(options),
       executeRelay: async (command) => await controller.executeRelay(command),
     },
   });

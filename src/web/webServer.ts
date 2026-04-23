@@ -8,6 +8,8 @@ import { ChatService } from "../services/chatService";
 import type { RelayCommand } from "../services/chatService";
 import type { AppConfig } from "../types";
 import type { VoiceRunResult } from "../controller";
+import { ConversationStore } from "../services/conversationStore";
+import type { ConversationMessage } from "../services/conversationStore";
 
 interface UploadResult {
   fileName: string;
@@ -15,15 +17,14 @@ interface UploadResult {
 }
 
 interface VoiceApi {
-  runOnce: () => Promise<VoiceRunResult>;
+  runOnce: (options?: { history?: ConversationMessage[] }) => Promise<VoiceRunResult>;
   executeRelay: (command: RelayCommand) => Promise<{ statusLine: string }>;
 }
 
 const json = (response: ServerResponse, statusCode: number, payload: unknown): void => {
-  response.writeHead(statusCode, {
-    "Content-Type": "application/json; charset=utf-8",
-    "Cache-Control": "no-store",
-  });
+  response.statusCode = statusCode;
+  response.setHeader("Content-Type", "application/json; charset=utf-8");
+  response.setHeader("Cache-Control", "no-store");
   response.end(JSON.stringify(payload));
 };
 
@@ -307,6 +308,7 @@ const renderPage = (config: AppConfig): string => `<!doctype html>
         <div style="display:flex; gap:10px; align-items:center;">
           <button id="listenButton" type="button">Listen</button>
           <button id="refreshButton" type="button" class="secondary">Refresh docs</button>
+          <button id="clearContextButton" type="button" class="secondary">Clear context</button>
         </div>
       </header>
 
@@ -333,6 +335,7 @@ const renderPage = (config: AppConfig): string => `<!doctype html>
     const uploadStatus = document.getElementById("uploadStatus");
     const refreshButton = document.getElementById("refreshButton");
     const listenButton = document.getElementById("listenButton");
+    const clearContextButton = document.getElementById("clearContextButton");
     const documentList = document.getElementById("documentList");
     const fileInput = document.getElementById("pdf");
 
@@ -405,7 +408,7 @@ const renderPage = (config: AppConfig): string => `<!doctype html>
           const response = await fetch("/api/relay/execute", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ command }),
+            body: JSON.stringify({ command, summary }),
           });
           const payload = await response.json();
           if (!response.ok) throw new Error(payload.error || "Relay execute failed");
@@ -542,6 +545,23 @@ const renderPage = (config: AppConfig): string => `<!doctype html>
       }
     });
 
+    clearContextButton.addEventListener("click", async () => {
+      clearContextButton.disabled = true;
+      chatStatus.textContent = "Clearing context...";
+      try {
+        const response = await fetch("/api/session/clear", { method: "POST" });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || "Clear context failed");
+        messages.innerHTML = "";
+        addMessage("assistant", "Context cleared.");
+        chatStatus.textContent = "Context cleared.";
+      } catch (error) {
+        chatStatus.textContent = "Clear context failed: " + error.message;
+      } finally {
+        clearContextButton.disabled = false;
+      }
+    });
+
     loadDocuments().catch((error) => {
       chatStatus.textContent = "Failed to load docs: " + error.message;
     });
@@ -552,6 +572,7 @@ const renderPage = (config: AppConfig): string => `<!doctype html>
 export class WebServer {
   private readonly logger: Logger;
   private readonly chat: ChatService;
+  private readonly conversations = new ConversationStore({ maxMessages: 24, maxChars: 12000 });
   private server: Server | null = null;
 
   constructor(
@@ -617,6 +638,7 @@ export class WebServer {
   private async route(request: IncomingMessage, response: ServerResponse): Promise<void> {
     const method = request.method ?? "GET";
     const url = new URL(request.url ?? "/", `http://${request.headers.host ?? "localhost"}`);
+    const sessionId = this.getOrCreateSessionId(request, response);
 
     if (method === "GET" && url.pathname === "/") {
       response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
@@ -637,7 +659,12 @@ export class WebServer {
         return;
       }
 
-      const result = await this.chat.ask(message);
+      const history = this.conversations.get(sessionId).messages;
+      const result = await this.chat.ask(message, history);
+      this.conversations.append(sessionId, "user", message);
+      if (result.reply) {
+        this.conversations.append(sessionId, "assistant", result.reply);
+      }
       json(response, 200, result);
       return;
     }
@@ -656,7 +683,22 @@ export class WebServer {
         return;
       }
 
-      const result = await api.runOnce();
+      const history = this.conversations.get(sessionId).messages;
+      const result = await api.runOnce({ history });
+      if (result.transcript) {
+        this.conversations.append(sessionId, "user", result.transcript);
+      }
+
+      if (result.relay.kind === "executed") {
+        this.conversations.append(
+          sessionId,
+          "assistant",
+          `Relay action executed: ${result.relay.summary}. ${result.relay.statusLine}`,
+        );
+      } else if (result.reply) {
+        this.conversations.append(sessionId, "assistant", result.reply);
+      }
+
       json(response, 200, result);
       return;
     }
@@ -668,18 +710,49 @@ export class WebServer {
         return;
       }
 
-      const payload = await readJsonBody<{ command?: RelayCommand }>(request);
+      const payload = await readJsonBody<{ command?: RelayCommand; summary?: string }>(request);
       if (!payload.command) {
         json(response, 400, { error: "command is required" });
         return;
       }
 
       const result = await api.executeRelay(payload.command);
+      const summary = payload.summary?.trim();
+      this.conversations.append(
+        sessionId,
+        "assistant",
+        summary ? `Relay updated: ${summary}. ${result.statusLine}` : `Relay updated. ${result.statusLine}`,
+      );
       json(response, 200, result);
       return;
     }
 
+    if (method === "POST" && url.pathname === "/api/session/clear") {
+      this.conversations.clear(sessionId);
+      json(response, 200, { ok: true });
+      return;
+    }
+
     json(response, 404, { error: "not found" });
+  }
+
+  private getOrCreateSessionId(request: IncomingMessage, response: ServerResponse): string {
+    const cookieHeader = request.headers.cookie ?? "";
+    const sessionCookie = cookieHeader
+      .split(";")
+      .map((part) => part.trim())
+      .find((part) => part.startsWith("svk_session="));
+
+    const existing = sessionCookie ? sessionCookie.split("=").slice(1).join("=") : null;
+    const sessionId = this.conversations.ensureSession(existing);
+    if (!existing || existing !== sessionId) {
+      response.setHeader(
+        "Set-Cookie",
+        `svk_session=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 24 * 14}`,
+      );
+    }
+
+    return sessionId;
   }
 
   private async handleUpload(request: IncomingMessage): Promise<UploadResult> {
