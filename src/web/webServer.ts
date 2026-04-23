@@ -63,6 +63,42 @@ const looksLikeRelayIntentWithHistory = (text: string, history: ConversationMess
   return recent.some((content) => content.includes("relay") || content.includes("ch1") || content.includes("channel 1"));
 };
 
+const inferRelayCommandFromHistory = (text: string, history: ConversationMessage[]): RelayCommand | null => {
+  const normalized = text.toLowerCase().trim();
+  const wantsOn =
+    normalized === "on" || normalized === "turn on" || normalized === "switch on" || normalized === "all on";
+  const wantsOff =
+    normalized === "off" || normalized === "turn off" || normalized === "switch off" || normalized === "all off";
+  if (!wantsOn && !wantsOff) {
+    return null;
+  }
+
+  const state = wantsOn ? "on" : "off";
+  const recent = history
+    .slice(-10)
+    .map((msg) => msg.content)
+    .reverse();
+
+  for (const content of recent) {
+    const match =
+      content.match(/\bch\s*([1-6])\b/i) ||
+      content.match(/\bchannel\s*([1-6])\b/i) ||
+      content.match(/\bch([1-6])\b/i);
+    if (match) {
+      const channel = Number(match[1]);
+      if (Number.isInteger(channel) && channel >= 1 && channel <= 6) {
+        return { action: "set", channel, state };
+      }
+    }
+
+    if (/\ball\b/i.test(content) && /\brelay\b/i.test(content)) {
+      return { action: "all", state };
+    }
+  }
+
+  return null;
+};
+
 const summarizeRelayCommand = (command: RelayCommand): string => {
   if (command.action === "status") {
     return "Read relay status";
@@ -731,7 +767,8 @@ export class WebServer {
 
       const api = this.apis?.voice;
       if (api && this.config.relayControlEnabled && looksLikeRelayIntentWithHistory(message, history)) {
-        const command = await this.chat.planRelayCommandWithHistory(message, history);
+        const inferred = inferRelayCommandFromHistory(message, history);
+        const command = inferred ?? (await this.chat.planRelayCommandWithHistory(message, history));
         if (command.action !== "none") {
           const summary = summarizeRelayCommand(command);
           this.conversations.append(sessionId, "user", message);
