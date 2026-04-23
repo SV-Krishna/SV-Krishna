@@ -34,10 +34,17 @@ export class ChatService {
 
   async ask(userText: string): Promise<ChatResponse> {
     const sources = this.config.enableRag ? await this.rag.search(userText) : [];
+    const trusted = this.config.enableRag ? hasTrustedSources(sources) : false;
+
     if (sources.length > 0) {
       this.logger.info(
         `RAG matched ${sources.length} chunks from ${new Set(sources.map((item) => item.source)).size} PDFs.`,
       );
+    }
+
+    if (this.config.enableRag && !trusted) {
+      const reply = await this.ollama.respond(userText);
+      return { reply, sources: [] };
     }
 
     const reply = await this.answerWithSources(userText, sources);
@@ -49,10 +56,6 @@ export class ChatService {
   }
 
   async answerWithSources(userText: string, sources: ChatResponse["sources"]): Promise<string> {
-    if (this.config.enableRag && !hasTrustedSources(sources)) {
-      return "I could not find sufficiently relevant material in the indexed documents to answer that reliably.";
-    }
-
     const prompt = sources.length > 0 ? this.rag.buildPrompt(userText, sources) : userText;
     return await this.ollama.respond(
       prompt,
