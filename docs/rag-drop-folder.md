@@ -25,6 +25,21 @@ Text extraction is pluggable. Current extractor modes:
 - `docling` - best quality for structured PDFs/manuals (headings/sections), but heavy to run on a Raspberry Pi
 - `opendataloader` - Java-backed extraction, relatively fast, but ranking/synonym issues still need addressing
 
+## Extractor implementation
+
+The Node app shells out to a Python extractor script:
+
+- `python/extract_pdf_text.py`
+
+The interpreter is controlled by:
+
+- `RAG_EXTRACTOR_PYTHON` (e.g. `python3` or `/opt/svkrishna/venvs/rag/bin/python`)
+
+Python dependencies live in:
+
+- `python/requirements-rag.txt`
+- `python/requirements-docling.txt` (Docling-specific; heavy)
+
 ## Recommended workflow (build machine -> Pi)
 
 Docling can be expensive on a Pi 5 for large manuals. The recommended workflow is:

@@ -8,6 +8,7 @@ Goal: the Pi boots into a responsive SV‑Krishna setup, and optional components
 - Build once (do not run `tsx` in production):
   - `npm ci`
   - `npm run build`
+- Create `/opt/svkrishna/app/.env` from `.env.template` and adjust values for the Pi (audio devices, models, etc.)
 - Create writable runtime dirs, e.g.:
   - `/var/lib/svkrishna/audio`
   - `/var/lib/svkrishna/rag`

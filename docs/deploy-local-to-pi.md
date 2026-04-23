@@ -19,6 +19,52 @@ It also calls out the RAG store workflow (build machine -> Pi).
 
 If any of those differ, adjust the commands accordingly.
 
+## SSH access to the Pi
+
+Basic access:
+
+```bash
+ssh admin@192.168.68.203
+```
+
+We strongly recommend switching to SSH keys so deploys do not require typing a password each time.
+
+### Optional: add an SSH config entry
+
+On the local machine, create or edit `~/.ssh/config`:
+
+```text
+Host svk-pi
+  HostName 192.168.68.203
+  User admin
+```
+
+Then connect with:
+
+```bash
+ssh svk-pi
+```
+
+### Optional: set up SSH keys (recommended)
+
+On the local machine (if you don't already have a key):
+
+```bash
+ssh-keygen -t ed25519
+```
+
+Copy the public key to the Pi (choose one approach):
+
+```bash
+# Option A: ssh-copy-id (if installed)
+ssh-copy-id admin@192.168.68.203
+
+# Option B: manual copy (always works)
+cat ~/.ssh/id_ed25519.pub | ssh admin@192.168.68.203 'mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys'
+```
+
+After this, `ssh admin@192.168.68.203` should not prompt for a password.
+
 ## 1) Git pull + build on the Pi (recommended)
 
 ### Step A - On the local machine: test, commit, push
