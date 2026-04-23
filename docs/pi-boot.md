@@ -48,3 +48,17 @@ SV‑Krishna should keep running even if:
 - Piper/TTS is not installed/configured (it will still respond via text)
 
 When running headless (no terminal), use the Web UI and the `Listen` button to trigger a one-shot voice run.
+
+## RAG ingest policy (recommended)
+
+On the Pi, prefer **read-only RAG**:
+
+- `RAG_ALLOW_INGEST=false`
+- copy `/opt/svkrishna/rag/inbox/*.pdf` + `/opt/svkrishna/rag/store.json` from the build machine
+
+This keeps the Pi responsive and prevents accidental rebuilds with a different extractor.
+
+## Piper voice selection (optional)
+
+To change the voice, point `PIPER_MODEL_PATH` at another `.onnx` voice model under `/opt/svkrishna/models/piper/`
+and restart `svkrishna.service`.

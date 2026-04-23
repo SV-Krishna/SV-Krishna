@@ -34,6 +34,19 @@ Docling can be expensive on a Pi 5 for large manuals. The recommended workflow i
    - `embeddings.json` (using `nomic-embed-text:latest`)
 2. Copy the resulting PDFs + stores to the Pi.
 
+### Read-only ingest on the Pi (recommended)
+
+For stability, the Pi is typically configured as **read-only** for RAG ingestion:
+
+- uploads/reindexing are disabled in the Web UI
+- if PDFs change on the Pi, the app keeps the existing `store.json` instead of attempting extraction locally
+
+This avoids:
+
+- long extraction times on the Pi
+- extractor dependency drift (e.g. Docling not installed on the Pi)
+- accidental downgrades of a high-quality Docling-built store to a low-quality `pypdf` store
+
 Important: the controller decides whether to rebuild by comparing the inbox PDF signature
 (`fileName + mtimeMs + size`) to what is recorded in `store.json`. If you copy PDFs to the Pi
 without preserving timestamps, it may try to re-extract on the Pi.
@@ -59,6 +72,7 @@ The controller also checks the inbox on demand and rebuilds automatically if the
 ## Environment variables
 
 - `ENABLE_RAG=true`
+- `RAG_ALLOW_INGEST=true|false`
 - `RAG_SOURCE_DIR=/opt/svkrishna/rag/inbox`
 - `RAG_STORE_PATH=/opt/svkrishna/rag/store.json`
 - `RAG_CHUNK_SIZE=120`
@@ -66,6 +80,11 @@ The controller also checks the inbox on demand and rebuilds automatically if the
 - `RAG_TOP_K=3`
 - `RAG_EXTRACTOR_PYTHON=python3`
 - `RAG_EXTRACTOR_MODE=pypdf|docling|opendataloader`
+
+Notes:
+
+- Default: `RAG_ALLOW_INGEST=true` in development, `false` in production.
+- On the Pi, keep `RAG_ALLOW_INGEST=false` and copy prebuilt `store.json` from the build machine.
 
 Embedding/hybrid configuration:
 

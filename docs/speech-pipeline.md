@@ -96,6 +96,15 @@ Relevant configuration:
 
 The goal is to keep the hardware boundary simple for the Pi 5.
 
+### Debug playback (recommended off)
+
+If you hear your own spoken command played back faintly before transcription, that is microphone sample playback
+used for debugging capture.
+
+- `ENABLE_AUDIO_PLAYBACK_DEBUG=true` replays the recorded sample before sending it to Whisper
+- This adds roughly `AUDIO_RECORD_SECONDS` of extra latency per voice run
+- For normal operation, keep `ENABLE_AUDIO_PLAYBACK_DEBUG=false`
+
 ### Common Raspberry Pi note (USB microphones)
 
 On some Raspberry Pi audio setups, `arecord -D default` may fail even though the device is present.

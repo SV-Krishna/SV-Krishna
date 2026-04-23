@@ -37,3 +37,7 @@ Example prompts:
 - `Relay status`
 
 SV‑Krishna uses the LLM to produce a structured relay command, asks for confirmation (if enabled), then calls the device HTTP endpoints. For per-channel “set” operations it uses `/getData` to avoid relying on toggles when the state is already correct.
+
+If you want voice commands to switch immediately (no click-confirm in the Web UI), set:
+
+- `RELAY_REQUIRE_CONFIRMATION=false`

@@ -43,5 +43,7 @@ The built-in web UI provides:
 - PDF upload directly into the RAG inbox
 - visibility into indexed documents
 - no dependency on an external vector DB or containerized chat platform
+- voice trigger via a `Listen` button (headless-friendly)
+- progress status during a voice run (recording/transcribing/thinking/speaking)
 
 If the project later outgrows this UI, `AnythingLLM` is the best next candidate to evaluate as a replacement rather than as a parallel stack.
