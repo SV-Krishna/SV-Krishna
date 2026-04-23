@@ -34,8 +34,17 @@ interface ExtractionPayload {
 
 const TOKEN_PATTERN = /[a-z0-9]{2,}/g;
 const STOP_WORDS = new Set([
+  "a",
+  "an",
   "the",
+  "of",
   "and",
+  "or",
+  "to",
+  "in",
+  "on",
+  "at",
+  "by",
   "for",
   "with",
   "from",
