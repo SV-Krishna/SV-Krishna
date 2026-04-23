@@ -498,11 +498,79 @@ const looksLikeRelayIntentWithHistory = (text: string, history: ConversationMess
   return recent.some((content) => content.includes("relay") || content.includes("ch1") || content.includes("channel 1"));
 };
 
+const parseChannelNumber = (text: string): number | null => {
+  const normalized = text.toLowerCase();
+  const digit = normalized.match(/\b([1-6])\b/);
+  if (digit) {
+    return Number(digit[1]);
+  }
+
+  const words: Record<string, number> = {
+    one: 1,
+    two: 2,
+    three: 3,
+    four: 4,
+    five: 5,
+    six: 6,
+  };
+
+  for (const [word, value] of Object.entries(words)) {
+    if (new RegExp(`\\b${word}\\b`, "i").test(text)) {
+      return value;
+    }
+  }
+
+  return null;
+};
+
+const parseRelayCommandFromText = (text: string): RelayCommand | null => {
+  const normalized = text.toLowerCase().replace(/[.?!]/g, " ").replace(/\s+/g, " ").trim();
+  if (!normalized) {
+    return null;
+  }
+
+  if (normalized.includes("status") && normalized.includes("relay")) {
+    return { action: "status" };
+  }
+
+  const wantsOn = /\b(turn|switch)?\s*on\b/.test(normalized) || /\bon\b/.test(normalized);
+  const wantsOff = /\b(turn|switch)?\s*off\b/.test(normalized) || /\boff\b/.test(normalized);
+  if (!wantsOn && !wantsOff) {
+    return null;
+  }
+
+  const state = wantsOn && !wantsOff ? "on" : wantsOff && !wantsOn ? "off" : null;
+  if (!state) {
+    return null;
+  }
+
+  if (normalized.includes("all") && normalized.includes("relay")) {
+    return { action: "all", state };
+  }
+
+  if (normalized.includes("relay")) {
+    const channel = parseChannelNumber(normalized);
+    if (channel) {
+      return { action: "set", channel, state };
+    }
+
+    // Common user phrasing: "turn off the relay" (singular) -> CH1
+    return { action: "set", channel: 1, state };
+  }
+
+  return null;
+};
+
 const inferRelayCommandFromHistory = (
   text: string,
   history: ConversationMessage[],
 ): RelayCommand | null => {
-  const normalized = text.toLowerCase().trim();
+  const direct = parseRelayCommandFromText(text);
+  if (direct) {
+    return direct;
+  }
+
+  const normalized = text.toLowerCase().replace(/[.?!]/g, " ").replace(/\s+/g, " ").trim();
   const wantsOn =
     normalized === "on" || normalized === "turn on" || normalized === "switch on" || normalized === "all on";
   const wantsOff =
