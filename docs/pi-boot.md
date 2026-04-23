@@ -9,9 +9,10 @@ Goal: the Pi boots into a responsive SV‑Krishna setup, and optional components
   - `npm ci`
   - `npm run build`
 - Create `/opt/svkrishna/app/.env` from `.env.template` and adjust values for the Pi (audio devices, models, etc.)
-- Create writable runtime dirs, e.g.:
-  - `/var/lib/svkrishna/audio`
-  - `/var/lib/svkrishna/rag`
+- Ensure writable runtime dirs exist (the defaults are under `/opt/svkrishna/`):
+  - `/opt/svkrishna/audio`
+  - `/opt/svkrishna/rag`
+  - `/opt/svkrishna/logs`
 
 ## systemd services
 
