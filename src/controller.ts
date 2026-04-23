@@ -108,6 +108,11 @@ export class ControllerApp {
       const recordingPath = await this.audio.recordSample();
       this.logger.info(`Recorded sample to ${recordingPath}`);
 
+      if (this.config.enableAudioPlaybackDebug) {
+        this.setState("playing", `Playing sample through ${this.config.audioOutputDevice}...`);
+        await this.audio.playFile(recordingPath);
+      }
+
       this.setState(
         "transcribing",
         `Sending sample to Whisper at ${this.getServiceUrl("whisper")}...`,
