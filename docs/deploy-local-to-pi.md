@@ -142,6 +142,35 @@ scp -r dist admin@192.168.68.203:/opt/svkrishna/app/
 
 Then restart as above.
 
+## 2b) Full source sync to Pi with rsync (safe settings)
+
+If you choose to sync the full repo tree to `/opt/svkrishna/app`, do not overwrite
+Pi secrets. Exclude `.env` so `SIGNALK_TOKEN`, `INFLUXDB_TOKEN`, and other local-only
+credentials survive deploys.
+
+From local:
+
+```bash
+cd /home/antony-slack/Documents/SV-Krishna
+
+rsync -az --delete \
+  --exclude '.git' \
+  --exclude 'node_modules' \
+  --exclude 'dist' \
+  --exclude 'local' \
+  --exclude '.env' \
+  ./ admin@192.168.68.203:/opt/svkrishna/app/
+```
+
+Then on Pi:
+
+```bash
+cd /opt/svkrishna/app
+npm ci
+npm run build
+sudo systemctl restart svkrishna.service
+```
+
 ## 3) RAG store deployment (build machine -> Pi)
 
 Docling extraction is expensive on the Pi for large manuals. The recommended approach is:
