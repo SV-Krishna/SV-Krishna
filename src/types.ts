@@ -29,6 +29,7 @@ export interface AppConfig {
   ragAllowIngest: boolean;
   ragSourceDir: string;
   ragStorePath: string;
+  vesselContextPath: string;
   ragChunkSize: number;
   ragChunkOverlap: number;
   ragTopK: number;
@@ -41,6 +42,19 @@ export interface AppConfig {
   relayRequireConfirmation: boolean;
   piperBinaryPath: string;
   piperModelPath: string;
+  marineTelemetryEnabled: boolean;
+  signalKUrl: string;
+  signalKToken: string;
+  influxdbUrl: string;
+  influxdbOrg: string;
+  influxdbBucket: string;
+  influxdbToken: string;
+  signalkMcpCommand: string;
+  signalkMcpArgs: string;
+  influxdbMcpCommand: string;
+  influxdbMcpArgs: string;
+  marineMcpRequestTimeoutMs: number;
+  marineMcpMaxCalls: number;
   services: ServiceEndpoint[];
 }
 

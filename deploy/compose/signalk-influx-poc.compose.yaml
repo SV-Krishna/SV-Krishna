@@ -1,0 +1,32 @@
+services:
+  signalk:
+    image: signalk/signalk-server:latest
+    container_name: svkrishna-signalk
+    restart: unless-stopped
+    ports:
+      - "${SIGNALK_HOST_PORT:-3000}:3000"
+    volumes:
+      - signalk_data:/home/node/.signalk
+
+  influxdb:
+    image: influxdb:2.7
+    container_name: svkrishna-influxdb
+    restart: unless-stopped
+    ports:
+      - "${INFLUXDB_HOST_PORT:-8086}:8086"
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: ${INFLUXDB_INIT_USERNAME:-admin}
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUXDB_INIT_PASSWORD:-change-me-now}
+      DOCKER_INFLUXDB_INIT_ORG: ${INFLUXDB_INIT_ORG:-svkrishna}
+      DOCKER_INFLUXDB_INIT_BUCKET: ${INFLUXDB_INIT_BUCKET:-signalk}
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_INIT_ADMIN_TOKEN:-change-me-now}
+      DOCKER_INFLUXDB_INIT_RETENTION: ${INFLUXDB_INIT_RETENTION:-2160h}
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+      - influxdb_config:/etc/influxdb2
+
+volumes:
+  signalk_data:
+  influxdb_data:
+  influxdb_config:

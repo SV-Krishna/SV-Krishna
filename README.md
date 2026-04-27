@@ -83,6 +83,7 @@ This project will replace those assumptions with:
 - `docs/speech-pipeline.md` describes the speech-to-text (Whisper) and text-to-speech (Piper) pipeline and configuration
 - `docs/deploy-local-to-pi.md` describes how we deploy builds from the local machine to the Raspberry Pi
 - `docs/web-ui-review.md` records the web UI review and why this repo uses a thin built-in UI
+- `docs/signalk-influx-mcp-poc.md` is the runbook for the marine telemetry PoC (`SignalK + InfluxDB + MCP`)
 - `docs/profile-readme-archive.md` preserves the original GitHub profile README content from this repository before repurposing it into a codebase
 
 ## License note

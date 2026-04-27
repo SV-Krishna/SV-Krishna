@@ -1,0 +1,23 @@
+[Unit]
+Description=InfluxDB MCP Server (SV-Krishna PoC)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=/opt/svkrishna/config/marine.env
+WorkingDirectory=/opt/svkrishna/app
+
+# Streamable HTTP mode allows health checks and non-stdio integration.
+ExecStart=/usr/bin/env npx -y influxdb-mcp-server --http ${INFLUX_MCP_HTTP_PORT}
+
+Restart=always
+RestartSec=2
+TimeoutStopSec=10
+KillSignal=SIGINT
+
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

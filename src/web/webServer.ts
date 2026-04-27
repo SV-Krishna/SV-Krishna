@@ -10,6 +10,7 @@ import type { AppConfig } from "../types";
 import type { VoiceRunResult } from "../controller";
 import { ConversationStore } from "../services/conversationStore";
 import type { ConversationMessage } from "../services/conversationStore";
+import { VesselContextStore } from "../services/vesselContextStore";
 
 interface UploadResult {
   fileName: string;
@@ -336,7 +337,7 @@ const renderPage = (config: AppConfig): string => `<!doctype html>
     .chat {
       min-height: calc(100vh - 48px);
       display: grid;
-      grid-template-rows: auto 1fr auto;
+      grid-template-rows: auto 1fr;
     }
     .chat-header {
       padding: 22px 24px 16px;
@@ -353,6 +354,28 @@ const renderPage = (config: AppConfig): string => `<!doctype html>
     .chat-header span {
       color: var(--muted);
       font-size: 13px;
+    }
+    .tab-row {
+      display: inline-flex;
+      gap: 8px;
+      background: rgba(255,255,255,0.72);
+      border-radius: 12px;
+      padding: 4px;
+      border: 1px solid rgba(22,33,40,0.1);
+    }
+    .tab-button {
+      border: 0;
+      border-radius: 9px;
+      padding: 8px 12px;
+      background: transparent;
+      color: var(--accent-strong);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .tab-button.active {
+      background: var(--accent);
+      color: white;
     }
     .messages {
       padding: 24px;
@@ -401,6 +424,30 @@ const renderPage = (config: AppConfig): string => `<!doctype html>
       padding: 18px;
       display: grid;
       gap: 10px;
+    }
+    .context-panel {
+      padding: 18px 22px 22px;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+    .context-panel textarea {
+      min-height: 420px;
+      font-family: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .context-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .context-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
     }
     textarea {
       width: 100%;
@@ -478,6 +525,13 @@ const renderPage = (config: AppConfig): string => `<!doctype html>
         </div>
       </header>
 
+      <div class="composer" style="border-top:none; border-bottom:1px solid var(--line); padding:10px 18px;">
+        <div class="tab-row">
+          <button id="chatTabButton" type="button" class="tab-button active">Chat</button>
+          <button id="vesselContextTabButton" type="button" class="tab-button">Vessel Context</button>
+        </div>
+      </div>
+
       <section id="messages" class="messages">
         <div class="bubble assistant">The web UI is ready. Upload a PDF on the left, then ask a question about it.</div>
       </section>
@@ -489,6 +543,21 @@ const renderPage = (config: AppConfig): string => `<!doctype html>
           <button id="sendButton" type="submit">Send</button>
         </div>
       </form>
+
+      <section id="vesselContextPanel" class="context-panel" hidden>
+        <div>
+          <div class="eyebrow">Vessel Context</div>
+          <p class="meta">Add your vessel-specific systems, normal ranges, and preferred SignalK paths (for example current speed and current depth paths).</p>
+        </div>
+        <textarea id="vesselContextText" placeholder="# My Vessel Systems"></textarea>
+        <div class="context-row">
+          <div id="vesselContextStatus" class="hint">Context is stored locally on this Pi.</div>
+          <div class="context-buttons">
+            <button id="reloadVesselContextButton" type="button" class="secondary">Reload</button>
+            <button id="saveVesselContextButton" type="button">Save context</button>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 
@@ -497,6 +566,13 @@ const renderPage = (config: AppConfig): string => `<!doctype html>
     const chatForm = document.getElementById("chatForm");
     const prompt = document.getElementById("prompt");
     const chatStatus = document.getElementById("chatStatus");
+    const chatTabButton = document.getElementById("chatTabButton");
+    const vesselContextTabButton = document.getElementById("vesselContextTabButton");
+    const vesselContextPanel = document.getElementById("vesselContextPanel");
+    const vesselContextText = document.getElementById("vesselContextText");
+    const vesselContextStatus = document.getElementById("vesselContextStatus");
+    const saveVesselContextButton = document.getElementById("saveVesselContextButton");
+    const reloadVesselContextButton = document.getElementById("reloadVesselContextButton");
 	    const uploadButton = document.getElementById("uploadButton");
 	    const uploadStatus = document.getElementById("uploadStatus");
     const refreshButton = document.getElementById("refreshButton");
@@ -610,6 +686,25 @@ const renderPage = (config: AppConfig): string => `<!doctype html>
       });
     };
 
+    const setActiveTab = (tab) => {
+      const isChat = tab === "chat";
+      chatTabButton.classList.toggle("active", isChat);
+      vesselContextTabButton.classList.toggle("active", !isChat);
+      messages.hidden = !isChat;
+      chatForm.hidden = !isChat;
+      vesselContextPanel.hidden = isChat;
+    };
+
+    const loadVesselContext = async () => {
+      const response = await fetch("/api/vessel-context");
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Failed to load vessel context");
+      vesselContextText.value = payload.content || "";
+      vesselContextStatus.textContent = payload.updatedAt
+        ? "Saved " + new Date(payload.updatedAt).toLocaleString()
+        : "Loaded default template.";
+    };
+
     chatForm.addEventListener("submit", async (event) => {
       event.preventDefault();
       const message = prompt.value.trim();
@@ -647,6 +742,52 @@ const renderPage = (config: AppConfig): string => `<!doctype html>
       } catch (error) {
         addMessage("assistant", "Request failed: " + error.message);
         chatStatus.textContent = "Request failed.";
+      }
+    });
+
+    chatTabButton.addEventListener("click", () => setActiveTab("chat"));
+    vesselContextTabButton.addEventListener("click", async () => {
+      setActiveTab("context");
+      try {
+        await loadVesselContext();
+      } catch (error) {
+        vesselContextStatus.textContent = "Failed to load: " + error.message;
+      }
+    });
+
+    saveVesselContextButton.addEventListener("click", async () => {
+      const content = vesselContextText.value.trim();
+      if (!content) {
+        vesselContextStatus.textContent = "Context cannot be empty.";
+        return;
+      }
+
+      saveVesselContextButton.disabled = true;
+      vesselContextStatus.textContent = "Saving...";
+      try {
+        const response = await fetch("/api/vessel-context", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content }),
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || "Failed to save vessel context");
+        vesselContextStatus.textContent = "Saved " + new Date(payload.updatedAt).toLocaleString();
+      } catch (error) {
+        vesselContextStatus.textContent = "Save failed: " + error.message;
+      } finally {
+        saveVesselContextButton.disabled = false;
+      }
+    });
+
+    reloadVesselContextButton.addEventListener("click", async () => {
+      reloadVesselContextButton.disabled = true;
+      try {
+        await loadVesselContext();
+      } catch (error) {
+        vesselContextStatus.textContent = "Reload failed: " + error.message;
+      } finally {
+        reloadVesselContextButton.disabled = false;
       }
     });
 
@@ -756,6 +897,9 @@ const renderPage = (config: AppConfig): string => `<!doctype html>
     loadDocuments().catch((error) => {
       chatStatus.textContent = "Failed to load docs: " + error.message;
     });
+    loadVesselContext().catch((error) => {
+      vesselContextStatus.textContent = "Failed to load: " + error.message;
+    });
   </script>
 </body>
 </html>`;
@@ -763,6 +907,7 @@ const renderPage = (config: AppConfig): string => `<!doctype html>
 export class WebServer {
   private readonly logger: Logger;
   private readonly chat: ChatService;
+  private readonly vesselContext: VesselContextStore;
   private readonly conversations = new ConversationStore({ maxMessages: 24, maxChars: 12000 });
   private server: Server | null = null;
 
@@ -774,6 +919,7 @@ export class WebServer {
   ) {
     this.logger = new Logger(config.logLevel);
     this.chat = new ChatService(config);
+    this.vesselContext = new VesselContextStore(config.vesselContextPath);
   }
 
   async start(): Promise<void> {
@@ -782,6 +928,7 @@ export class WebServer {
     }
 
     await mkdir(this.config.ragSourceDir, { recursive: true });
+    await this.vesselContext.get();
     await this.chat.ensureKnowledgeReady();
 
     this.server = createServer(async (request, response) => {
@@ -808,6 +955,8 @@ export class WebServer {
   }
 
   async stop(): Promise<void> {
+    await this.chat.shutdown();
+
     if (!this.server) {
       return;
     }
@@ -885,6 +1034,30 @@ export class WebServer {
         this.conversations.append(sessionId, "assistant", result.reply);
       }
       json(response, 200, { ...result, relay: { kind: "none" } as RelayApiResult });
+      return;
+    }
+
+    if (method === "GET" && url.pathname === "/api/vessel-context") {
+      const document = await this.vesselContext.get();
+      json(response, 200, document);
+      return;
+    }
+
+    if (method === "PUT" && url.pathname === "/api/vessel-context") {
+      const payload = await readJsonBody<{ content?: string }>(request);
+      const content = payload.content?.trim();
+      if (!content) {
+        json(response, 400, { error: "content is required" });
+        return;
+      }
+
+      if (content.length > 100_000) {
+        json(response, 400, { error: "content too large" });
+        return;
+      }
+
+      await this.vesselContext.save(payload.content ?? "");
+      json(response, 200, { ok: true, updatedAt: new Date().toISOString() });
       return;
     }
 

@@ -4,6 +4,8 @@ import type { OllamaChatMessage } from "./ollamaClient";
 import { OllamaClient } from "./ollamaClient";
 import { hasTrustedSources, RagStore } from "./ragStore";
 import type { ConversationMessage } from "./conversationStore";
+import { MarineMcpOrchestrator } from "./marineMcpOrchestrator";
+import { readFile } from "node:fs/promises";
 
 export type RelayCommand =
   | { action: "none" }
@@ -21,11 +23,13 @@ export class ChatService {
   private readonly logger: Logger;
   private readonly ollama: OllamaClient;
   private readonly rag: RagStore;
+  private readonly marineMcp?: MarineMcpOrchestrator;
 
   constructor(private readonly config: AppConfig) {
     this.logger = new Logger(config.logLevel);
     this.ollama = new OllamaClient(config);
     this.rag = new RagStore(config);
+    this.marineMcp = config.marineTelemetryEnabled ? new MarineMcpOrchestrator(config) : undefined;
   }
 
   async ensureKnowledgeReady(): Promise<void> {
@@ -41,6 +45,20 @@ export class ChatService {
   }
 
   async ask(userText: string, history: ConversationMessage[] = []): Promise<ChatResponse> {
+    const vesselContext = await this.getVesselContextSnippet();
+
+    if (this.marineMcp) {
+      try {
+        const marineReply = await this.marineMcp.tryRespond(userText, history, vesselContext ?? undefined);
+        if (marineReply) {
+          return { reply: marineReply, sources: [] };
+        }
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        this.logger.warn(`Marine MCP orchestration failed: ${detail}`);
+      }
+    }
+
     const sources = this.config.enableRag ? await this.rag.search(userText) : [];
     const trusted = this.config.enableRag ? hasTrustedSources(sources) : false;
 
@@ -52,7 +70,7 @@ export class ChatService {
 
     if (this.config.enableRag && !trusted) {
       const messages: OllamaChatMessage[] = [
-        { role: "system", content: this.config.ollamaSystemPrompt },
+        { role: "system", content: this.withVesselContext(this.config.ollamaSystemPrompt, vesselContext) },
         ...toOllamaHistory(history),
         { role: "user", content: userText },
       ];
@@ -64,13 +82,15 @@ export class ChatService {
     if (history.length === 0) {
       const reply = await this.ollama.respond(
         prompt,
-        sources.length > 0 ? this.buildGroundedSystemPrompt() : undefined,
+        sources.length > 0 ? this.buildGroundedSystemPrompt(vesselContext) : undefined,
       );
       return { reply, sources };
     }
 
     const systemPrompt =
-      sources.length > 0 ? this.buildGroundedSystemPrompt() : this.config.ollamaSystemPrompt;
+      sources.length > 0
+        ? this.buildGroundedSystemPrompt(vesselContext)
+        : this.withVesselContext(this.config.ollamaSystemPrompt, vesselContext);
     const messages: OllamaChatMessage[] = [
       { role: "system", content: systemPrompt },
       ...toOllamaHistory(history),
@@ -85,11 +105,16 @@ export class ChatService {
   }
 
   async answerWithSources(userText: string, sources: ChatResponse["sources"]): Promise<string> {
+    const vesselContext = await this.getVesselContextSnippet();
     const prompt = sources.length > 0 ? this.rag.buildPrompt(userText, sources) : userText;
     return await this.ollama.respond(
       prompt,
-      sources.length > 0 ? this.buildGroundedSystemPrompt() : undefined,
+      sources.length > 0 ? this.buildGroundedSystemPrompt(vesselContext) : undefined,
     );
+  }
+
+  async shutdown(): Promise<void> {
+    await this.marineMcp?.shutdown();
   }
 
   async planRelayCommand(userText: string): Promise<RelayCommand> {
@@ -139,8 +164,8 @@ export class ChatService {
     return parseRelayCommand(raw);
   }
 
-  private buildGroundedSystemPrompt(): string {
-    return [
+  private buildGroundedSystemPrompt(vesselContext: string | null): string {
+    const base = [
       this.config.ollamaSystemPrompt,
       "When reference excerpts are provided, answer from them first.",
       "Do not invent procedures, settings, or specifications that are not supported by the excerpts.",
@@ -149,6 +174,34 @@ export class ChatService {
       "If the excerpts are incomplete, say what is missing.",
       "Finish with a short 'Sources:' line citing the document name and page numbers you used.",
     ].join(" ");
+
+    return this.withVesselContext(base, vesselContext);
+  }
+
+  private withVesselContext(basePrompt: string, vesselContext: string | null): string {
+    if (!vesselContext) {
+      return basePrompt;
+    }
+
+    return `${basePrompt}\n\nVessel context (operator-provided):\n${vesselContext}`;
+  }
+
+  private async getVesselContextSnippet(): Promise<string | null> {
+    try {
+      const content = (await readFile(this.config.vesselContextPath, "utf8")).trim();
+      if (!content) {
+        return null;
+      }
+
+      const maxChars = 4000;
+      if (content.length <= maxChars) {
+        return content;
+      }
+
+      return `${content.slice(0, maxChars)}\n\n[Context truncated to ${maxChars} chars]`;
+    } catch {
+      return null;
+    }
   }
 }
 

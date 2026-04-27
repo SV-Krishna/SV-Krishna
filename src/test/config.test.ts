@@ -29,6 +29,7 @@ test("loadConfig returns expected default service topology", () => {
   delete process.env.RAG_ALLOW_INGEST;
   delete process.env.RAG_SOURCE_DIR;
   delete process.env.RAG_STORE_PATH;
+  delete process.env.VESSEL_CONTEXT_PATH;
   delete process.env.RAG_CHUNK_SIZE;
   delete process.env.RAG_CHUNK_OVERLAP;
   delete process.env.RAG_TOP_K;
@@ -40,6 +41,19 @@ test("loadConfig returns expected default service topology", () => {
   delete process.env.RELAY_REQUIRE_CONFIRMATION;
   delete process.env.PIPER_BINARY_PATH;
   delete process.env.PIPER_MODEL_PATH;
+  delete process.env.MARINE_TELEMETRY_ENABLED;
+  delete process.env.SIGNALK_URL;
+  delete process.env.SIGNALK_TOKEN;
+  delete process.env.INFLUXDB_URL;
+  delete process.env.INFLUXDB_ORG;
+  delete process.env.INFLUXDB_BUCKET;
+  delete process.env.INFLUXDB_TOKEN;
+  delete process.env.SIGNALK_MCP_COMMAND;
+  delete process.env.SIGNALK_MCP_ARGS;
+  delete process.env.INFLUXDB_MCP_COMMAND;
+  delete process.env.INFLUXDB_MCP_ARGS;
+  delete process.env.MARINE_MCP_REQUEST_TIMEOUT_MS;
+  delete process.env.MARINE_MCP_MAX_CALLS;
 
   const config = loadConfig();
   assert.equal(config.nodeEnv, "development");
@@ -70,6 +84,7 @@ test("loadConfig returns expected default service topology", () => {
   assert.equal(config.ragAllowIngest, true);
   assert.equal(config.ragSourceDir, `${process.cwd()}/local/svkrishna/rag/inbox`);
   assert.equal(config.ragStorePath, `${process.cwd()}/local/svkrishna/rag/store.json`);
+  assert.equal(config.vesselContextPath, `${process.cwd()}/local/svkrishna/config/vessel-context.md`);
   assert.equal(config.ragChunkSize, 120);
   assert.equal(config.ragChunkOverlap, 30);
   assert.equal(config.ragTopK, 3);
@@ -81,4 +96,17 @@ test("loadConfig returns expected default service topology", () => {
   assert.equal(config.relayRequireConfirmation, true);
   assert.equal(config.piperBinaryPath, "piper");
   assert.equal(config.piperModelPath, "/path/to/piper/voice/model.onnx");
+  assert.equal(config.marineTelemetryEnabled, false);
+  assert.equal(config.signalKUrl, "http://127.0.0.1:3000");
+  assert.equal(config.signalKToken, "");
+  assert.equal(config.influxdbUrl, "http://127.0.0.1:8086");
+  assert.equal(config.influxdbOrg, "");
+  assert.equal(config.influxdbBucket, "");
+  assert.equal(config.influxdbToken, "");
+  assert.equal(config.signalkMcpCommand, "npx");
+  assert.equal(config.signalkMcpArgs, "-y signalk-mcp-server");
+  assert.equal(config.influxdbMcpCommand, "npx");
+  assert.equal(config.influxdbMcpArgs, "-y influxdb-mcp-server --stdio");
+  assert.equal(config.marineMcpRequestTimeoutMs, 15000);
+  assert.equal(config.marineMcpMaxCalls, 4);
 });

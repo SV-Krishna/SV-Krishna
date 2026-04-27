@@ -99,6 +99,12 @@ export const loadConfig = (): AppConfig => {
       "RAG_STORE_PATH",
       nodeEnv === "development" ? `${devDataRoot}/rag/store.json` : "/opt/svkrishna/rag/store.json",
     ),
+    vesselContextPath: readString(
+      "VESSEL_CONTEXT_PATH",
+      nodeEnv === "development"
+        ? `${devDataRoot}/config/vessel-context.md`
+        : "/opt/svkrishna/config/vessel-context.md",
+    ),
     ragChunkSize: readNumber("RAG_CHUNK_SIZE", 120),
     ragChunkOverlap: readNumber("RAG_CHUNK_OVERLAP", 30),
     ragTopK: readNumber("RAG_TOP_K", 3),
@@ -114,6 +120,19 @@ export const loadConfig = (): AppConfig => {
     relayRequireConfirmation: readBoolean("RELAY_REQUIRE_CONFIRMATION", true),
     piperBinaryPath: readString("PIPER_BINARY_PATH", "piper"),
     piperModelPath: readString("PIPER_MODEL_PATH", "/path/to/piper/voice/model.onnx"),
+    marineTelemetryEnabled: readBoolean("MARINE_TELEMETRY_ENABLED", false),
+    signalKUrl: readString("SIGNALK_URL", "http://127.0.0.1:3000"),
+    signalKToken: readString("SIGNALK_TOKEN", ""),
+    influxdbUrl: readString("INFLUXDB_URL", "http://127.0.0.1:8086"),
+    influxdbOrg: readString("INFLUXDB_ORG", ""),
+    influxdbBucket: readString("INFLUXDB_BUCKET", ""),
+    influxdbToken: readString("INFLUXDB_TOKEN", ""),
+    signalkMcpCommand: readString("SIGNALK_MCP_COMMAND", "npx"),
+    signalkMcpArgs: readString("SIGNALK_MCP_ARGS", "-y signalk-mcp-server"),
+    influxdbMcpCommand: readString("INFLUXDB_MCP_COMMAND", "npx"),
+    influxdbMcpArgs: readString("INFLUXDB_MCP_ARGS", "-y influxdb-mcp-server --stdio"),
+    marineMcpRequestTimeoutMs: readNumber("MARINE_MCP_REQUEST_TIMEOUT_MS", 15000),
+    marineMcpMaxCalls: readNumber("MARINE_MCP_MAX_CALLS", 4),
     services,
   };
 };

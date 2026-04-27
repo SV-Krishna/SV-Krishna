@@ -5,6 +5,7 @@ import { ChatService } from "./services/chatService";
 import { checkServiceHealth } from "./services/health";
 import { PiperClient } from "./services/piperClient";
 import { RagStore } from "./services/ragStore";
+import { MarineTelemetryService } from "./services/marineTelemetryService";
 import type { RelayCommand } from "./services/chatService";
 import type { ConversationMessage } from "./services/conversationStore";
 import { RelayService } from "./services/relayService";
@@ -34,6 +35,7 @@ export class ControllerApp {
   private readonly rag: RagStore;
   private readonly chat: ChatService;
   private readonly relay?: RelayService;
+  private readonly marine?: MarineTelemetryService;
   private piperReady = false;
   private serviceHealth: ServiceHealth[] = [];
   private healthTimer?: NodeJS.Timeout;
@@ -49,6 +51,7 @@ export class ControllerApp {
     this.rag = new RagStore(config);
     this.chat = new ChatService(config);
     this.relay = config.relayControlEnabled ? new RelayService(config) : undefined;
+    this.marine = config.marineTelemetryEnabled ? new MarineTelemetryService(config) : undefined;
   }
 
   async start(options?: { enableTerminalInput?: boolean }): Promise<void> {
@@ -86,6 +89,7 @@ export class ControllerApp {
       this.healthTimer = undefined;
     }
     this.input.stop();
+    void this.chat.shutdown();
     this.logger.info("Controller stopped.");
   }
 
@@ -321,6 +325,7 @@ export class ControllerApp {
       this.piper.runPreflightChecks(),
       this.rag.runPreflightChecks(),
       this.relay?.runPreflightChecks() ?? Promise.resolve([]),
+      this.marine?.runPreflightChecks() ?? Promise.resolve([]),
     ]);
     return checks.flat();
   }
