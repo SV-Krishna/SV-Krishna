@@ -15,6 +15,8 @@ interface PlannedToolCall {
 interface PlannedExecution {
   useMarine: boolean;
   notes?: string;
+  needsClarification?: boolean;
+  clarificationQuestion?: string;
   calls: PlannedToolCall[];
 }
 
@@ -53,35 +55,6 @@ const parseFirstJsonObject = (text: string): unknown => {
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
-
-const isLikelyMarinePrompt = (text: string): boolean => {
-  const normalized = text.toLowerCase();
-  const hints = [
-    "boat",
-    "vessel",
-    "signalk",
-    "ais",
-    "anchor",
-    "course",
-    "heading",
-    "speed",
-    "gps",
-    "position",
-    "wind",
-    "depth",
-    "battery",
-    "voltage",
-    "current",
-    "soc",
-    "marine",
-    "navigation",
-    "history",
-    "trend",
-    "influx",
-  ];
-
-  return hints.some((hint) => normalized.includes(hint));
-};
 
 const DEPTH_PATH_CANDIDATES = [
   "environment.depth.belowTransducer",
@@ -197,6 +170,11 @@ const parsePlannedExecution = (
 
   const useMarine = parsed.useMarine === true;
   const notes = typeof parsed.notes === "string" ? parsed.notes : undefined;
+  const needsClarification = parsed.needsClarification === true;
+  const clarificationQuestion =
+    typeof parsed.clarificationQuestion === "string" && parsed.clarificationQuestion.trim().length > 0
+      ? parsed.clarificationQuestion.trim()
+      : undefined;
   const callsRaw = Array.isArray(parsed.calls) ? parsed.calls : [];
 
   const calls: PlannedToolCall[] = [];
@@ -226,6 +204,8 @@ const parsePlannedExecution = (
   return {
     useMarine,
     notes,
+    needsClarification,
+    clarificationQuestion,
     calls,
   };
 };
@@ -240,7 +220,7 @@ export class MarineMcpOrchestrator {
 
   constructor(private readonly config: AppConfig) {
     this.ollama = new OllamaClient(config);
-    this.deterministicShortcutsEnabled = process.env.MARINE_DETERMINISTIC_SHORTCUTS !== "false";
+    this.deterministicShortcutsEnabled = process.env.MARINE_DETERMINISTIC_SHORTCUTS === "true";
 
     const signalkEndpoint = new URL(config.signalKUrl);
     const signalkPort = signalkEndpoint.port || (signalkEndpoint.protocol === "https:" ? "443" : "80");
@@ -277,7 +257,7 @@ export class MarineMcpOrchestrator {
     history: ConversationMessage[],
     vesselContext?: string,
   ): Promise<string | null> {
-    if (!this.config.marineTelemetryEnabled || !isLikelyMarinePrompt(userText)) {
+    if (!this.config.marineTelemetryEnabled) {
       return null;
     }
 
@@ -299,7 +279,15 @@ export class MarineMcpOrchestrator {
     }
 
     const plan = await this.planExecution(userText, history, available, vesselContext ?? null);
-    if (!plan || !plan.useMarine || plan.calls.length === 0) {
+    if (!plan) {
+      return null;
+    }
+
+    if (plan.needsClarification && plan.clarificationQuestion) {
+      return plan.clarificationQuestion;
+    }
+
+    if (!plan.useMarine || plan.calls.length === 0) {
       return null;
     }
 
@@ -371,14 +359,17 @@ export class MarineMcpOrchestrator {
       "You are a marine MCP tool planner.",
       "Return ONLY one JSON object. No markdown or prose.",
       "Schema:",
-      '{"useMarine":boolean,"notes":"string","calls":[{"server":"signalk|influx","tool":"name","arguments":{}}]}',
+      '{"useMarine":boolean,"needsClarification":boolean,"clarificationQuestion":"string","notes":"string","calls":[{"server":"signalk|influx","tool":"name","arguments":{}}]}',
       "Rules:",
-      "- useMarine=true only if the user asks for live boat telemetry or time-series trends.",
+      "- Decide intent from user wording and context. useMarine=true only for live boat telemetry or marine time-series analysis.",
+      "- If user intent is marine but key detail is missing or ambiguous, set needsClarification=true and ask one short question in clarificationQuestion.",
+      "- If needsClarification=true, set calls to [] and useMarine=true.",
+      "- If not a marine telemetry request, set useMarine=false, needsClarification=false, calls=[].",
       "- choose at most 4 calls.",
       "- use only tools listed below.",
       "- for Influx queries use tool query-data with arguments {org, query}.",
       "- for SignalK use listed tools only.",
-      "- when unsure, return useMarine=false with empty calls.",
+      "- prefer operator-provided Vessel context path mappings when selecting SignalK paths.",
       `Available SignalK tools: ${JSON.stringify([...available.signalk])}`,
       `Available Influx tools: ${JSON.stringify([...available.influx])}`,
       this.config.influxdbOrg

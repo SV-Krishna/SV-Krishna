@@ -127,7 +127,7 @@ test("MarineMcpOrchestrator executes planned MCP calls and synthesizes final rep
 
 test("MarineMcpOrchestrator skips MCP flow for non-marine prompts", async () => {
   const ollama = await startMockOllama({
-    planner: JSON.stringify({ useMarine: true, calls: [] }),
+    planner: JSON.stringify({ useMarine: false, needsClarification: false, calls: [] }),
     synthesis: "unused",
   });
 
@@ -136,7 +136,30 @@ test("MarineMcpOrchestrator skips MCP flow for non-marine prompts", async () => 
   try {
     const reply = await orchestrator.tryRespond("Summarize this PDF chapter about bearings", []);
     assert.equal(reply, null);
-    assert.equal(ollama.requests(), 0);
+    assert.equal(ollama.requests(), 1);
+  } finally {
+    await orchestrator.shutdown();
+    await ollama.close();
+  }
+});
+
+test("MarineMcpOrchestrator returns clarification question for ambiguous marine requests", async () => {
+  const ollama = await startMockOllama({
+    planner: JSON.stringify({
+      useMarine: true,
+      needsClarification: true,
+      clarificationQuestion: "Do you mean true wind speed or apparent wind speed?",
+      calls: [],
+    }),
+    synthesis: "unused",
+  });
+
+  const orchestrator = new MarineMcpOrchestrator(buildConfig(ollama.endpoint));
+
+  try {
+    const reply = await orchestrator.tryRespond("What is our current wind speed?", []);
+    assert.equal(reply, "Do you mean true wind speed or apparent wind speed?");
+    assert.equal(ollama.requests(), 1);
   } finally {
     await orchestrator.shutdown();
     await ollama.close();
