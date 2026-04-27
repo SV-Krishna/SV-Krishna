@@ -33,6 +33,9 @@ interface MetricReading {
   units?: string;
 }
 
+export const MARINE_TELEMETRY_UNAVAILABLE_REPLY =
+  "I couldn't retrieve live telemetry right now. Please try again in a moment.";
+
 const toOllamaHistory = (history: ConversationMessage[]): OllamaChatMessage[] =>
   history.map((message) => ({
     role: message.role,
@@ -311,6 +314,11 @@ export class MarineMcpOrchestrator {
           output: detail,
         });
       }
+    }
+
+    const hasSuccessfulTelemetry = results.some((result) => result.ok && result.output.trim().length > 0);
+    if (!hasSuccessfulTelemetry) {
+      return MARINE_TELEMETRY_UNAVAILABLE_REPLY;
     }
 
     return await this.composeFinalAnswer(userText, history, plan, results, vesselContext ?? null);

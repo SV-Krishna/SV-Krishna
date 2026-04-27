@@ -4,7 +4,7 @@ import type { OllamaChatMessage } from "./ollamaClient";
 import { OllamaClient } from "./ollamaClient";
 import { hasTrustedSources, RagStore } from "./ragStore";
 import type { ConversationMessage } from "./conversationStore";
-import { MarineMcpOrchestrator } from "./marineMcpOrchestrator";
+import { MarineMcpOrchestrator, MARINE_TELEMETRY_UNAVAILABLE_REPLY } from "./marineMcpOrchestrator";
 import { readFile } from "node:fs/promises";
 
 export type RelayCommand =
@@ -18,6 +18,32 @@ const toOllamaHistory = (history: ConversationMessage[]): OllamaChatMessage[] =>
     role: message.role,
     content: message.content,
   }));
+
+const isLikelyTelemetryPrompt = (text: string): boolean => {
+  const normalized = text.toLowerCase();
+  const hints = [
+    "depth",
+    "wind",
+    "speed",
+    "heading",
+    "course",
+    "position",
+    "sog",
+    "stw",
+    "battery",
+    "voltage",
+    "soc",
+    "temperature",
+    "pressure",
+    "bilge",
+    "rpm",
+    "fuel",
+    "influx",
+    "signalk",
+    "telemetry",
+  ];
+  return hints.some((hint) => normalized.includes(hint));
+};
 
 export class ChatService {
   private readonly logger: Logger;
@@ -46,6 +72,7 @@ export class ChatService {
 
   async ask(userText: string, history: ConversationMessage[] = []): Promise<ChatResponse> {
     const vesselContext = await this.getVesselContextSnippet();
+    const telemetryIntent = isLikelyTelemetryPrompt(userText);
 
     if (this.marineMcp) {
       try {
@@ -53,9 +80,15 @@ export class ChatService {
         if (marineReply) {
           return { reply: marineReply, sources: [] };
         }
+        if (telemetryIntent) {
+          return { reply: MARINE_TELEMETRY_UNAVAILABLE_REPLY, sources: [] };
+        }
       } catch (error) {
         const detail = error instanceof Error ? error.message : String(error);
         this.logger.warn(`Marine MCP orchestration failed: ${detail}`);
+        if (telemetryIntent) {
+          return { reply: MARINE_TELEMETRY_UNAVAILABLE_REPLY, sources: [] };
+        }
       }
     }
 

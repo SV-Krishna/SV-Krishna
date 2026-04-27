@@ -70,6 +70,17 @@ const handleRequest = (message: JsonRpcRequest): void => {
     const params = (message.params ?? {}) as { name?: string; arguments?: Record<string, unknown> };
     if (serverType === "signalk" && params.name === "getPathValue") {
       const path = typeof params.arguments?.path === "string" ? params.arguments.path : "unknown";
+      if (path === "force.error") {
+        writeMessage({
+          jsonrpc: "2.0",
+          id: message.id,
+          error: {
+            code: -32000,
+            message: "Forced mock error",
+          },
+        });
+        return;
+      }
       writeMessage({
         jsonrpc: "2.0",
         id: message.id,

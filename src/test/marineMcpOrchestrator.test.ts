@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { join } from "node:path";
 import { loadConfig } from "../config";
-import { MarineMcpOrchestrator } from "../services/marineMcpOrchestrator";
+import { MarineMcpOrchestrator, MARINE_TELEMETRY_UNAVAILABLE_REPLY } from "../services/marineMcpOrchestrator";
 import type { AppConfig } from "../types";
 
 const readJsonBody = async (request: IncomingMessage): Promise<unknown> => {
@@ -159,6 +159,34 @@ test("MarineMcpOrchestrator returns clarification question for ambiguous marine 
   try {
     const reply = await orchestrator.tryRespond("What is our current wind speed?", []);
     assert.equal(reply, "Do you mean true wind speed or apparent wind speed?");
+    assert.equal(ollama.requests(), 1);
+  } finally {
+    await orchestrator.shutdown();
+    await ollama.close();
+  }
+});
+
+test("MarineMcpOrchestrator returns unavailable message when tool calls fail", async () => {
+  const ollama = await startMockOllama({
+    planner: JSON.stringify({
+      useMarine: true,
+      needsClarification: false,
+      calls: [
+        {
+          server: "signalk",
+          tool: "getPathValue",
+          arguments: { path: "force.error" },
+        },
+      ],
+    }),
+    synthesis: "unused",
+  });
+
+  const orchestrator = new MarineMcpOrchestrator(buildConfig(ollama.endpoint));
+
+  try {
+    const reply = await orchestrator.tryRespond("What is our current depth?", []);
+    assert.equal(reply, MARINE_TELEMETRY_UNAVAILABLE_REPLY);
     assert.equal(ollama.requests(), 1);
   } finally {
     await orchestrator.shutdown();
