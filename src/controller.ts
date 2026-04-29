@@ -153,7 +153,7 @@ export class ControllerApp {
         return { transcript, reply: null, relay: relayResult };
       }
 
-      this.setState("thinking", `Sending transcript to Ollama at ${this.getServiceUrl("ollama")}...`);
+      this.setState("thinking", "Processing transcript...");
       const { reply } = await this.chat.ask(transcript, history);
       const safeReply = reply || "";
 

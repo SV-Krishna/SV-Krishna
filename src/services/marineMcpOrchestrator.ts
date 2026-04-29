@@ -104,11 +104,15 @@ const isLikelyWindSpeedPrompt = (text: string): boolean => {
   return (
     normalized.includes("wind speed") ||
     normalized.includes("wnd speed") ||
+    normalized.includes("winner speed") ||
     normalized.includes("speed true") ||
     normalized.includes("speedtrue") ||
     normalized.includes("apparent wind") ||
     normalized.includes("wind true") ||
-    normalized.includes("wnd true")
+    normalized.includes("wnd true") ||
+    normalized.includes("winner true") ||
+    normalized.includes("current winner") ||
+    normalized.includes("our winner")
   );
 };
 
