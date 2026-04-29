@@ -75,6 +75,11 @@ const DEPTH_PATH_CANDIDATES = [
 ];
 
 const SPEED_PATH_CANDIDATES = ["navigation.speedOverGround", "navigation.speedThroughWater"];
+const WIND_SPEED_PATH_CANDIDATES = [
+  "environment.wind.speedTrue",
+  "environment.wind.speedApparent",
+  "environment.wind.speedOverGround",
+];
 
 const isLikelyDepthPrompt = (text: string): boolean => {
   const normalized = text.toLowerCase();
@@ -83,11 +88,25 @@ const isLikelyDepthPrompt = (text: string): boolean => {
 
 const isLikelySpeedPrompt = (text: string): boolean => {
   const normalized = text.toLowerCase();
+  if (normalized.includes("wind")) {
+    return false;
+  }
   return (
     normalized.includes("speed") ||
     normalized.includes("sog") ||
     normalized.includes("speedoverground") ||
     normalized.includes("speedthroughwater")
+  );
+};
+
+const isLikelyWindSpeedPrompt = (text: string): boolean => {
+  const normalized = text.toLowerCase();
+  return (
+    normalized.includes("wind speed") ||
+    normalized.includes("speed true") ||
+    normalized.includes("speedtrue") ||
+    normalized.includes("apparent wind") ||
+    normalized.includes("wind true")
   );
 };
 
@@ -354,6 +373,12 @@ export class MarineMcpOrchestrator {
       }
 
       const directSpeed = await this.trySpeedShortcutDirectSignalK(userText);
+      const directWindSpeed = await this.tryWindSpeedShortcutDirectSignalK(userText);
+      if (directWindSpeed) {
+        this.logger.debug(`Marine timing: total=${Date.now() - startedAt}ms (direct-signalk-wind-speed path)`);
+        return directWindSpeed;
+      }
+
       if (directSpeed) {
         this.logger.debug(`Marine timing: total=${Date.now() - startedAt}ms (direct-signalk-speed path)`);
         return directSpeed;
@@ -962,6 +987,19 @@ export class MarineMcpOrchestrator {
     }
 
     return `Current speed is ${formatMetric(reading)}${reading.path ? ` (${reading.path})` : ""}.\nSource: SignalK API.`;
+  }
+
+  private async tryWindSpeedShortcutDirectSignalK(userText: string): Promise<string | null> {
+    if (!isLikelyWindSpeedPrompt(userText)) {
+      return null;
+    }
+
+    const reading = await this.fetchSignalKReadingForPaths(WIND_SPEED_PATH_CANDIDATES);
+    if (!reading) {
+      return null;
+    }
+
+    return `Current wind speed is ${formatMetric(reading)}${reading.path ? ` (${reading.path})` : ""}.\nSource: SignalK API.`;
   }
 
   private async fetchSignalKReadingForPaths(paths: string[]): Promise<MetricReading | null> {
