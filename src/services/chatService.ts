@@ -150,6 +150,10 @@ export class ChatService {
     await this.marineMcp?.shutdown();
   }
 
+  async warmupModel(): Promise<void> {
+    await this.ollama.warmup();
+  }
+
   async planRelayCommand(userText: string): Promise<RelayCommand> {
     const systemPrompt = [
       "You convert user requests into relay control commands for a Waveshare ESP32-S3-Relay-6CH device.",

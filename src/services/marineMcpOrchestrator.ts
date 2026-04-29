@@ -1,6 +1,7 @@
 import type { AppConfig } from "../types";
+import { Logger } from "../logger";
 import type { ConversationMessage } from "./conversationStore";
-import type { OllamaChatMessage } from "./ollamaClient";
+import type { OllamaChatMessage, OllamaFunctionTool, OllamaToolCall } from "./ollamaClient";
 import { OllamaClient } from "./ollamaClient";
 import { McpStdioClient, type McpToolDefinition } from "./mcpStdioClient";
 
@@ -31,6 +32,12 @@ interface MetricReading {
   path?: string;
   value: string | number;
   units?: string;
+}
+
+interface ExecutableToolCall {
+  server: McpServerName;
+  tool: string;
+  arguments: Record<string, unknown>;
 }
 
 export const MARINE_TELEMETRY_UNAVAILABLE_REPLY =
@@ -64,6 +71,7 @@ const DEPTH_PATH_CANDIDATES = [
   "navigation.depth.belowTransducer",
   "environment.depth.belowKeel",
   "navigation.depth.belowKeel",
+  "environment.depth.belowSurface",
 ];
 
 const SPEED_PATH_CANDIDATES = ["navigation.speedOverGround", "navigation.speedThroughWater"];
@@ -81,6 +89,32 @@ const isLikelySpeedPrompt = (text: string): boolean => {
     normalized.includes("speedoverground") ||
     normalized.includes("speedthroughwater")
   );
+};
+
+const isLikelyMarinePrompt = (text: string): boolean => {
+  const normalized = text.toLowerCase();
+  const hints = [
+    "depth",
+    "wind",
+    "speed",
+    "heading",
+    "course",
+    "position",
+    "sog",
+    "stw",
+    "battery",
+    "voltage",
+    "soc",
+    "temperature",
+    "pressure",
+    "bilge",
+    "rpm",
+    "fuel",
+    "influx",
+    "signalk",
+    "telemetry",
+  ];
+  return hints.some((hint) => normalized.includes(hint));
 };
 
 const extractToolOutput = (value: unknown): string => {
@@ -155,10 +189,51 @@ const toMetricReading = (value: unknown): MetricReading | null => {
   return null;
 };
 
+const normalizeSignalkCode = (raw: string): string => {
+  const code = raw.trim();
+  if (!code) {
+    return "";
+  }
+
+  // If model already returns the expected async IIFE form, keep it untouched.
+  if (code.includes("(async () => {") && code.endsWith("})()")) {
+    return code;
+  }
+
+  // Common small-model output: top-level `return ...` (illegal in isolate top-level).
+  if (code.startsWith("return ")) {
+    return ["(async () => {", `  ${code}`, "})()"].join("\n");
+  }
+
+  // If the model returns a single expression, return it as JSON from wrapper.
+  if (!code.includes("\n") && !code.includes(";")) {
+    return [
+      "(async () => {",
+      `  const value = ${code};`,
+      "  return JSON.stringify(value);",
+      "})()",
+    ].join("\n");
+  }
+
+  // Default: wrap arbitrary snippet and preserve explicit returns if present.
+  return ["(async () => {", code, "})()"].join("\n");
+};
+
 const formatMetric = (reading: MetricReading): string => {
   const rawValue = typeof reading.value === "number" ? String(reading.value) : reading.value;
   const units = reading.units?.trim();
   return units && units.length > 0 ? `${rawValue} ${units}` : rawValue;
+};
+
+const getNestedValue = (root: unknown, dottedPath: string): unknown => {
+  let current: unknown = root;
+  for (const part of dottedPath.split(".")) {
+    if (!isObject(current)) {
+      return null;
+    }
+    current = current[part];
+  }
+  return current;
 };
 
 const parsePlannedExecution = (
@@ -214,16 +289,22 @@ const parsePlannedExecution = (
 };
 
 export class MarineMcpOrchestrator {
+  private readonly logger: Logger;
   private readonly ollama: OllamaClient;
   private readonly signalkClient: McpStdioClient;
   private readonly influxClient: McpStdioClient;
   private readonly deterministicShortcutsEnabled: boolean;
+  private readonly fastMarineMode: boolean;
+  private readonly toolModel: string | null;
   private toolCatalog: Record<McpServerName, McpToolDefinition[]> = { signalk: [], influx: [] };
   private catalogFetchedAt = 0;
 
   constructor(private readonly config: AppConfig) {
+    this.logger = new Logger(config.logLevel);
     this.ollama = new OllamaClient(config);
-    this.deterministicShortcutsEnabled = process.env.MARINE_DETERMINISTIC_SHORTCUTS === "true";
+    this.deterministicShortcutsEnabled = process.env.MARINE_DETERMINISTIC_SHORTCUTS !== "false";
+    this.fastMarineMode = process.env.MARINE_FAST_MODE !== "false";
+    this.toolModel = config.ollamaToolModel.trim().length > 0 ? config.ollamaToolModel.trim() : null;
 
     const signalkEndpoint = new URL(config.signalKUrl);
     const signalkPort = signalkEndpoint.port || (signalkEndpoint.protocol === "https:" ? "443" : "80");
@@ -260,11 +341,28 @@ export class MarineMcpOrchestrator {
     history: ConversationMessage[],
     vesselContext?: string,
   ): Promise<string | null> {
+    const startedAt = Date.now();
     if (!this.config.marineTelemetryEnabled) {
       return null;
     }
 
+    if (this.deterministicShortcutsEnabled) {
+      const directDepth = await this.tryDepthShortcutDirectSignalK(userText);
+      if (directDepth) {
+        this.logger.debug(`Marine timing: total=${Date.now() - startedAt}ms (direct-signalk-depth path)`);
+        return directDepth;
+      }
+
+      const directSpeed = await this.trySpeedShortcutDirectSignalK(userText);
+      if (directSpeed) {
+        this.logger.debug(`Marine timing: total=${Date.now() - startedAt}ms (direct-signalk-speed path)`);
+        return directSpeed;
+      }
+    }
+
+    const toolsStart = Date.now();
     const available = await this.getAvailableTools();
+    this.logger.debug(`Marine timing: getAvailableTools=${Date.now() - toolsStart}ms`);
     if (available.signalk.size === 0 && available.influx.size === 0) {
       return null;
     }
@@ -272,13 +370,26 @@ export class MarineMcpOrchestrator {
     if (this.deterministicShortcutsEnabled) {
       const deterministicDepth = await this.tryDepthShortcut(userText, available);
       if (deterministicDepth) {
+        this.logger.debug(`Marine timing: total=${Date.now() - startedAt}ms (deterministic-depth path)`);
         return deterministicDepth;
       }
 
       const deterministicSpeed = await this.trySpeedShortcut(userText, available);
       if (deterministicSpeed) {
+        this.logger.debug(`Marine timing: total=${Date.now() - startedAt}ms (deterministic-speed path)`);
         return deterministicSpeed;
       }
+    }
+
+    // In fast mode, avoid high-latency LLM paths for telemetry.
+    if (this.fastMarineMode && isLikelyMarinePrompt(userText)) {
+      return MARINE_TELEMETRY_UNAVAILABLE_REPLY;
+    }
+
+    const nativeToolReply = await this.tryRespondViaNativeToolCalls(userText, history, available, vesselContext ?? null);
+    if (nativeToolReply) {
+      this.logger.debug(`Marine timing: total=${Date.now() - startedAt}ms (native-tools path)`);
+      return nativeToolReply;
     }
 
     const plan = await this.planExecution(userText, history, available, vesselContext ?? null);
@@ -295,6 +406,7 @@ export class MarineMcpOrchestrator {
     }
 
     const results: ToolCallResult[] = [];
+    const planCallsStart = Date.now();
     for (const call of plan.calls.slice(0, this.config.marineMcpMaxCalls)) {
       const client = call.server === "signalk" ? this.signalkClient : this.influxClient;
       try {
@@ -315,13 +427,18 @@ export class MarineMcpOrchestrator {
         });
       }
     }
+    this.logger.debug(`Marine timing: planner mcp-calls=${Date.now() - planCallsStart}ms`);
 
     const hasSuccessfulTelemetry = results.some((result) => result.ok && result.output.trim().length > 0);
     if (!hasSuccessfulTelemetry) {
       return MARINE_TELEMETRY_UNAVAILABLE_REPLY;
     }
 
-    return await this.composeFinalAnswer(userText, history, plan, results, vesselContext ?? null);
+    const composeStart = Date.now();
+    const final = await this.composeFinalAnswer(userText, history, plan, results, vesselContext ?? null);
+    this.logger.debug(`Marine timing: composeFinalAnswer=${Date.now() - composeStart}ms`);
+    this.logger.debug(`Marine timing: total=${Date.now() - startedAt}ms (planner path)`);
+    return final;
   }
 
   async shutdown(): Promise<void> {
@@ -395,8 +512,252 @@ export class MarineMcpOrchestrator {
       { role: "user", content: userText },
     ];
 
-    const raw = await this.ollama.respondMessages(messages);
+    const raw = await this.ollama.respondMessages(messages, this.toolModel ? { model: this.toolModel } : undefined);
     return parsePlannedExecution(raw, available, this.config.marineMcpMaxCalls);
+  }
+
+  private async tryRespondViaNativeToolCalls(
+    userText: string,
+    history: ConversationMessage[],
+    available: Record<McpServerName, Set<string>>,
+    vesselContext: string | null,
+  ): Promise<string | null> {
+    const tools = this.buildOllamaTools(available);
+    if (tools.length === 0) {
+      return null;
+    }
+
+    const systemPrompt = [
+      "You are a marine telemetry assistant for SV Krishna.",
+      "If the user asks for live or historical marine telemetry, call tools.",
+      "Prefer SignalK for current/live values and Influx for historical trends.",
+      "For current depth, prefer SignalK path environment.depth.belowTransducer first.",
+      "When calling signalk_execute_code, return ONLY JavaScript code in this exact shape:",
+      "(async () => {",
+      "  const data = await getPathValue(\"environment.depth.belowTransducer\");",
+      "  const value = data?.value ?? data?.data?.value ?? null;",
+      "  const units = data?.units ?? data?.data?.units ?? \"m\";",
+      "  return JSON.stringify({ path: \"environment.depth.belowTransducer\", value, units });",
+      "})()",
+      "Do not return top-level `return ...` without wrapper.",
+      "Do not invent values.",
+      vesselContext ? `Vessel context:\n${vesselContext}` : "",
+    ]
+      .filter((line) => line.length > 0)
+      .join("\n");
+
+    const messages: OllamaChatMessage[] = [
+      { role: "system", content: systemPrompt },
+      ...toOllamaHistory(history.slice(-6)),
+      { role: "user", content: userText },
+    ];
+
+    const toolCallStart = Date.now();
+    const response = await this.ollama.respondWithTools(
+      messages,
+      tools,
+      {
+        num_predict: 96,
+        temperature: 0,
+      },
+      this.toolModel ? { model: this.toolModel } : undefined,
+    );
+    this.logger.debug(`Marine timing: native-tool-llm=${Date.now() - toolCallStart}ms`);
+    this.logger.debug(
+      `Marine native tool-call response: toolCalls=${response.toolCalls.length}, content=${JSON.stringify(response.content)}`,
+    );
+    if (response.toolCalls.length === 0) {
+      return null;
+    }
+
+    let executableCalls = this.toExecutableToolCalls(response.toolCalls).slice(0, this.config.marineMcpMaxCalls);
+    this.logger.debug(`Marine mapped tool calls: ${JSON.stringify(executableCalls)}`);
+    if (executableCalls.length === 0 && this.toolModel) {
+      const fallbackStart = Date.now();
+      const fallbackResponse = await this.ollama.respondWithTools(messages, tools, {
+        num_predict: 96,
+        temperature: 0,
+      });
+      this.logger.debug(`Marine timing: native-tool-llm-fallback=${Date.now() - fallbackStart}ms`);
+      this.logger.debug(
+        `Marine native tool-call fallback response: toolCalls=${fallbackResponse.toolCalls.length}, content=${JSON.stringify(fallbackResponse.content)}`,
+      );
+      executableCalls = this.toExecutableToolCalls(fallbackResponse.toolCalls).slice(0, this.config.marineMcpMaxCalls);
+      this.logger.debug(`Marine mapped tool calls after fallback: ${JSON.stringify(executableCalls)}`);
+    }
+    if (executableCalls.length === 0) {
+      return null;
+    }
+
+    const results: ToolCallResult[] = [];
+    const mcpCallsStart = Date.now();
+    for (const call of executableCalls) {
+      const client = call.server === "signalk" ? this.signalkClient : this.influxClient;
+      try {
+        const result = await client.callTool(call.tool, call.arguments);
+        results.push({
+          server: call.server,
+          tool: call.tool,
+          ok: true,
+          output: extractToolOutput(result),
+        });
+        this.logger.debug(`Marine MCP call ok: ${call.server}.${call.tool}`);
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        results.push({
+          server: call.server,
+          tool: call.tool,
+          ok: false,
+          output: detail,
+        });
+        this.logger.warn(`Marine MCP call failed: ${call.server}.${call.tool} (${detail})`);
+      }
+    }
+    this.logger.debug(`Marine timing: native-tool-mcp-calls=${Date.now() - mcpCallsStart}ms`);
+
+    const hasSuccessfulTelemetry = results.some((result) => result.ok && result.output.trim().length > 0);
+    this.logger.debug(`Marine MCP aggregated results: ${JSON.stringify(results)}`);
+    if (!hasSuccessfulTelemetry) {
+      return MARINE_TELEMETRY_UNAVAILABLE_REPLY;
+    }
+
+    if (this.fastMarineMode) {
+      const quickReply = this.tryBuildFastTelemetryReply(userText, results);
+      if (quickReply) {
+        return quickReply;
+      }
+    }
+
+    const composeStart = Date.now();
+    const final = await this.composeFinalAnswer(
+      userText,
+      history,
+      { useMarine: true, calls: [], notes: "Native Ollama tool-calling path" },
+      results,
+      vesselContext,
+    );
+    this.logger.debug(`Marine timing: native-tool-compose=${Date.now() - composeStart}ms`);
+    return final;
+  }
+
+  private tryBuildFastTelemetryReply(userText: string, results: ToolCallResult[]): string | null {
+    const metricKeywords = isLikelyDepthPrompt(userText)
+      ? ["depth"]
+      : isLikelySpeedPrompt(userText)
+        ? ["speed"]
+        : [];
+
+    for (const result of results) {
+      if (!result.ok || result.output.trim().length === 0) {
+        continue;
+      }
+
+      const parsed = parseFirstJsonObject(result.output) ?? parseJsonString(result.output);
+      const reading = parsed ? toMetricReading(parsed) : null;
+      if (!reading) {
+        continue;
+      }
+
+      if (metricKeywords.includes("depth")) {
+        return `Current depth: ${formatMetric(reading)}\n\nSource: SignalK and/or InfluxDB MCP.`;
+      }
+
+      if (metricKeywords.includes("speed")) {
+        return `Current speed: ${formatMetric(reading)}\n\nSource: SignalK and/or InfluxDB MCP.`;
+      }
+
+      return `Current value: ${formatMetric(reading)}\n\nSource: SignalK and/or InfluxDB MCP.`;
+    }
+
+    return null;
+  }
+
+  private buildOllamaTools(available: Record<McpServerName, Set<string>>): OllamaFunctionTool[] {
+    const tools: OllamaFunctionTool[] = [];
+
+    if (available.signalk.has("execute_code")) {
+      tools.push({
+        type: "function",
+        function: {
+          name: "signalk_execute_code",
+          description:
+            "Run JavaScript in SignalK MCP isolate to retrieve current vessel telemetry such as depth, speed, wind, position, alarms, and path values.",
+          parameters: {
+            type: "object",
+            properties: {
+              code: { type: "string" },
+            },
+            required: ["code"],
+          },
+        },
+      });
+    }
+
+    if (available.influx.has("query-data")) {
+      tools.push({
+        type: "function",
+        function: {
+          name: "influx_query_data",
+          description: "Query historical time-series data from InfluxDB using Flux.",
+          parameters: {
+            type: "object",
+            properties: {
+              org: { type: "string" },
+              query: { type: "string" },
+            },
+            required: ["query"],
+          },
+        },
+      });
+    }
+
+    return tools;
+  }
+
+  private toExecutableToolCalls(toolCalls: OllamaToolCall[]): ExecutableToolCall[] {
+    const result: ExecutableToolCall[] = [];
+    for (const call of toolCalls) {
+      const fn = call.function;
+      if (!fn || typeof fn.name !== "string") {
+        continue;
+      }
+
+      const args =
+        typeof fn.arguments === "string"
+          ? ((parseJsonString(fn.arguments) as Record<string, unknown>) ?? {})
+          : isObject(fn.arguments)
+            ? (fn.arguments as Record<string, unknown>)
+            : {};
+
+      if (fn.name === "signalk_execute_code") {
+        const code = typeof args.code === "string" ? args.code : "";
+        const normalizedCode = normalizeSignalkCode(code);
+        if (!normalizedCode) {
+          continue;
+        }
+        result.push({
+          server: "signalk",
+          tool: "execute_code",
+          arguments: { code: normalizedCode },
+        });
+        continue;
+      }
+
+      if (fn.name === "influx_query_data") {
+        const query = typeof args.query === "string" ? args.query : "";
+        if (!query.trim()) {
+          continue;
+        }
+        const org = typeof args.org === "string" && args.org.trim().length > 0 ? args.org : this.config.influxdbOrg;
+        result.push({
+          server: "influx",
+          tool: "query-data",
+          arguments: { org, query },
+        });
+      }
+    }
+
+    return result;
   }
 
   private async composeFinalAnswer(
@@ -505,6 +866,19 @@ export class MarineMcpOrchestrator {
     return null;
   }
 
+  private async tryDepthShortcutDirectSignalK(userText: string): Promise<string | null> {
+    if (!isLikelyDepthPrompt(userText)) {
+      return null;
+    }
+
+    const reading = await this.fetchSignalKReadingForPaths(DEPTH_PATH_CANDIDATES);
+    if (!reading) {
+      return null;
+    }
+
+    return `Current depth is ${formatMetric(reading)}${reading.path ? ` (${reading.path})` : ""}.\nSource: SignalK API.`;
+  }
+
   private async trySpeedShortcut(
     userText: string,
     available: Record<McpServerName, Set<string>>,
@@ -572,6 +946,47 @@ export class MarineMcpOrchestrator {
       } catch {
         // try next path
       }
+    }
+
+    return null;
+  }
+
+  private async trySpeedShortcutDirectSignalK(userText: string): Promise<string | null> {
+    if (!isLikelySpeedPrompt(userText)) {
+      return null;
+    }
+
+    const reading = await this.fetchSignalKReadingForPaths(SPEED_PATH_CANDIDATES);
+    if (!reading) {
+      return null;
+    }
+
+    return `Current speed is ${formatMetric(reading)}${reading.path ? ` (${reading.path})` : ""}.\nSource: SignalK API.`;
+  }
+
+  private async fetchSignalKReadingForPaths(paths: string[]): Promise<MetricReading | null> {
+    const endpoint = this.config.signalKUrl.replace(/\/+$/, "");
+    const headers: Record<string, string> = { Accept: "application/json" };
+    if (this.config.signalKToken.trim().length > 0) {
+      headers.Authorization = `Bearer ${this.config.signalKToken}`;
+    }
+
+    try {
+      const response = await fetch(`${endpoint}/signalk/v1/api/vessels/self`, { headers });
+      if (!response.ok) {
+        return null;
+      }
+
+      const payload = (await response.json()) as unknown;
+      for (const path of paths) {
+        const value = getNestedValue(payload, path);
+        const reading = toMetricReading({ path, ...(isObject(value) ? value : { value }) });
+        if (reading) {
+          return reading;
+        }
+      }
+    } catch {
+      return null;
     }
 
     return null;

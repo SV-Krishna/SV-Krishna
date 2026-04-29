@@ -15,6 +15,11 @@ const availableTools =
   serverType === "signalk"
     ? [
         {
+          name: "execute_code",
+          description: "Execute JavaScript code in SignalK MCP sandbox",
+          inputSchema: { type: "object", properties: { code: { type: "string" } } },
+        },
+        {
           name: "getPathValue",
           description: "Get a SignalK path value",
           inputSchema: { type: "object", properties: { path: { type: "string" } } },
@@ -68,6 +73,42 @@ const handleRequest = (message: JsonRpcRequest): void => {
 
   if (message.method === "tools/call") {
     const params = (message.params ?? {}) as { name?: string; arguments?: Record<string, unknown> };
+    if (serverType === "signalk" && params.name === "execute_code") {
+      const code = typeof params.arguments?.code === "string" ? params.arguments.code : "";
+      if (code.includes("force.error")) {
+        writeMessage({
+          jsonrpc: "2.0",
+          id: message.id,
+          error: {
+            code: -32000,
+            message: "Forced mock error",
+          },
+        });
+        return;
+      }
+
+      writeMessage({
+        jsonrpc: "2.0",
+        id: message.id,
+        result: {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                success: true,
+                result: JSON.stringify({
+                  path: "environment.depth.belowTransducer",
+                  value: 12.6,
+                  units: "m",
+                }),
+              }),
+            },
+          ],
+        },
+      });
+      return;
+    }
+
     if (serverType === "signalk" && params.name === "getPathValue") {
       const path = typeof params.arguments?.path === "string" ? params.arguments.path : "unknown";
       if (path === "force.error") {

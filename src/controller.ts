@@ -39,6 +39,7 @@ export class ControllerApp {
   private piperReady = false;
   private serviceHealth: ServiceHealth[] = [];
   private healthTimer?: NodeJS.Timeout;
+  private ollamaWarmupTimer?: NodeJS.Timeout;
   private state: ControllerState = "starting";
   private stateMessage = "Starting...";
   private busy = false;
@@ -77,6 +78,7 @@ export class ControllerApp {
     }
 
     this.startHealthPolling();
+    this.startOllamaWarmupLoop();
     if (enableTerminalInput) {
       this.registerInputHandlers(health);
       this.input.start(this.config.pushToTalkKey);
@@ -87,6 +89,10 @@ export class ControllerApp {
     if (this.healthTimer) {
       clearInterval(this.healthTimer);
       this.healthTimer = undefined;
+    }
+    if (this.ollamaWarmupTimer) {
+      clearInterval(this.ollamaWarmupTimer);
+      this.ollamaWarmupTimer = undefined;
     }
     this.input.stop();
     void this.chat.shutdown();
@@ -338,6 +344,26 @@ export class ControllerApp {
     this.healthTimer = setInterval(() => {
       void this.pollHealthOnce();
     }, 5_000);
+  }
+
+  private startOllamaWarmupLoop(): void {
+    if (this.config.ollamaWarmupIntervalMs <= 0) {
+      return;
+    }
+
+    const runWarmup = async (): Promise<void> => {
+      try {
+        await this.chat.warmupModel();
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        this.logger.debug(`Ollama warmup failed: ${detail}`);
+      }
+    };
+
+    void runWarmup();
+    this.ollamaWarmupTimer = setInterval(() => {
+      void runWarmup();
+    }, this.config.ollamaWarmupIntervalMs);
   }
 
   private async pollHealthOnce(): Promise<void> {

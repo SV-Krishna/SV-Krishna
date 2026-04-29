@@ -36,7 +36,10 @@ export interface AppConfig {
   ragExtractorPython: string;
   ragExtractorMode: "pypdf" | "docling" | "opendataloader";
   ollamaModel: string;
+  ollamaToolModel: string;
   ollamaSystemPrompt: string;
+  ollamaKeepAlive: string;
+  ollamaWarmupIntervalMs: number;
   relayControlEnabled: boolean;
   relayBaseUrl: string;
   relayRequireConfirmation: boolean;

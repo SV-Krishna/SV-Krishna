@@ -111,10 +111,13 @@ export const loadConfig = (): AppConfig => {
     ragExtractorPython: readString("RAG_EXTRACTOR_PYTHON", "python3"),
     ragExtractorMode,
     ollamaModel: readString("OLLAMA_MODEL", "gemma3:1b"),
+    ollamaToolModel: readString("OLLAMA_TOOL_MODEL", ""),
     ollamaSystemPrompt: readString(
       "OLLAMA_SYSTEM_PROMPT",
       "You are a concise offline boat assistant for SV Krishna. Answer clearly and briefly.",
     ),
+    ollamaKeepAlive: readString("OLLAMA_KEEP_ALIVE", "30m"),
+    ollamaWarmupIntervalMs: readNumber("OLLAMA_WARMUP_INTERVAL_MS", 120000),
     relayControlEnabled: readBoolean("RELAY_CONTROL_ENABLED", false),
     relayBaseUrl: readString("RELAY_BASE_URL", "http://192.168.4.1"),
     relayRequireConfirmation: readBoolean("RELAY_REQUIRE_CONFIRMATION", true),
