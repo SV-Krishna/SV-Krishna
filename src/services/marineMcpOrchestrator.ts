@@ -244,10 +244,35 @@ const normalizeSignalkCode = (raw: string): string => {
   return ["(async () => {", code, "})()"].join("\n");
 };
 
-const formatMetric = (reading: MetricReading): string => {
-  const rawValue = typeof reading.value === "number" ? String(reading.value) : reading.value;
-  const units = reading.units?.trim();
-  return units && units.length > 0 ? `${rawValue} ${units}` : rawValue;
+const roundTo = (value: number, digits: number): number => {
+  const factor = 10 ** digits;
+  return Math.round(value * factor) / factor;
+};
+
+const toNumber = (value: string | number): number | null => {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const formatDepthForSpeech = (reading: MetricReading): string => {
+  const numeric = toNumber(reading.value);
+  if (numeric === null) {
+    return `${reading.value}`;
+  }
+  return `${roundTo(numeric, 2).toFixed(2)} meters`;
+};
+
+const formatSpeedForSpeech = (reading: MetricReading): string => {
+  const numeric = toNumber(reading.value);
+  if (numeric === null) {
+    return `${reading.value}`;
+  }
+  const units = reading.units?.trim().toLowerCase() ?? "";
+  const knotsValue = units === "m/s" || units === "mps" ? numeric * 1.94384 : numeric;
+  return `${roundTo(knotsValue, 2).toFixed(2)} knots`;
 };
 
 const getNestedValue = (root: unknown, dottedPath: string): unknown => {
@@ -694,14 +719,14 @@ export class MarineMcpOrchestrator {
       }
 
       if (metricKeywords.includes("depth")) {
-        return `Current depth: ${formatMetric(reading)}\n\nSource: SignalK and/or InfluxDB MCP.`;
+        return `Current depth is ${formatDepthForSpeech(reading)}.`;
       }
 
       if (metricKeywords.includes("speed")) {
-        return `Current speed: ${formatMetric(reading)}\n\nSource: SignalK and/or InfluxDB MCP.`;
+        return `Current speed is ${formatSpeedForSpeech(reading)}.`;
       }
 
-      return `Current value: ${formatMetric(reading)}\n\nSource: SignalK and/or InfluxDB MCP.`;
+      return `Current value is ${reading.value}.`;
     }
 
     return null;
@@ -867,7 +892,7 @@ export class MarineMcpOrchestrator {
         const parsed = parseFirstJsonObject(output);
         const reading = parsed ? toMetricReading(parsed) : null;
         if (reading) {
-          return `Current depth is ${formatMetric(reading)}${reading.path ? ` (${reading.path})` : ""}.\nSource: SignalK MCP.`;
+          return `Current depth is ${formatDepthForSpeech(reading)}.`;
         }
       } catch {
         // fall through to legacy tool attempts
@@ -891,7 +916,7 @@ export class MarineMcpOrchestrator {
         const parsed = parseFirstJsonObject(output);
         const reading = parsed ? toMetricReading(parsed) : null;
         if (reading) {
-          return `Current depth is ${formatMetric(reading)}${reading.path ? ` (${reading.path})` : ` (${path})`}.\nSource: SignalK MCP.`;
+          return `Current depth is ${formatDepthForSpeech(reading)}.`;
         }
       } catch {
         // try next path
@@ -911,7 +936,7 @@ export class MarineMcpOrchestrator {
       return null;
     }
 
-    return `Current depth is ${formatMetric(reading)}${reading.path ? ` (${reading.path})` : ""}.\nSource: SignalK API.`;
+    return `Current depth is ${formatDepthForSpeech(reading)}.`;
   }
 
   private async trySpeedShortcut(
@@ -952,7 +977,7 @@ export class MarineMcpOrchestrator {
         const parsed = parseFirstJsonObject(output);
         const reading = parsed ? toMetricReading(parsed) : null;
         if (reading) {
-          return `Current speed is ${formatMetric(reading)}${reading.path ? ` (${reading.path})` : ""}.\nSource: SignalK MCP.`;
+          return `Current speed is ${formatSpeedForSpeech(reading)}.`;
         }
       } catch {
         // fall through to legacy tool attempts
@@ -976,7 +1001,7 @@ export class MarineMcpOrchestrator {
         const parsed = parseFirstJsonObject(output);
         const reading = parsed ? toMetricReading(parsed) : null;
         if (reading) {
-          return `Current speed is ${formatMetric(reading)}${reading.path ? ` (${reading.path})` : ` (${path})`}.\nSource: SignalK MCP.`;
+          return `Current speed is ${formatSpeedForSpeech(reading)}.`;
         }
       } catch {
         // try next path
@@ -996,7 +1021,7 @@ export class MarineMcpOrchestrator {
       return null;
     }
 
-    return `Current speed is ${formatMetric(reading)}${reading.path ? ` (${reading.path})` : ""}.\nSource: SignalK API.`;
+    return `Current speed is ${formatSpeedForSpeech(reading)}.`;
   }
 
   private async tryWindSpeedShortcutDirectSignalK(userText: string): Promise<string | null> {
@@ -1009,7 +1034,7 @@ export class MarineMcpOrchestrator {
       return null;
     }
 
-    return `Current wind speed is ${formatMetric(reading)}${reading.path ? ` (${reading.path})` : ""}.\nSource: SignalK API.`;
+    return `Current wind speed is ${formatSpeedForSpeech(reading)}.`;
   }
 
   private async fetchSignalKReadingForPaths(paths: string[]): Promise<MetricReading | null> {
