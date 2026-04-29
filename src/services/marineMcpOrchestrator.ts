@@ -224,7 +224,8 @@ const toMetricReading = (value: unknown): MetricReading | null => {
 
   const directValue = value.value;
   const directPath = typeof value.path === "string" ? value.path : undefined;
-  const directUnits = typeof value.units === "string" ? value.units : undefined;
+  const metaUnits = isObject(value.meta) && typeof value.meta.units === "string" ? value.meta.units : undefined;
+  const directUnits = typeof value.units === "string" ? value.units : metaUnits;
   if (typeof directValue === "number" || typeof directValue === "string") {
     return { path: directPath, value: directValue, units: directUnits };
   }
@@ -352,11 +353,19 @@ const formatGenericValueForSpeech = (path: string, reading: MetricReading, userT
 
 const formatPathLabel = (path: string): string => {
   const parts = path.split(".").filter((part) => part.length > 0);
+  const skip = new Set([
+    "environment",
+    "navigation",
+    "electrical",
+    "propulsion",
+    "tanks",
+    "notifications",
+    "inside",
+    "vessels",
+    "self",
+  ]);
   const filtered = parts.filter(
-    (part) =>
-      !["environment", "navigation", "electrical", "propulsion", "tanks", "notifications", "inside"].includes(
-        part.toLowerCase(),
-      ),
+    (part) => !skip.has(part.toLowerCase()),
   );
   const target = filtered.length > 0 ? filtered : parts;
   return splitWords(target.join(" ")).join(" ");
