@@ -136,6 +136,14 @@ export class ControllerApp {
       );
       const transcript = await this.whisper.transcribe(recordingPath);
       if (!transcript) {
+        if (this.config.enableTts && this.piperReady) {
+          const fallback = "I did not catch that. Please repeat your question.";
+          this.setState("speaking", "Synthesizing reply with Piper...");
+          const speechPath = await this.piper.synthesize(fallback);
+          if (speechPath) {
+            await this.audio.playFile(speechPath);
+          }
+        }
         this.setState("idle", "Whisper returned an empty transcript.");
         return { transcript: null, reply: null, relay: { kind: "none" } };
       }
