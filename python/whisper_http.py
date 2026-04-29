@@ -13,6 +13,12 @@ WHISPER_DEVICE = os.environ.get("WHISPER_DEVICE", "cpu")
 WHISPER_COMPUTE_TYPE = os.environ.get("WHISPER_COMPUTE_TYPE", "int8")
 WHISPER_HOST = os.environ.get("WHISPER_HOST", "127.0.0.1")
 WHISPER_PORT = int(os.environ.get("WHISPER_PORT", "9001"))
+WHISPER_VAD_FILTER = os.environ.get("WHISPER_VAD_FILTER", "false").strip().lower() in (
+    "1",
+    "true",
+    "yes",
+    "on",
+)
 
 
 model = WhisperModel(
@@ -53,7 +59,7 @@ def recognize() -> tuple:
     segments, info = model.transcribe(
         str(audio_path),
         language=language,
-        vad_filter=True,
+        vad_filter=WHISPER_VAD_FILTER,
     )
 
     recognition = " ".join(segment.text.strip() for segment in segments).strip()
