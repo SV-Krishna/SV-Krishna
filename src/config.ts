@@ -29,6 +29,17 @@ const readNumber = (name: string, fallback: number): number => {
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
+const readStringList = (name: string, fallback: string[]): string[] => {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    return fallback;
+  }
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+};
+
 const readLogLevel = (): LogLevel => {
   const value = readString("LOG_LEVEL", "info") as LogLevel;
   return VALID_LOG_LEVELS.has(value) ? value : "info";
@@ -141,6 +152,10 @@ export const loadConfig = (): AppConfig => {
     influxdbMcpArgs: readString("INFLUXDB_MCP_ARGS", "-y influxdb-mcp-server --stdio"),
     marineMcpRequestTimeoutMs: readNumber("MARINE_MCP_REQUEST_TIMEOUT_MS", 15000),
     marineMcpMaxCalls: readNumber("MARINE_MCP_MAX_CALLS", 4),
+    signalkAlertMonitorEnabled: readBoolean("SIGNALK_ALERT_MONITOR_ENABLED", false),
+    signalkAlertPaths: readStringList("SIGNALK_ALERT_PATHS", ["notifications.environment.depth.belowTransducer"]),
+    signalkAlertPollMs: readNumber("SIGNALK_ALERT_POLL_MS", 2000),
+    signalkAlertRepeatSeconds: readNumber("SIGNALK_ALERT_REPEAT_SECONDS", 30),
     services,
   };
 };

@@ -6,6 +6,7 @@ import { checkServiceHealth } from "./services/health";
 import { PiperClient } from "./services/piperClient";
 import { RagStore } from "./services/ragStore";
 import { MarineTelemetryService } from "./services/marineTelemetryService";
+import { SignalKAlertMonitor, type SpokenSignalKAlert } from "./services/signalkAlertMonitor";
 import type { RelayCommand } from "./services/chatService";
 import type { ConversationMessage } from "./services/conversationStore";
 import { RelayService } from "./services/relayService";
@@ -36,6 +37,7 @@ export class ControllerApp {
   private readonly chat: ChatService;
   private readonly relay?: RelayService;
   private readonly marine?: MarineTelemetryService;
+  private readonly signalkAlertMonitor?: SignalKAlertMonitor;
   private piperReady = false;
   private serviceHealth: ServiceHealth[] = [];
   private healthTimer?: NodeJS.Timeout;
@@ -53,6 +55,9 @@ export class ControllerApp {
     this.chat = new ChatService(config);
     this.relay = config.relayControlEnabled ? new RelayService(config) : undefined;
     this.marine = config.marineTelemetryEnabled ? new MarineTelemetryService(config) : undefined;
+    this.signalkAlertMonitor = config.signalkAlertMonitorEnabled
+      ? new SignalKAlertMonitor(config, async (alert) => this.handleSignalKAlert(alert))
+      : undefined;
   }
 
   async start(options?: { enableTerminalInput?: boolean }): Promise<void> {
@@ -79,6 +84,7 @@ export class ControllerApp {
 
     this.startHealthPolling();
     this.startOllamaWarmupLoop();
+    this.signalkAlertMonitor?.start();
     if (enableTerminalInput) {
       this.registerInputHandlers(health);
       this.input.start(this.config.pushToTalkKey);
@@ -95,6 +101,7 @@ export class ControllerApp {
       this.ollamaWarmupTimer = undefined;
     }
     this.input.stop();
+    this.signalkAlertMonitor?.stop();
     void this.chat.shutdown();
     this.logger.info("Controller stopped.");
   }
@@ -324,6 +331,22 @@ export class ControllerApp {
         this.busy = false;
       }
     });
+  }
+
+  private async handleSignalKAlert(alert: SpokenSignalKAlert): Promise<void> {
+    this.logger.warn(`SignalK alert ${alert.path}: ${alert.message}`);
+    if (!this.config.enableTts || !this.piperReady) {
+      return;
+    }
+    try {
+      const speechPath = await this.piper.synthesize(alert.message);
+      if (speechPath) {
+        await this.audio.playFile(speechPath);
+      }
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`Failed to speak SignalK alert: ${detail}`);
+    }
   }
 
   private setState(state: ControllerState, message: string): void {

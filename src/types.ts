@@ -63,6 +63,10 @@ export interface AppConfig {
   influxdbMcpArgs: string;
   marineMcpRequestTimeoutMs: number;
   marineMcpMaxCalls: number;
+  signalkAlertMonitorEnabled: boolean;
+  signalkAlertPaths: string[];
+  signalkAlertPollMs: number;
+  signalkAlertRepeatSeconds: number;
   services: ServiceEndpoint[];
 }
 

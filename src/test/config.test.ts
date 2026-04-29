@@ -59,6 +59,10 @@ test("loadConfig returns expected default service topology", () => {
   delete process.env.INFLUXDB_MCP_ARGS;
   delete process.env.MARINE_MCP_REQUEST_TIMEOUT_MS;
   delete process.env.MARINE_MCP_MAX_CALLS;
+  delete process.env.SIGNALK_ALERT_MONITOR_ENABLED;
+  delete process.env.SIGNALK_ALERT_PATHS;
+  delete process.env.SIGNALK_ALERT_POLL_MS;
+  delete process.env.SIGNALK_ALERT_REPEAT_SECONDS;
 
   const config = loadConfig();
   assert.equal(config.nodeEnv, "development");
@@ -119,4 +123,8 @@ test("loadConfig returns expected default service topology", () => {
   assert.equal(config.influxdbMcpArgs, "-y influxdb-mcp-server --stdio");
   assert.equal(config.marineMcpRequestTimeoutMs, 15000);
   assert.equal(config.marineMcpMaxCalls, 4);
+  assert.equal(config.signalkAlertMonitorEnabled, false);
+  assert.deepEqual(config.signalkAlertPaths, ["notifications.environment.depth.belowTransducer"]);
+  assert.equal(config.signalkAlertPollMs, 2000);
+  assert.equal(config.signalkAlertRepeatSeconds, 30);
 });
