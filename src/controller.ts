@@ -18,7 +18,7 @@ import type { AppConfig, ControllerState, PreflightCheck, ServiceHealth } from "
 type RelayActionResult =
   | { kind: "none" }
   | { kind: "planned"; summary: string; command: RelayCommand }
-  | { kind: "executed"; summary: string; statusLine: string };
+  | { kind: "executed"; summary: string; statusLine: string; spokenReply: string };
 
 export interface VoiceRunResult {
   transcript: string | null;
@@ -161,11 +161,19 @@ export class ControllerApp {
       if (relayResult.kind !== "none") {
         if (relayResult.kind === "planned") {
           this.setState("idle", `Relay action planned: ${relayResult.summary}`);
-        } else {
-          this.setState("idle", `Relay action executed: ${relayResult.summary}. ${relayResult.statusLine}`);
+          return { transcript, reply: null, relay: relayResult };
         }
 
-        return { transcript, reply: null, relay: relayResult };
+        if (this.config.enableTts && this.piperReady) {
+          this.setState("speaking", "Synthesizing relay confirmation with Piper...");
+          const speechPath = await this.piper.synthesize(relayResult.spokenReply);
+          if (speechPath) {
+            await this.audio.playFile(speechPath);
+          }
+        }
+
+        this.setState("idle", relayResult.spokenReply);
+        return { transcript, reply: relayResult.spokenReply, relay: relayResult };
       }
 
       this.setState("thinking", "Processing transcript...");
@@ -479,18 +487,10 @@ export class ControllerApp {
       }
 
       if (planned.kind === "planned") {
-        const confirm = await this.input.promptText(`Confirm: ${planned.summary}? (y/N)> `);
-        if (confirm.toLowerCase() !== "y" && confirm.toLowerCase() !== "yes") {
-          this.setState("idle", "Relay action cancelled.");
-          return true;
-        }
-
-        const result = await this.executeRelay(planned.command);
-        this.setState("idle", `Relays updated. ${result.statusLine}`);
-        return true;
+        return false;
       }
 
-      this.setState("idle", `Relays updated. ${planned.statusLine}`);
+      this.setState("idle", planned.spokenReply);
       return true;
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
@@ -518,19 +518,14 @@ export class ControllerApp {
       return { kind: "none" };
     }
 
-    const summary =
-      command.action === "status"
-        ? "Read relay status"
-        : command.action === "all"
-          ? `Turn ALL relays ${command.state.toUpperCase()}`
-          : `Set relay CH${command.channel} ${command.state.toUpperCase()}`;
-
-    if (this.config.relayRequireConfirmation) {
-      return { kind: "planned", summary, command };
-    }
-
+    const summary = summarizeRelayCommand(command);
     const result = await this.executeRelay(command);
-    return { kind: "executed", summary, statusLine: result.statusLine };
+    return {
+      kind: "executed",
+      summary,
+      statusLine: result.statusLine,
+      spokenReply: summarizeRelayExecution(command),
+    };
   }
 }
 
@@ -697,4 +692,30 @@ const isPiperReady = (checks: PreflightCheck[]): boolean => {
     return false;
   }
   return piperChecks.every((check) => check.ok);
+};
+
+const summarizeRelayCommand = (command: RelayCommand): string => {
+  if (command.action === "status") {
+    return "Read relay status";
+  }
+  if (command.action === "all") {
+    return `Turn all relays ${command.state}`;
+  }
+  if (command.action === "set") {
+    return `Turn relay ${command.channel} ${command.state}`;
+  }
+  return "Relay action";
+};
+
+const summarizeRelayExecution = (command: RelayCommand): string => {
+  if (command.action === "status") {
+    return "Here is the current relay status.";
+  }
+  if (command.action === "all") {
+    return `All relays are now ${command.state}.`;
+  }
+  if (command.action === "set") {
+    return `Relay ${command.channel} is now ${command.state}.`;
+  }
+  return "Relay updated.";
 };

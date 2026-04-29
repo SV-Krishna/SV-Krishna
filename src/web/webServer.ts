@@ -170,15 +170,15 @@ const inferRelayCommandFromHistory = (text: string, history: ConversationMessage
 
 const summarizeRelayCommand = (command: RelayCommand): string => {
   if (command.action === "status") {
-    return "Read relay status";
+    return "Here is the current relay status.";
   }
   if (command.action === "all") {
-    return `Turn ALL relays ${command.state.toUpperCase()}`;
+    return `All relays are now ${command.state}.`;
   }
   if (command.action === "set") {
-    return `Set relay CH${command.channel} ${command.state.toUpperCase()}`;
+    return `Relay ${command.channel} is now ${command.state}.`;
   }
-  return "No relay action";
+  return "Relay updated.";
 };
 
 const json = (response: ServerResponse, statusCode: number, payload: unknown): void => {
@@ -1009,21 +1009,10 @@ export class WebServer {
           const summary = summarizeRelayCommand(command);
           this.conversations.append(sessionId, "user", message);
 
-          if (this.config.relayRequireConfirmation) {
-            this.conversations.append(sessionId, "assistant", `Planned relay action: ${summary}`);
-            const relay: RelayApiResult = { kind: "planned", summary, command };
-            json(response, 200, { reply: null, sources: [], relay });
-            return;
-          }
-
           const executed = await api.executeRelay(command);
-          this.conversations.append(
-            sessionId,
-            "assistant",
-            `Relay action executed: ${summary}. ${executed.statusLine}`,
-          );
+          this.conversations.append(sessionId, "assistant", summary);
           const relay: RelayApiResult = { kind: "executed", summary, statusLine: executed.statusLine };
-          json(response, 200, { reply: null, sources: [], relay });
+          json(response, 200, { reply: summary, sources: [], relay });
           return;
         }
       }
@@ -1089,7 +1078,7 @@ export class WebServer {
         this.conversations.append(
           sessionId,
           "assistant",
-          `Relay action executed: ${result.relay.summary}. ${result.relay.statusLine}`,
+          result.relay.summary,
         );
       } else if (result.reply) {
         this.conversations.append(sessionId, "assistant", result.reply);
