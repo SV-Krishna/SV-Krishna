@@ -136,8 +136,8 @@ export class ControllerApp {
       );
       const transcript = await this.whisper.transcribe(recordingPath);
       if (!transcript) {
+        const fallback = "I did not catch that. Please repeat your question.";
         if (this.config.enableTts && this.piperReady) {
-          const fallback = "I did not catch that. Please repeat your question.";
           this.setState("speaking", "Synthesizing reply with Piper...");
           const speechPath = await this.piper.synthesize(fallback);
           if (speechPath) {
@@ -145,7 +145,7 @@ export class ControllerApp {
           }
         }
         this.setState("idle", "Whisper returned an empty transcript.");
-        return { transcript: null, reply: null, relay: { kind: "none" } };
+        return { transcript: null, reply: fallback, relay: { kind: "none" } };
       }
 
       this.logger.info(`Transcript: ${transcript}`);
