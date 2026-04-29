@@ -135,7 +135,7 @@ export class ControllerApp {
         `Sending sample to Whisper at ${this.getServiceUrl("whisper")}...`,
       );
       const transcript = await this.whisper.transcribe(recordingPath);
-      if (!transcript) {
+      if (!isUsableTranscript(transcript)) {
         const fallback = "I did not catch that. Please repeat your question.";
         if (this.config.enableTts && this.piperReady) {
           this.setState("speaking", "Synthesizing reply with Piper...");
@@ -510,6 +510,19 @@ export class ControllerApp {
     return { kind: "executed", summary, statusLine: result.statusLine };
   }
 }
+
+const isUsableTranscript = (value: string | null | undefined): value is string => {
+  if (!value) {
+    return false;
+  }
+
+  const normalized = value.trim();
+  if (!/[a-z0-9]/i.test(normalized)) {
+    return false;
+  }
+
+  return normalized.length >= 3;
+};
 
 const looksLikeRelayIntent = (text: string): boolean => {
   const normalized = text.toLowerCase();
