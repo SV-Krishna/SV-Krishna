@@ -88,6 +88,38 @@ const startMockOllama = async (responses: MockOllamaResponses) => {
   };
 };
 
+const startMockSignalK = async (payload: unknown) => {
+  const server = createServer((request: IncomingMessage, response: ServerResponse) => {
+    if (request.method === "GET" && request.url === "/signalk/v1/api/vessels/self") {
+      response.statusCode = 200;
+      response.setHeader("Content-Type", "application/json");
+      response.end(JSON.stringify(payload));
+      return;
+    }
+    response.statusCode = 404;
+    response.end("not found");
+  });
+
+  await new Promise<void>((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => resolve());
+  });
+
+  const address = server.address();
+  if (!address || typeof address === "string") {
+    throw new Error("Failed to bind mock SignalK server");
+  }
+
+  return {
+    endpoint: `http://127.0.0.1:${address.port}`,
+    close: async () => {
+      await new Promise<void>((resolve, reject) => {
+        server.close((error) => (error ? reject(error) : resolve()));
+      });
+    },
+  };
+};
+
 const buildConfig = (ollamaEndpoint: string): AppConfig => {
   const config = loadConfig();
   const fixturePath = join(process.cwd(), "dist", "fixtures", "mcpMockServer.js");
@@ -250,6 +282,38 @@ test("MarineMcpOrchestrator returns unavailable message when tool calls fail", a
     assert.equal(ollama.requests(), 2);
   } finally {
     await orchestrator.shutdown();
+    await ollama.close();
+  }
+});
+
+test("MarineMcpOrchestrator answers cabin temperature from generic SignalK lookup without LLM", async () => {
+  const ollama = await startMockOllama({
+    planner: JSON.stringify({ useMarine: false, needsClarification: false, calls: [] }),
+    synthesis: "unused",
+  });
+  const signalk = await startMockSignalK({
+    environment: {
+      inside: {
+        temperature: {
+          value: 289.25,
+          units: "K",
+        },
+      },
+    },
+  });
+
+  const orchestrator = new MarineMcpOrchestrator({
+    ...buildConfig(ollama.endpoint),
+    signalKUrl: signalk.endpoint,
+  });
+
+  try {
+    const reply = await orchestrator.tryRespond("What is the cabin temperature?", []);
+    assert.equal(reply, "Current temperature is 16.1 degrees Celsius.");
+    assert.equal(ollama.requests(), 0);
+  } finally {
+    await orchestrator.shutdown();
+    await signalk.close();
     await ollama.close();
   }
 });

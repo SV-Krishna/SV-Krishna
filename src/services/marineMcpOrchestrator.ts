@@ -33,6 +33,11 @@ interface MetricReading {
   value: string | number;
   units?: string;
 }
+interface SignalKMetricCandidate {
+  path: string;
+  reading: MetricReading;
+  tokens: Set<string>;
+}
 
 interface ExecutableToolCall {
   server: McpServerName;
@@ -175,6 +180,43 @@ const parseJsonString = (text: string): unknown => {
   }
 };
 
+const STOPWORDS = new Set([
+  "what",
+  "is",
+  "our",
+  "the",
+  "a",
+  "an",
+  "current",
+  "currently",
+  "please",
+  "show",
+  "give",
+  "me",
+  "tell",
+  "value",
+  "reading",
+  "of",
+  "for",
+  "now",
+]);
+
+const splitWords = (value: string): string[] => {
+  const withSpaces = value.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/[_./-]+/g, " ");
+  return withSpaces
+    .toLowerCase()
+    .split(/\s+/)
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
+};
+
+const tokenizeQuery = (value: string): Set<string> =>
+  new Set(splitWords(value).filter((token) => token.length > 1 && !STOPWORDS.has(token)));
+
+const tokenizePath = (path: string): Set<string> => new Set(splitWords(path));
+
+const normalizeUnits = (units: string | undefined): string => (units ?? "").trim().toLowerCase();
+
 const toMetricReading = (value: unknown): MetricReading | null => {
   if (!isObject(value)) {
     return null;
@@ -275,6 +317,51 @@ const formatSpeedForSpeech = (reading: MetricReading): string => {
   return `${roundTo(knotsValue, 2).toFixed(2)} knots`;
 };
 
+const formatGenericValueForSpeech = (path: string, reading: MetricReading, userText: string): string => {
+  const numeric = toNumber(reading.value);
+  if (numeric === null) {
+    return `${reading.value}`;
+  }
+
+  const units = normalizeUnits(reading.units);
+  const query = userText.toLowerCase();
+  const lowerPath = path.toLowerCase();
+  const isTemperature = query.includes("temp") || lowerPath.includes("temperature");
+  const isSpeed = query.includes("speed") || lowerPath.includes("speed");
+  const isDepth = query.includes("depth") || lowerPath.includes("depth");
+
+  if (isTemperature) {
+    const celsius = units === "k" || units === "kelvin" ? numeric - 273.15 : numeric;
+    return `${roundTo(celsius, 1).toFixed(1)} degrees Celsius`;
+  }
+
+  if (isSpeed && (units === "m/s" || units === "mps")) {
+    const knots = numeric * 1.94384;
+    return `${roundTo(knots, 2).toFixed(2)} knots`;
+  }
+
+  if (isDepth && (units === "m" || units === "meter" || units === "meters")) {
+    return `${roundTo(numeric, 2).toFixed(2)} meters`;
+  }
+
+  if (units) {
+    return `${roundTo(numeric, 2).toFixed(2)} ${units}`;
+  }
+  return `${roundTo(numeric, 2).toFixed(2)}`;
+};
+
+const formatPathLabel = (path: string): string => {
+  const parts = path.split(".").filter((part) => part.length > 0);
+  const filtered = parts.filter(
+    (part) =>
+      !["environment", "navigation", "electrical", "propulsion", "tanks", "notifications", "inside"].includes(
+        part.toLowerCase(),
+      ),
+  );
+  const target = filtered.length > 0 ? filtered : parts;
+  return splitWords(target.join(" ")).join(" ");
+};
+
 const getNestedValue = (root: unknown, dottedPath: string): unknown => {
   let current: unknown = root;
   for (const part of dottedPath.split(".")) {
@@ -346,6 +433,8 @@ export class MarineMcpOrchestrator {
   private readonly deterministicShortcutsEnabled: boolean;
   private readonly fastMarineMode: boolean;
   private readonly toolModel: string | null;
+  private signalkSnapshot: unknown | null = null;
+  private signalkSnapshotFetchedAt = 0;
   private toolCatalog: Record<McpServerName, McpToolDefinition[]> = { signalk: [], influx: [] };
   private catalogFetchedAt = 0;
 
@@ -418,6 +507,12 @@ export class MarineMcpOrchestrator {
         this.logger.debug(`Marine timing: total=${Date.now() - startedAt}ms (direct-signalk-speed path)`);
         return directSpeed;
       }
+    }
+
+    const genericSignalK = await this.tryGenericSignalKLookup(userText);
+    if (genericSignalK) {
+      this.logger.debug(`Marine timing: total=${Date.now() - startedAt}ms (generic-signalk path)`);
+      return genericSignalK;
     }
 
     const toolsStart = Date.now();
@@ -1038,6 +1133,28 @@ export class MarineMcpOrchestrator {
   }
 
   private async fetchSignalKReadingForPaths(paths: string[]): Promise<MetricReading | null> {
+    const payload = await this.fetchSignalKSnapshot();
+    if (!payload) {
+      return null;
+    }
+
+    for (const path of paths) {
+      const value = getNestedValue(payload, path);
+      const reading = toMetricReading({ path, ...(isObject(value) ? value : { value }) });
+      if (reading) {
+        return reading;
+      }
+    }
+
+    return null;
+  }
+
+  private async fetchSignalKSnapshot(): Promise<unknown | null> {
+    const maxAgeMs = 2000;
+    if (this.signalkSnapshot && Date.now() - this.signalkSnapshotFetchedAt < maxAgeMs) {
+      return this.signalkSnapshot;
+    }
+
     const endpoint = this.config.signalKUrl.replace(/\/+$/, "");
     const headers: Record<string, string> = { Accept: "application/json" };
     if (this.config.signalKToken.trim().length > 0) {
@@ -1045,23 +1162,107 @@ export class MarineMcpOrchestrator {
     }
 
     try {
-      const response = await fetch(`${endpoint}/signalk/v1/api/vessels/self`, { headers });
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 1000);
+      const response = await fetch(`${endpoint}/signalk/v1/api/vessels/self`, {
+        headers,
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
       if (!response.ok) {
         return null;
       }
 
       const payload = (await response.json()) as unknown;
-      for (const path of paths) {
-        const value = getNestedValue(payload, path);
-        const reading = toMetricReading({ path, ...(isObject(value) ? value : { value }) });
-        if (reading) {
-          return reading;
-        }
-      }
+      this.signalkSnapshot = payload;
+      this.signalkSnapshotFetchedAt = Date.now();
+      return payload;
     } catch {
       return null;
     }
+  }
 
-    return null;
+  private collectSignalKMetricCandidates(payload: unknown): SignalKMetricCandidate[] {
+    const candidates: SignalKMetricCandidate[] = [];
+    const visit = (node: unknown, currentPath: string[]): void => {
+      if (!isObject(node)) {
+        return;
+      }
+      for (const [key, value] of Object.entries(node)) {
+        const path = [...currentPath, key];
+        const dottedPath = path.join(".");
+        const reading = toMetricReading({ path: dottedPath, ...(isObject(value) ? value : { value }) });
+        if (reading && typeof reading.value !== "undefined") {
+          candidates.push({
+            path: dottedPath,
+            reading,
+            tokens: tokenizePath(dottedPath),
+          });
+        }
+        if (isObject(value)) {
+          visit(value, path);
+        }
+      }
+    };
+
+    visit(payload, []);
+    return candidates;
+  }
+
+  private async tryGenericSignalKLookup(userText: string): Promise<string | null> {
+    if (!isLikelyMarinePrompt(userText)) {
+      return null;
+    }
+
+    const payload = await this.fetchSignalKSnapshot();
+    if (!payload) {
+      return null;
+    }
+
+    const queryTokens = tokenizeQuery(userText);
+    if (queryTokens.size === 0) {
+      return null;
+    }
+
+    const candidates = this.collectSignalKMetricCandidates(payload).filter(
+      (candidate) =>
+        !candidate.path.startsWith("notifications.") &&
+        !candidate.path.startsWith("self.") &&
+        !candidate.path.endsWith(".meta"),
+    );
+    if (candidates.length === 0) {
+      return null;
+    }
+
+    let best: { candidate: SignalKMetricCandidate; score: number } | null = null;
+    for (const candidate of candidates) {
+      let overlap = 0;
+      for (const token of queryTokens) {
+        if (candidate.tokens.has(token)) {
+          overlap += 1;
+        }
+      }
+
+      let score = overlap;
+      const pathLower = candidate.path.toLowerCase();
+      if (queryTokens.has("cabin") && (pathLower.includes("inside") || pathLower.includes("cabin"))) {
+        score += 2;
+      }
+      if ((queryTokens.has("temp") || queryTokens.has("temperature")) && pathLower.includes("temperature")) {
+        score += 2;
+      }
+
+      if (!best || score > best.score) {
+        best = { candidate, score };
+      }
+    }
+
+    if (!best || best.score < 2) {
+      return null;
+    }
+
+    const valueSpeech = formatGenericValueForSpeech(best.candidate.path, best.candidate.reading, userText);
+    const label = formatPathLabel(best.candidate.path);
+    return `Current ${label} is ${valueSpeech}.`;
   }
 }
