@@ -1,5 +1,6 @@
 import { access } from "node:fs/promises";
 import { constants as fsConstants } from "node:fs";
+import { stat } from "node:fs/promises";
 import { join } from "node:path";
 import { spawn } from "node:child_process";
 import type { AppConfig, PreflightCheck } from "../types";
@@ -83,7 +84,9 @@ export class LinuxAudio {
       `sample-${Date.now()}.wav`,
     );
 
+    let attemptedVad = false;
     if (this.config.audioUseVad && (await commandExists("sox"))) {
+      attemptedVad = true;
       const threshold = `${Math.max(1, this.config.audioVadThresholdPercent)}%`;
       const vadArgs = [
         "-t",
@@ -112,7 +115,50 @@ export class LinuxAudio {
       } else {
         await runCommand("sox", vadArgs);
       }
-    } else if (await commandExists("arecord")) {
+    }
+
+    const hasUsableOutput = async (): Promise<boolean> => {
+      if (!(await fileExists(outputPath))) {
+        return false;
+      }
+      const info = await stat(outputPath);
+      return info.size > 44;
+    };
+
+    if (attemptedVad && !(await hasUsableOutput())) {
+      // Fallback for environments where VAD thresholds produce header-only files.
+      if (await commandExists("arecord")) {
+        const args = [
+          "-D",
+          this.config.audioInputDevice,
+          "-d",
+          String(this.config.audioRecordSeconds),
+          "-f",
+          "S16_LE",
+          "-c",
+          "1",
+          "-r",
+          String(this.config.audioSampleRate),
+          outputPath,
+        ];
+        await runCommand("arecord", args);
+      } else if (await commandExists("sox")) {
+        const args = [
+          "-t",
+          "alsa",
+          this.config.audioInputDevice,
+          "-r",
+          String(this.config.audioSampleRate),
+          "-c",
+          "1",
+          outputPath,
+          "trim",
+          "0",
+          String(this.config.audioRecordSeconds),
+        ];
+        await runCommand("sox", args);
+      }
+    } else if (!attemptedVad && (await commandExists("arecord"))) {
       const args = [
         "-D",
         this.config.audioInputDevice,
@@ -127,7 +173,7 @@ export class LinuxAudio {
         outputPath,
       ];
       await runCommand("arecord", args);
-    } else if (await commandExists("sox")) {
+    } else if (!attemptedVad && (await commandExists("sox"))) {
       const args = [
         "-t",
         "alsa",

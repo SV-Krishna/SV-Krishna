@@ -120,7 +120,7 @@ export class ControllerApp {
     try {
       this.setState(
         "listening",
-        `Recording ${this.config.audioRecordSeconds}s sample from ${this.config.audioInputDevice}...`,
+        `Recording sample from ${this.config.audioInputDevice}...`,
       );
       const recordingPath = await this.audio.recordSample();
       this.logger.info(`Recorded sample to ${recordingPath}`);
