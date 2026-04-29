@@ -371,6 +371,10 @@ export class MarineMcpOrchestrator {
       return null;
     }
 
+    if (!isLikelyMarinePrompt(userText)) {
+      return null;
+    }
+
     if (this.deterministicShortcutsEnabled) {
       const directDepth = await this.tryDepthShortcutDirectSignalK(userText);
       if (directDepth) {

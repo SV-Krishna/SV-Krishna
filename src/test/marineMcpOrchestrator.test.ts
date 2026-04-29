@@ -196,7 +196,7 @@ test("MarineMcpOrchestrator skips MCP flow for non-marine prompts", async () => 
   try {
     const reply = await orchestrator.tryRespond("Summarize this PDF chapter about bearings", []);
     assert.equal(reply, null);
-    assert.equal(ollama.requests(), 2);
+    assert.equal(ollama.requests(), 0);
   } finally {
     await orchestrator.shutdown();
     await ollama.close();
