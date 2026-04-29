@@ -317,3 +317,39 @@ test("MarineMcpOrchestrator answers cabin temperature from generic SignalK looku
     await ollama.close();
   }
 });
+
+test("MarineMcpOrchestrator answers house battery voltage phrasing variants via alias lookup", async () => {
+  const ollama = await startMockOllama({
+    planner: JSON.stringify({ useMarine: false, needsClarification: false, calls: [] }),
+    synthesis: "unused",
+  });
+  const signalk = await startMockSignalK({
+    electrical: {
+      batteries: {
+        house: {
+          voltage: {
+            value: 13.42,
+            units: "V",
+          },
+        },
+      },
+    },
+  });
+
+  const orchestrator = new MarineMcpOrchestrator({
+    ...buildConfig(ollama.endpoint),
+    signalKUrl: signalk.endpoint,
+  });
+
+  try {
+    const reply1 = await orchestrator.tryRespond("What is the house battery voltage?", []);
+    const reply2 = await orchestrator.tryRespond("What is the battery house voltage?", []);
+    assert.equal(reply1, "Current batteries house voltage is 13.42 v.");
+    assert.equal(reply2, "Current batteries house voltage is 13.42 v.");
+    assert.equal(ollama.requests(), 0);
+  } finally {
+    await orchestrator.shutdown();
+    await signalk.close();
+    await ollama.close();
+  }
+});

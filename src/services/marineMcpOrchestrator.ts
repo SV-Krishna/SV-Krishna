@@ -37,6 +37,7 @@ interface SignalKMetricCandidate {
   path: string;
   reading: MetricReading;
   tokens: Set<string>;
+  aliasTokens: Set<string>;
 }
 
 interface ExecutableToolCall {
@@ -201,6 +202,20 @@ const STOPWORDS = new Set([
   "now",
 ]);
 
+const THESAURUS: Record<string, string[]> = {
+  battery: ["batteries", "house", "domestic", "voltage", "volt"],
+  batteries: ["battery", "house", "domestic", "voltage", "volt"],
+  house: ["domestic", "battery", "batteries"],
+  voltage: ["volt", "v", "battery", "batteries"],
+  temp: ["temperature", "inside", "cabin"],
+  temperature: ["temp", "inside", "cabin"],
+  cabin: ["inside", "interior", "temperature", "temp"],
+  inside: ["cabin", "interior"],
+  wind: ["breeze", "true", "apparent"],
+  speed: ["sog", "stw", "velocity"],
+  depth: ["sounder", "below", "keel", "transducer"],
+};
+
 const splitWords = (value: string): string[] => {
   const withSpaces = value.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/[_./-]+/g, " ");
   return withSpaces
@@ -214,6 +229,19 @@ const tokenizeQuery = (value: string): Set<string> =>
   new Set(splitWords(value).filter((token) => token.length > 1 && !STOPWORDS.has(token)));
 
 const tokenizePath = (path: string): Set<string> => new Set(splitWords(path));
+const expandTokens = (tokens: Set<string>): Set<string> => {
+  const expanded = new Set<string>(tokens);
+  for (const token of tokens) {
+    const aliases = THESAURUS[token];
+    if (!aliases) {
+      continue;
+    }
+    for (const alias of aliases) {
+      expanded.add(alias);
+    }
+  }
+  return expanded;
+};
 
 const normalizeUnits = (units: string | undefined): string => (units ?? "").trim().toLowerCase();
 
@@ -444,6 +472,8 @@ export class MarineMcpOrchestrator {
   private readonly toolModel: string | null;
   private signalkSnapshot: unknown | null = null;
   private signalkSnapshotFetchedAt = 0;
+  private signalkAliasCandidates: SignalKMetricCandidate[] = [];
+  private signalkAliasBuiltAt = 0;
   private toolCatalog: Record<McpServerName, McpToolDefinition[]> = { signalk: [], influx: [] };
   private catalogFetchedAt = 0;
 
@@ -1185,6 +1215,7 @@ export class MarineMcpOrchestrator {
       const payload = (await response.json()) as unknown;
       this.signalkSnapshot = payload;
       this.signalkSnapshotFetchedAt = Date.now();
+      this.signalkAliasBuiltAt = 0;
       return payload;
     } catch {
       return null;
@@ -1202,10 +1233,12 @@ export class MarineMcpOrchestrator {
         const dottedPath = path.join(".");
         const reading = toMetricReading({ path: dottedPath, ...(isObject(value) ? value : { value }) });
         if (reading && typeof reading.value !== "undefined") {
+          const tokens = tokenizePath(dottedPath);
           candidates.push({
             path: dottedPath,
             reading,
-            tokens: tokenizePath(dottedPath),
+            tokens,
+            aliasTokens: expandTokens(tokens),
           });
         }
         if (isObject(value)) {
@@ -1232,8 +1265,19 @@ export class MarineMcpOrchestrator {
     if (queryTokens.size === 0) {
       return null;
     }
+    const expandedQueryTokens = expandTokens(queryTokens);
 
-    const candidates = this.collectSignalKMetricCandidates(payload).filter(
+    const now = Date.now();
+    if (this.signalkAliasBuiltAt === 0 || now - this.signalkAliasBuiltAt > 5000) {
+      this.signalkAliasCandidates = this.collectSignalKMetricCandidates(payload).filter(
+        (candidate) =>
+          !candidate.path.startsWith("notifications.") &&
+          !candidate.path.startsWith("self.") &&
+          !candidate.path.endsWith(".meta"),
+      );
+      this.signalkAliasBuiltAt = now;
+    }
+    const candidates = this.signalkAliasCandidates.filter(
       (candidate) =>
         !candidate.path.startsWith("notifications.") &&
         !candidate.path.startsWith("self.") &&
@@ -1251,13 +1295,25 @@ export class MarineMcpOrchestrator {
           overlap += 1;
         }
       }
+      let aliasOverlap = 0;
+      for (const token of expandedQueryTokens) {
+        if (candidate.aliasTokens.has(token)) {
+          aliasOverlap += 1;
+        }
+      }
 
-      let score = overlap;
+      let score = overlap + aliasOverlap * 0.6;
       const pathLower = candidate.path.toLowerCase();
       if (queryTokens.has("cabin") && (pathLower.includes("inside") || pathLower.includes("cabin"))) {
         score += 2;
       }
       if ((queryTokens.has("temp") || queryTokens.has("temperature")) && pathLower.includes("temperature")) {
+        score += 2;
+      }
+      if (queryTokens.has("battery") && pathLower.includes("batter")) {
+        score += 2;
+      }
+      if ((queryTokens.has("volt") || queryTokens.has("voltage")) && pathLower.includes("voltage")) {
         score += 2;
       }
 
