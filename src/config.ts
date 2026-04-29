@@ -142,6 +142,12 @@ export const loadConfig = (): AppConfig => {
     marineTelemetryEnabled: readBoolean("MARINE_TELEMETRY_ENABLED", false),
     signalKUrl: readString("SIGNALK_URL", "http://127.0.0.1:3000"),
     signalKToken: readString("SIGNALK_TOKEN", ""),
+    signalkAliasStorePath: readString(
+      "SIGNALK_ALIAS_STORE_PATH",
+      nodeEnv === "development"
+        ? `${devDataRoot}/config/signalk-alias-store.json`
+        : "/opt/svkrishna/config/signalk-alias-store.json",
+    ),
     influxdbUrl: readString("INFLUXDB_URL", "http://127.0.0.1:8086"),
     influxdbOrg: readString("INFLUXDB_ORG", ""),
     influxdbBucket: readString("INFLUXDB_BUCKET", ""),

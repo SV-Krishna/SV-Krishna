@@ -49,6 +49,7 @@ test("loadConfig returns expected default service topology", () => {
   delete process.env.MARINE_TELEMETRY_ENABLED;
   delete process.env.SIGNALK_URL;
   delete process.env.SIGNALK_TOKEN;
+  delete process.env.SIGNALK_ALIAS_STORE_PATH;
   delete process.env.INFLUXDB_URL;
   delete process.env.INFLUXDB_ORG;
   delete process.env.INFLUXDB_BUCKET;
@@ -113,6 +114,7 @@ test("loadConfig returns expected default service topology", () => {
   assert.equal(config.marineTelemetryEnabled, false);
   assert.equal(config.signalKUrl, "http://127.0.0.1:3000");
   assert.equal(config.signalKToken, "");
+  assert.equal(config.signalkAliasStorePath, `${process.cwd()}/local/svkrishna/config/signalk-alias-store.json`);
   assert.equal(config.influxdbUrl, "http://127.0.0.1:8086");
   assert.equal(config.influxdbOrg, "");
   assert.equal(config.influxdbBucket, "");

@@ -4,6 +4,7 @@ import type { ConversationMessage } from "./conversationStore";
 import type { OllamaChatMessage, OllamaFunctionTool, OllamaToolCall } from "./ollamaClient";
 import { OllamaClient } from "./ollamaClient";
 import { McpStdioClient, type McpToolDefinition } from "./mcpStdioClient";
+import { readFileSync } from "node:fs";
 
 type McpServerName = "signalk" | "influx";
 
@@ -228,6 +229,10 @@ const THESAURUS: Record<string, string[]> = {
   depth: ["sounder", "below", "keel", "transducer"],
 };
 
+interface AliasStoreFile {
+  aliases?: Record<string, string[]>;
+}
+
 const splitWords = (value: string): string[] => {
   const withSpaces = value.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/[_./-]+/g, " ");
   return withSpaces
@@ -274,10 +279,10 @@ const extractMetadataAliasTokens = (node: unknown): Set<string> => {
   return tokens;
 };
 
-const expandTokens = (tokens: Set<string>): Set<string> => {
+const expandTokensWithThesaurus = (tokens: Set<string>, thesaurus: Record<string, string[]>): Set<string> => {
   const expanded = new Set<string>(tokens);
   for (const token of tokens) {
-    const aliases = THESAURUS[token];
+    const aliases = thesaurus[token];
     if (!aliases) {
       continue;
     }
@@ -519,6 +524,7 @@ export class MarineMcpOrchestrator {
   private signalkSnapshotFetchedAt = 0;
   private signalkAliasCandidates: SignalKMetricCandidate[] = [];
   private signalkAliasBuiltAt = 0;
+  private readonly mergedThesaurus: Record<string, string[]>;
   private toolCatalog: Record<McpServerName, McpToolDefinition[]> = { signalk: [], influx: [] };
   private catalogFetchedAt = 0;
 
@@ -528,6 +534,7 @@ export class MarineMcpOrchestrator {
     this.deterministicShortcutsEnabled = process.env.MARINE_DETERMINISTIC_SHORTCUTS !== "false";
     this.fastMarineMode = process.env.MARINE_FAST_MODE !== "false";
     this.toolModel = config.ollamaToolModel.trim().length > 0 ? config.ollamaToolModel.trim() : null;
+    this.mergedThesaurus = this.loadMergedThesaurus();
 
     const signalkEndpoint = new URL(config.signalKUrl);
     const signalkPort = signalkEndpoint.port || (signalkEndpoint.protocol === "https:" ? "443" : "80");
@@ -557,6 +564,52 @@ export class MarineMcpOrchestrator {
       },
       config.marineMcpRequestTimeoutMs,
     );
+  }
+
+  private loadMergedThesaurus(): Record<string, string[]> {
+    const merged: Record<string, Set<string>> = {};
+    const add = (key: string, value: string): void => {
+      const normalizedKey = key.trim().toLowerCase();
+      const normalizedValue = value.trim().toLowerCase();
+      if (!normalizedKey || !normalizedValue || normalizedKey === normalizedValue) {
+        return;
+      }
+      if (!merged[normalizedKey]) {
+        merged[normalizedKey] = new Set<string>();
+      }
+      merged[normalizedKey].add(normalizedValue);
+    };
+
+    for (const [key, values] of Object.entries(THESAURUS)) {
+      for (const value of values) {
+        add(key, value);
+      }
+    }
+
+    try {
+      const raw = readFileSync(this.config.signalkAliasStorePath, "utf8");
+      const parsed = JSON.parse(raw) as AliasStoreFile;
+      for (const [key, values] of Object.entries(parsed.aliases ?? {})) {
+        if (!Array.isArray(values)) {
+          continue;
+        }
+        for (const value of values) {
+          if (typeof value === "string") {
+            add(key, value);
+          }
+        }
+      }
+      this.logger.info(`Loaded SignalK alias store from ${this.config.signalkAliasStorePath}`);
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`SignalK alias store unavailable (${detail}); using built-in aliases only.`);
+    }
+
+    const flat: Record<string, string[]> = {};
+    for (const [key, values] of Object.entries(merged)) {
+      flat[key] = [...values];
+    }
+    return flat;
   }
 
   async tryRespond(
@@ -1292,7 +1345,7 @@ export class MarineMcpOrchestrator {
             path: dottedPath,
             reading,
             tokens,
-            aliasTokens: expandTokens(merged),
+            aliasTokens: expandTokensWithThesaurus(merged, this.mergedThesaurus),
             metadataTokens,
           });
         }
@@ -1341,7 +1394,7 @@ export class MarineMcpOrchestrator {
     if (queryTokens.size === 0) {
       return null;
     }
-    const expandedQueryTokens = expandTokens(queryTokens);
+    const expandedQueryTokens = expandTokensWithThesaurus(queryTokens, this.mergedThesaurus);
 
     const now = Date.now();
     if (this.signalkAliasBuiltAt === 0 || now - this.signalkAliasBuiltAt > 5000) {

@@ -53,6 +53,7 @@ export interface AppConfig {
   marineTelemetryEnabled: boolean;
   signalKUrl: string;
   signalKToken: string;
+  signalkAliasStorePath: string;
   influxdbUrl: string;
   influxdbOrg: string;
   influxdbBucket: string;
