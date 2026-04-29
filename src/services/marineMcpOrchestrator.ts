@@ -38,6 +38,7 @@ interface SignalKMetricCandidate {
   reading: MetricReading;
   tokens: Set<string>;
   aliasTokens: Set<string>;
+  metadataTokens: Set<string>;
 }
 
 interface ExecutableToolCall {
@@ -148,6 +149,17 @@ const isLikelyMarinePrompt = (text: string): boolean => {
   return hints.some((hint) => normalized.includes(hint));
 };
 
+const isHistoricalOrTrendPrompt = (text: string): boolean => {
+  const normalized = text.toLowerCase();
+  return (
+    normalized.includes("trend") ||
+    normalized.includes("history") ||
+    normalized.includes("last ") ||
+    /\b\d+\s*(m|h|d)\b/.test(normalized) ||
+    normalized.includes("over ")
+  );
+};
+
 const extractToolOutput = (value: unknown): string => {
   if (typeof value === "string") {
     return value;
@@ -229,6 +241,39 @@ const tokenizeQuery = (value: string): Set<string> =>
   new Set(splitWords(value).filter((token) => token.length > 1 && !STOPWORDS.has(token)));
 
 const tokenizePath = (path: string): Set<string> => new Set(splitWords(path));
+const tokenizeMetadata = (value: string): Set<string> =>
+  new Set(
+    splitWords(value).filter(
+      (token) =>
+        token.length > 2 &&
+        !STOPWORDS.has(token) &&
+        !["meta", "value", "units", "description", "display"].includes(token),
+    ),
+  );
+
+const extractMetadataAliasTokens = (node: unknown): Set<string> => {
+  if (!isObject(node) || !isObject(node.meta)) {
+    return new Set<string>();
+  }
+
+  const meta = node.meta as Record<string, unknown>;
+  const tokens = new Set<string>();
+  const add = (input: unknown): void => {
+    if (typeof input !== "string") {
+      return;
+    }
+    for (const token of tokenizeMetadata(input)) {
+      tokens.add(token);
+    }
+  };
+
+  add(meta.description);
+  add(meta.displayName);
+  add(meta.shortName);
+  add(meta.longName);
+  return tokens;
+};
+
 const expandTokens = (tokens: Set<string>): Set<string> => {
   const expanded = new Set<string>(tokens);
   for (const token of tokens) {
@@ -1224,6 +1269,7 @@ export class MarineMcpOrchestrator {
 
   private collectSignalKMetricCandidates(payload: unknown): SignalKMetricCandidate[] {
     const candidates: SignalKMetricCandidate[] = [];
+    const skipLeafKeys = new Set(["value", "meta", "units", "timestamp", "$source", "$sourceRef"]);
     const visit = (node: unknown, currentPath: string[]): void => {
       if (!isObject(node)) {
         return;
@@ -1231,14 +1277,22 @@ export class MarineMcpOrchestrator {
       for (const [key, value] of Object.entries(node)) {
         const path = [...currentPath, key];
         const dottedPath = path.join(".");
-        const reading = toMetricReading({ path: dottedPath, ...(isObject(value) ? value : { value }) });
+        const isLeafKey = skipLeafKeys.has(key);
+        const reading =
+          isLeafKey ? null : toMetricReading({ path: dottedPath, ...(isObject(value) ? value : { value }) });
         if (reading && typeof reading.value !== "undefined") {
           const tokens = tokenizePath(dottedPath);
+          const metadataTokens = extractMetadataAliasTokens(value);
+          const merged = new Set<string>(tokens);
+          for (const token of metadataTokens) {
+            merged.add(token);
+          }
           candidates.push({
             path: dottedPath,
             reading,
             tokens,
-            aliasTokens: expandTokens(tokens),
+            aliasTokens: expandTokens(merged),
+            metadataTokens,
           });
         }
         if (isObject(value)) {
@@ -1253,6 +1307,9 @@ export class MarineMcpOrchestrator {
 
   private async tryGenericSignalKLookup(userText: string): Promise<string | null> {
     if (!isLikelyMarinePrompt(userText)) {
+      return null;
+    }
+    if (isHistoricalOrTrendPrompt(userText)) {
       return null;
     }
 
@@ -1288,11 +1345,18 @@ export class MarineMcpOrchestrator {
     }
 
     let best: { candidate: SignalKMetricCandidate; score: number } | null = null;
+    let secondBestScore = Number.NEGATIVE_INFINITY;
     for (const candidate of candidates) {
       let overlap = 0;
       for (const token of queryTokens) {
         if (candidate.tokens.has(token)) {
           overlap += 1;
+        }
+      }
+      let metadataOverlap = 0;
+      for (const token of queryTokens) {
+        if (candidate.metadataTokens.has(token)) {
+          metadataOverlap += 1;
         }
       }
       let aliasOverlap = 0;
@@ -1302,7 +1366,7 @@ export class MarineMcpOrchestrator {
         }
       }
 
-      let score = overlap + aliasOverlap * 0.6;
+      let score = overlap + metadataOverlap * 1.1 + aliasOverlap * 0.6;
       const pathLower = candidate.path.toLowerCase();
       if (queryTokens.has("cabin") && (pathLower.includes("inside") || pathLower.includes("cabin"))) {
         score += 2;
@@ -1318,11 +1382,19 @@ export class MarineMcpOrchestrator {
       }
 
       if (!best || score > best.score) {
+        if (best) {
+          secondBestScore = best.score;
+        }
         best = { candidate, score };
+      } else if (score > secondBestScore) {
+        secondBestScore = score;
       }
     }
 
     if (!best || best.score < 2) {
+      return null;
+    }
+    if (secondBestScore > Number.NEGATIVE_INFINITY && best.score - secondBestScore < 0.75) {
       return null;
     }
 

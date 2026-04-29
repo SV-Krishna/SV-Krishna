@@ -353,3 +353,40 @@ test("MarineMcpOrchestrator answers house battery voltage phrasing variants via 
     await ollama.close();
   }
 });
+
+test("MarineMcpOrchestrator uses metadata description aliases conservatively", async () => {
+  const ollama = await startMockOllama({
+    planner: JSON.stringify({ useMarine: false, needsClarification: false, calls: [] }),
+    synthesis: "unused",
+  });
+  const signalk = await startMockSignalK({
+    electrical: {
+      batteries: {
+        bank42: {
+          v0: {
+            value: 12.91,
+            units: "V",
+            meta: {
+              description: "House battery voltage",
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const orchestrator = new MarineMcpOrchestrator({
+    ...buildConfig(ollama.endpoint),
+    signalKUrl: signalk.endpoint,
+  });
+
+  try {
+    const reply = await orchestrator.tryRespond("What is the house battery voltage?", []);
+    assert.equal(reply, "Current batteries bank42 v0 is 12.91 v.");
+    assert.equal(ollama.requests(), 0);
+  } finally {
+    await orchestrator.shutdown();
+    await signalk.close();
+    await ollama.close();
+  }
+});
