@@ -22,6 +22,10 @@ WHISPER_VAD_FILTER = os.environ.get("WHISPER_VAD_FILTER", "false").strip().lower
     "yes",
     "on",
 )
+WHISPER_RETRY_PROMPT = os.environ.get(
+    "WHISPER_RETRY_PROMPT",
+    "marine telemetry depth speed wind speed true wind depth below transducer",
+)
 
 
 def _transcribe_file(audio_path: Path, language: str | None) -> tuple[str, str, float]:
@@ -29,6 +33,21 @@ def _transcribe_file(audio_path: Path, language: str | None) -> tuple[str, str, 
         str(audio_path),
         language=language,
         vad_filter=WHISPER_VAD_FILTER,
+    )
+    recognition = " ".join(segment.text.strip() for segment in segments).strip()
+    return recognition, info.language, info.language_probability
+
+
+def _transcribe_file_lenient(audio_path: Path, language: str | None) -> tuple[str, str, float]:
+    segments, info = model.transcribe(
+        str(audio_path),
+        language=language,
+        vad_filter=False,
+        no_speech_threshold=0.05,
+        log_prob_threshold=-2.0,
+        condition_on_previous_text=False,
+        temperature=0.0,
+        initial_prompt=WHISPER_RETRY_PROMPT,
     )
     recognition = " ".join(segment.text.strip() for segment in segments).strip()
     return recognition, info.language, info.language_probability
@@ -96,6 +115,10 @@ def recognize() -> tuple:
                 boosted.unlink(missing_ok=True)
             except Exception:
                 pass
+
+    # Final retry: lenient decode with marine prompt for weak bridge/cockpit audio.
+    if not recognition:
+        recognition, detected_language, language_probability = _transcribe_file_lenient(audio_path, language)
 
     return (
         jsonify(
