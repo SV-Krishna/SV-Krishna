@@ -88,7 +88,7 @@ const isLikelyDepthPrompt = (text: string): boolean => {
 
 const isLikelySpeedPrompt = (text: string): boolean => {
   const normalized = text.toLowerCase();
-  if (normalized.includes("wind")) {
+  if (normalized.includes("wind") || normalized.includes(" wnd")) {
     return false;
   }
   return (
@@ -103,10 +103,12 @@ const isLikelyWindSpeedPrompt = (text: string): boolean => {
   const normalized = text.toLowerCase();
   return (
     normalized.includes("wind speed") ||
+    normalized.includes("wnd speed") ||
     normalized.includes("speed true") ||
     normalized.includes("speedtrue") ||
     normalized.includes("apparent wind") ||
-    normalized.includes("wind true")
+    normalized.includes("wind true") ||
+    normalized.includes("wnd true")
   );
 };
 
