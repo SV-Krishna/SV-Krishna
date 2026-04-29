@@ -1302,7 +1302,25 @@ export class MarineMcpOrchestrator {
     };
 
     visit(payload, []);
-    return candidates;
+
+    // Deduplicate mirrored paths such as `vessels.self.*` vs top-level `*`.
+    const byCanonical = new Map<string, SignalKMetricCandidate>();
+    for (const candidate of candidates) {
+      const canonicalPath = candidate.path.replace(/^vessels\.self\./, "");
+      const existing = byCanonical.get(canonicalPath);
+      if (!existing) {
+        byCanonical.set(canonicalPath, candidate);
+        continue;
+      }
+
+      const existingPref = existing.path.startsWith("vessels.self.") ? 2 : 1;
+      const candidatePref = candidate.path.startsWith("vessels.self.") ? 2 : 1;
+      if (candidatePref > existingPref) {
+        byCanonical.set(canonicalPath, candidate);
+      }
+    }
+
+    return [...byCanonical.values()];
   }
 
   private async tryGenericSignalKLookup(userText: string): Promise<string | null> {

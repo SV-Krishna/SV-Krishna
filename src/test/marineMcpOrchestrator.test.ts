@@ -390,3 +390,51 @@ test("MarineMcpOrchestrator uses metadata description aliases conservatively", a
     await ollama.close();
   }
 });
+
+test("MarineMcpOrchestrator handles mirrored vessels.self and top-level paths", async () => {
+  const ollama = await startMockOllama({
+    planner: JSON.stringify({ useMarine: false, needsClarification: false, calls: [] }),
+    synthesis: "unused",
+  });
+  const signalk = await startMockSignalK({
+    vessels: {
+      self: {
+        electrical: {
+          batteries: {
+            house: {
+              voltage: {
+                value: 13.4,
+                units: "V",
+              },
+            },
+          },
+        },
+      },
+    },
+    electrical: {
+      batteries: {
+        house: {
+          voltage: {
+            value: 11.4,
+            units: "V",
+          },
+        },
+      },
+    },
+  });
+
+  const orchestrator = new MarineMcpOrchestrator({
+    ...buildConfig(ollama.endpoint),
+    signalKUrl: signalk.endpoint,
+  });
+
+  try {
+    const reply = await orchestrator.tryRespond("What is the house battery voltage?", []);
+    assert.equal(reply, "Current batteries house voltage is 13.40 v.");
+    assert.equal(ollama.requests(), 0);
+  } finally {
+    await orchestrator.shutdown();
+    await signalk.close();
+    await ollama.close();
+  }
+});
