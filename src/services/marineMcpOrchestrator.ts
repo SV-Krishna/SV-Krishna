@@ -1277,9 +1277,10 @@ export class MarineMcpOrchestrator {
       for (const [key, value] of Object.entries(node)) {
         const path = [...currentPath, key];
         const dottedPath = path.join(".");
+        const isMetaPath = dottedPath.includes(".meta.");
         const isLeafKey = skipLeafKeys.has(key);
         const reading =
-          isLeafKey ? null : toMetricReading({ path: dottedPath, ...(isObject(value) ? value : { value }) });
+          isLeafKey || isMetaPath ? null : toMetricReading({ path: dottedPath, ...(isObject(value) ? value : { value }) });
         if (reading && typeof reading.value !== "undefined") {
           const tokens = tokenizePath(dottedPath);
           const metadataTokens = extractMetadataAliasTokens(value);
