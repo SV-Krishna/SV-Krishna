@@ -4,6 +4,13 @@ import { extractSpokenSignalKAlerts } from "../services/signalkAlertMonitor";
 
 test("extractSpokenSignalKAlerts returns active alert message for configured path", () => {
   const payload = {
+    environment: {
+      depth: {
+        belowTransducer: {
+          value: 19.84,
+        },
+      },
+    },
     notifications: {
       environment: {
         depth: {
@@ -20,7 +27,7 @@ test("extractSpokenSignalKAlerts returns active alert message for configured pat
   assert.deepEqual(alerts, [
     {
       path: "environment.depth.belowTransducer",
-      message: "Shallow water warning. Depth below 20 meters.",
+      message: "Warning shallow depth. Depth currently 19.8 meters.",
     },
   ]);
 });

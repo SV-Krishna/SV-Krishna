@@ -54,6 +54,28 @@ const extractState = (value: unknown): string => {
   return "";
 };
 
+const toNumber = (value: unknown): number | null => {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  if (isObject(value) && typeof value.value === "number" && Number.isFinite(value.value)) {
+    return value.value;
+  }
+  return null;
+};
+
+const formatDepthAlertMessage = (payload: Record<string, unknown>, path: string, fallback: string): string => {
+  if (path !== "environment.depth.belowTransducer") {
+    return fallback;
+  }
+  const depthNode = getNestedValue(payload, path);
+  const depthMeters = toNumber(depthNode);
+  if (depthMeters === null) {
+    return "Warning shallow depth.";
+  }
+  return `Warning shallow depth. Depth currently ${depthMeters.toFixed(1)} meters.`;
+};
+
 export const extractSpokenSignalKAlerts = (
   payload: unknown,
   requestedPaths: string[],
@@ -78,7 +100,7 @@ export const extractSpokenSignalKAlerts = (
     if (!message || !ACTIVE_STATES.has(state)) {
       continue;
     }
-    alerts.push({ path, message });
+    alerts.push({ path, message: formatDepthAlertMessage(payload, path, message) });
   }
 
   return alerts;
