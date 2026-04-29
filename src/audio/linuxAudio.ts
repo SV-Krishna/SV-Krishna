@@ -24,7 +24,7 @@ export const commandExists = async (command: string): Promise<boolean> => {
   });
 };
 
-const runCommand = async (command: string, args: string[]): Promise<void> => {
+const runCommand = async (command: string, args: string[], allowedExitCodes: number[] = [0]): Promise<void> => {
   await new Promise<void>((resolve, reject) => {
     const child = spawn(command, args, {
       stdio: ["ignore", "ignore", "pipe"],
@@ -36,7 +36,7 @@ const runCommand = async (command: string, args: string[]): Promise<void> => {
     });
 
     child.on("close", (code) => {
-      if (code === 0) {
+      if (code !== null && allowedExitCodes.includes(code)) {
         resolve();
         return;
       }
@@ -83,7 +83,36 @@ export class LinuxAudio {
       `sample-${Date.now()}.wav`,
     );
 
-    if (await commandExists("arecord")) {
+    if (this.config.audioUseVad && (await commandExists("sox"))) {
+      const threshold = `${Math.max(1, this.config.audioVadThresholdPercent)}%`;
+      const vadArgs = [
+        "-t",
+        "alsa",
+        this.config.audioInputDevice,
+        "-r",
+        String(this.config.audioSampleRate),
+        "-c",
+        "1",
+        outputPath,
+        "silence",
+        "1",
+        `${Math.max(1, this.config.audioVadMinSpeechSeconds)}.0`,
+        threshold,
+        "1",
+        `${Math.max(1, this.config.audioVadSilenceSeconds)}.0`,
+        threshold,
+        "trim",
+        "0",
+        String(Math.max(this.config.audioRecordSeconds, this.config.audioVadMaxSeconds)),
+      ];
+
+      if (await commandExists("timeout")) {
+        const timeoutSeconds = Math.max(this.config.audioRecordSeconds, this.config.audioVadMaxSeconds) + 2;
+        await runCommand("timeout", [String(timeoutSeconds), "sox", ...vadArgs], [0, 124]);
+      } else {
+        await runCommand("sox", vadArgs);
+      }
+    } else if (await commandExists("arecord")) {
       const args = [
         "-D",
         this.config.audioInputDevice,

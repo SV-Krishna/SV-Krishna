@@ -21,6 +21,11 @@ test("loadConfig returns expected default service topology", () => {
   delete process.env.AUDIO_OUTPUT_DEVICE;
   delete process.env.AUDIO_WORK_DIR;
   delete process.env.AUDIO_RECORD_SECONDS;
+  delete process.env.AUDIO_USE_VAD;
+  delete process.env.AUDIO_VAD_MIN_SPEECH_SECONDS;
+  delete process.env.AUDIO_VAD_SILENCE_SECONDS;
+  delete process.env.AUDIO_VAD_MAX_SECONDS;
+  delete process.env.AUDIO_VAD_THRESHOLD_PERCENT;
   delete process.env.AUDIO_SAMPLE_RATE;
   delete process.env.ENABLE_AUDIO_PLAYBACK_DEBUG;
   delete process.env.WHISPER_LANGUAGE;
@@ -76,6 +81,11 @@ test("loadConfig returns expected default service topology", () => {
   assert.equal(config.embeddingTopK, 3);
   assert.equal(config.audioWorkDir, `${process.cwd()}/local/svkrishna/audio`);
   assert.equal(config.audioRecordSeconds, 5);
+  assert.equal(config.audioUseVad, true);
+  assert.equal(config.audioVadMinSpeechSeconds, 1);
+  assert.equal(config.audioVadSilenceSeconds, 1);
+  assert.equal(config.audioVadMaxSeconds, 8);
+  assert.equal(config.audioVadThresholdPercent, 2);
   assert.equal(config.audioSampleRate, 16000);
   assert.equal(config.enableAudioPlaybackDebug, false);
   assert.equal(config.whisperLanguage, "en");

@@ -21,6 +21,11 @@ export interface AppConfig {
   audioOutputDevice: string;
   audioWorkDir: string;
   audioRecordSeconds: number;
+  audioUseVad: boolean;
+  audioVadMinSpeechSeconds: number;
+  audioVadSilenceSeconds: number;
+  audioVadMaxSeconds: number;
+  audioVadThresholdPercent: number;
   audioSampleRate: number;
   enableAudioPlaybackDebug: boolean;
   whisperLanguage: string;
