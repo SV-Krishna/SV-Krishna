@@ -1,4 +1,7 @@
 import os
+import shutil
+import subprocess
+import tempfile
 from pathlib import Path
 
 from flask import Flask, jsonify, request
@@ -19,6 +22,16 @@ WHISPER_VAD_FILTER = os.environ.get("WHISPER_VAD_FILTER", "false").strip().lower
     "yes",
     "on",
 )
+
+
+def _transcribe_file(audio_path: Path, language: str | None) -> tuple[str, str, float]:
+    segments, info = model.transcribe(
+        str(audio_path),
+        language=language,
+        vad_filter=WHISPER_VAD_FILTER,
+    )
+    recognition = " ".join(segment.text.strip() for segment in segments).strip()
+    return recognition, info.language, info.language_probability
 
 
 model = WhisperModel(
@@ -56,20 +69,41 @@ def recognize() -> tuple:
     if not audio_path.exists():
         return jsonify({"error": f"file not found: {audio_path}"}), 404
 
-    segments, info = model.transcribe(
-        str(audio_path),
-        language=language,
-        vad_filter=WHISPER_VAD_FILTER,
-    )
+    recognition, detected_language, language_probability = _transcribe_file(audio_path, language)
 
-    recognition = " ".join(segment.text.strip() for segment in segments).strip()
+    # Retry once with a normalized/boosted copy for very low-level captures.
+    if not recognition and shutil.which("sox"):
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
+            boosted = Path(tmp.name)
+        try:
+            subprocess.run(
+                [
+                    "sox",
+                    str(audio_path),
+                    str(boosted),
+                    "gain",
+                    "15",
+                    "norm",
+                    "-3",
+                ],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            recognition, detected_language, language_probability = _transcribe_file(boosted, language)
+        finally:
+            try:
+                boosted.unlink(missing_ok=True)
+            except Exception:
+                pass
+
     return (
         jsonify(
             {
                 "filePath": str(audio_path),
                 "recognition": recognition,
-                "language": info.language,
-                "language_probability": info.language_probability,
+                "language": detected_language,
+                "language_probability": language_probability,
             }
         ),
         200,
