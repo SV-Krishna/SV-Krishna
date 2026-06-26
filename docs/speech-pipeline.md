@@ -241,7 +241,7 @@ The controller can now play a short acknowledgement cue while Whisper transcript
 Environment variables:
 
 - `ENABLE_TRANSCRIBING_CUE=true|false`
-- `TRANSCRIBING_CUE_TEXT=Got it`
+- `TRANSCRIBING_CUE_TEXT=I'm on it`
 
 Behavior:
 
@@ -252,4 +252,4 @@ Behavior:
 
 Current cache path on the test Pi:
 
-- `/opt/svkrishna/app/local/svkrishna/audio/cues/transcribing-got-it.wav`
+- `/opt/svkrishna/app/local/svkrishna/audio/cues/transcribing-i-m-on-it.wav`

@@ -75,13 +75,13 @@ Verification:
 
 ## Transcribing cue runtime
 
-The main service can also play a short `Got it` cue during `transcribing`.
+The main service can also play a short `I'm on it` cue during `transcribing`.
 
 Recommended `.env` settings:
 
 ```text
 ENABLE_TRANSCRIBING_CUE=true
-TRANSCRIBING_CUE_TEXT=Got it
+TRANSCRIBING_CUE_TEXT=I'm on it
 ```
 
 Notes:

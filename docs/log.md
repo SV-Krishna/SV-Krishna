@@ -20,7 +20,7 @@ Entries should be appended in reverse chronological order unless a different ord
 
 - document the final ReSpeaker XVF3800 routing decision after probe-based validation
 - record the move from `Okay Krishna` planning to the deployed `Hey Krishna` wake-word model
-- capture the transcribing-stage `Got it` cue behavior and its device constraints
+- capture the transcribing-stage `I'm on it` cue behavior and its device constraints
 - align the handover and operational docs with the Test Pi runtime that has already passed smoke
 
 ### Files Added Or Changed

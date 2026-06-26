@@ -195,7 +195,7 @@ export const loadConfig = (): AppConfig => {
     piperBinaryPath: readString("PIPER_BINARY_PATH", "piper"),
     piperModelPath: readString("PIPER_MODEL_PATH", "/path/to/piper/voice/model.onnx"),
     enableTranscribingCue: readBoolean("ENABLE_TRANSCRIBING_CUE", true),
-    transcribingCueText: readString("TRANSCRIBING_CUE_TEXT", "Got it"),
+    transcribingCueText: readString("TRANSCRIBING_CUE_TEXT", "I'm on it"),
     marineTelemetryEnabled: readBoolean("MARINE_TELEMETRY_ENABLED", false),
     signalKUrl: readString("SIGNALK_URL", "http://127.0.0.1:3000"),
     signalKToken: readString("SIGNALK_TOKEN", ""),

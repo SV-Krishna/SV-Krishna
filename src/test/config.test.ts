@@ -167,7 +167,7 @@ test("loadConfig returns expected default service topology", () => {
   assert.equal(config.piperBinaryPath, "piper");
   assert.equal(config.piperModelPath, "/path/to/piper/voice/model.onnx");
   assert.equal(config.enableTranscribingCue, true);
-  assert.equal(config.transcribingCueText, "Got it");
+  assert.equal(config.transcribingCueText, "I'm on it");
   assert.equal(config.marineTelemetryEnabled, false);
   assert.equal(config.signalKUrl, "http://127.0.0.1:3000");
   assert.equal(config.signalKToken, "");

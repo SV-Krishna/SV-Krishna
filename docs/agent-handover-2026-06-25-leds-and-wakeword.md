@@ -259,7 +259,7 @@ The following work was completed after the original 2026-06-25 note:
 - confirmed the best live ASR path is the XVF `right` channel
 - changed the target wake phrase from `Okay Krishna` to `Hey Krishna`
 - deployed the supplied `Hey Krishna` ONNX model to the Test Pi
-- added a short transcribing-stage `Got it` cue using the existing Piper voice actor
+- added a short transcribing-stage `I'm on it` cue using the existing Piper voice actor
 
 ### XVF routing outcome
 
@@ -308,7 +308,7 @@ The detector was verified running with:
 
 ### Transcribing cue behavior
 
-The controller now starts a short `Got it` WAV when entering `transcribing` while the LED is solid amber.
+The controller now starts a short `I'm on it` WAV when entering `transcribing` while the LED is solid amber.
 
 Implementation details:
 
@@ -318,7 +318,7 @@ Implementation details:
 
 Cached file on the Test Pi:
 
-- `/opt/svkrishna/app/local/svkrishna/audio/cues/transcribing-got-it.wav`
+- `/opt/svkrishna/app/local/svkrishna/audio/cues/transcribing-i-m-on-it.wav`
 
 Constraint:
 

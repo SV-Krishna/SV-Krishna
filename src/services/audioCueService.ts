@@ -16,6 +16,12 @@ const fileExists = async (path: string): Promise<boolean> => {
   }
 };
 
+const slugifyCueText = (value: string): string =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "cue";
+
 export class AudioCueService {
   private readonly logger: Logger;
   private readonly enabled: boolean;
@@ -33,7 +39,11 @@ export class AudioCueService {
     this.enabled = config.enableTts && config.enableTranscribingCue;
     this.cueText = config.transcribingCueText;
     this.outputDevice = config.audioOutputDevice;
-    this.cuePath = join(config.audioWorkDir, "cues", "transcribing-got-it.wav");
+    this.cuePath = join(
+      config.audioWorkDir,
+      "cues",
+      `transcribing-${slugifyCueText(this.cueText)}.wav`,
+    );
   }
 
   async prepare(): Promise<void> {

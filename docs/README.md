@@ -105,7 +105,7 @@ At the time this index was added:
 - ReSpeaker XVF3800 LED status integration and XVF-aware audio routing are deployed to the Test Pi
 - the current wake-word baseline is `Hey Krishna` using `/opt/svkrishna/models/openwakeword/hey-krishna.onnx`
 - wake-word detection now triggers visual feedback earlier via a two-stage detector event flow
-- a short `Got it` cue now runs during `transcribing`
+- a short `I'm on it` cue now runs during `transcribing`
 - AEC remains deferred while the playback device stays unchanged
 
 When adding a new handover, runbook, or design note, update this index so the next agent can find the current path quickly.
