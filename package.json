@@ -10,8 +10,10 @@
     "dev": "tsx src/index.ts",
     "start": "node dist/index.js",
     "test": "npm run clean --silent && npm run build --silent && node --test dist/test",
+    "imu-bridge": "npm run build --silent && node dist/scripts/imuBridge.js",
     "benchmark:rag": "npm run build --silent && node dist/scripts/benchmarkRag.js",
     "voice:check": "npm run build --silent && node dist/scripts/voicePipelineCheck.js",
+    "xvf:probe": "npm run build --silent && node dist/scripts/xvfRoutingProbe.js",
     "build:signalk-alias-store": "npm run build --silent && node dist/scripts/buildSignalkAliasStore.js"
   },
   "engines": {
@@ -19,11 +21,13 @@
   },
   "dependencies": {
     "busboy": "^1.6.0",
-    "dotenv": "^16.5.0"
+    "dotenv": "^16.5.0",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "@types/busboy": "^1.5.4",
     "@types/node": "^22.15.30",
+    "@types/ws": "^8.18.1",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3"
   }

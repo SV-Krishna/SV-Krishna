@@ -8,7 +8,9 @@ const main = async (): Promise<void> => {
   const web = new WebServer(config, {
     voice: {
       runOnce: async (options) => await controller.runVoiceOnce(options),
-      executeRelay: async (command) => await controller.executeRelay(command),
+      runTextCommand: async (text, history) => await controller.runTextCommand(text, history),
+      getWakeWordSettings: async () => await controller.getWakeWordSettings(),
+      setWakeWordEnabled: async (enabled) => await controller.setWakeWordEnabled(enabled),
       getStatus: async () => await controller.getStatus(),
     },
   });

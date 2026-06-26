@@ -29,6 +29,16 @@ const readNumber = (name: string, fallback: number): number => {
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
+const readFloat = (name: string, fallback: number): number => {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    return fallback;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
 const readStringList = (name: string, fallback: string[]): string[] => {
   const value = process.env[name]?.trim();
   if (!value) {
@@ -57,11 +67,6 @@ export const loadConfig = (): AppConfig => {
 
   const services: ServiceEndpoint[] = [
     {
-      name: "ollama",
-      enabled: true,
-      url: readString("OLLAMA_ENDPOINT", "http://127.0.0.1:11434"),
-    },
-    {
       name: "whisper",
       enabled: readBoolean("ENABLE_WHISPER_HTTP", true),
       url: readString("WHISPER_ENDPOINT", "http://127.0.0.1:9001"),
@@ -71,6 +76,11 @@ export const loadConfig = (): AppConfig => {
       enabled: readBoolean("ENABLE_PIPER_HTTP", false),
       url: readString("PIPER_ENDPOINT", "http://127.0.0.1:9002"),
     },
+    {
+      name: "rasa",
+      enabled: readBoolean("ENABLE_RASA_INTENT_ROUTER", true),
+      url: readString("RASA_ENDPOINT", "http://127.0.0.1:5005"),
+    },
   ];
 
   return {
@@ -79,6 +89,24 @@ export const loadConfig = (): AppConfig => {
     enableWebUi: readBoolean("ENABLE_WEB_UI", true),
     webUiHost: readString("WEB_UI_HOST", "0.0.0.0"),
     webUiPort: readNumber("WEB_UI_PORT", 8080),
+    enableWakeWord: readBoolean("ENABLE_WAKE_WORD", false),
+    wakeWordPhrase: readString("WAKE_WORD_PHRASE", "Okay Krishna"),
+    wakeWordConfigPath: readString(
+      "WAKE_WORD_CONFIG_PATH",
+      nodeEnv === "development"
+        ? `${devDataRoot}/config/wake-word.json`
+        : "/opt/svkrishna/config/wake-word.json",
+    ),
+    wakeWordPythonPath: readString("WAKE_WORD_PYTHON", "python3"),
+    wakeWordModelPath: readString(
+      "WAKE_WORD_MODEL_PATH",
+      nodeEnv === "development"
+        ? `${process.cwd()}/local/svkrishna/models/openwakeword/krishna.onnx`
+        : "/opt/svkrishna/models/openwakeword/krishna.onnx",
+    ),
+    wakeWordThreshold: readFloat("WAKE_WORD_THRESHOLD", 0.5),
+    wakeWordChunkSize: readNumber("WAKE_WORD_CHUNK_SIZE", 1280),
+    wakeWordCooldownMs: readNumber("WAKE_WORD_COOLDOWN_MS", 8000),
     enableEmbeddingPoc: readBoolean("ENABLE_EMBEDDING_POC", false),
     embeddingModel: readString("EMBEDDING_MODEL", "all-minilm:33m"),
     embeddingStorePath: readString(
@@ -90,6 +118,11 @@ export const loadConfig = (): AppConfig => {
     embeddingTopK: readNumber("EMBEDDING_TOP_K", 3),
     pushToTalkKey: readString("PUSH_TO_TALK_KEY", "space"),
     audioInputDevice: readString("AUDIO_INPUT_DEVICE", "default"),
+    audioInputChannels: Math.max(1, readNumber("AUDIO_INPUT_CHANNELS", 1)),
+    audioInputChannelSelect: (() => {
+      const value = readString("AUDIO_INPUT_CHANNEL_SELECT", "mix").toLowerCase();
+      return value === "left" || value === "right" ? value : "mix";
+    })(),
     audioOutputDevice: readString("AUDIO_OUTPUT_DEVICE", "default"),
     audioWorkDir: readString(
       "AUDIO_WORK_DIR",
@@ -102,10 +135,32 @@ export const loadConfig = (): AppConfig => {
     audioVadMaxSeconds: readNumber("AUDIO_VAD_MAX_SECONDS", 8),
     audioVadThresholdPercent: readNumber("AUDIO_VAD_THRESHOLD_PERCENT", 2),
     audioSampleRate: readNumber("AUDIO_SAMPLE_RATE", 16000),
+    audioCaptureBoostDb: readNumber("AUDIO_CAPTURE_BOOST_DB", 0),
+    audioCaptureHighpassHz: readNumber("AUDIO_CAPTURE_HIGHPASS_HZ", 120),
+    audioCaptureLowpassHz: readNumber("AUDIO_CAPTURE_LOWPASS_HZ", 7000),
+    reSpeakerLedEnabled: readBoolean("RESPEAKER_LED_ENABLED", false),
+    reSpeakerLedHostPath: readString(
+      "RESPEAKER_LED_HOST_PATH",
+      nodeEnv === "development"
+        ? `${process.cwd()}/local/tools/respeaker-xvf3800/xvf_host`
+        : "/opt/svkrishna/tools/respeaker-xvf3800/xvf_host",
+    ),
+    reSpeakerXvfEnabled: readBoolean("RESPEAKER_XVF_ENABLED", false),
+    reSpeakerXvfHostPath: readString(
+      "RESPEAKER_XVF_HOST_PATH",
+      nodeEnv === "development"
+        ? `${process.cwd()}/local/tools/respeaker-xvf3800/xvf_host`
+        : "/opt/svkrishna/tools/respeaker-xvf3800/xvf_host",
+    ),
+    reSpeakerXvfAutoRoute: readBoolean("RESPEAKER_XVF_AUTO_ROUTE", true),
+    reSpeakerXvfOutputLeftCategory: readNumber("RESPEAKER_XVF_OUTPUT_LEFT_CATEGORY", 8),
+    reSpeakerXvfOutputLeftSource: readNumber("RESPEAKER_XVF_OUTPUT_LEFT_SOURCE", 0),
+    reSpeakerXvfOutputRightCategory: readNumber("RESPEAKER_XVF_OUTPUT_RIGHT_CATEGORY", 7),
+    reSpeakerXvfOutputRightSource: readNumber("RESPEAKER_XVF_OUTPUT_RIGHT_SOURCE", 3),
     enableAudioPlaybackDebug: readBoolean("ENABLE_AUDIO_PLAYBACK_DEBUG", false),
     whisperLanguage: readString("WHISPER_LANGUAGE", "en"),
     enableTts: readBoolean("ENABLE_TTS", true),
-    enableRag: readBoolean("ENABLE_RAG", true),
+    enableRag: readBoolean("ENABLE_RAG", false),
     ragAllowIngest: readBoolean("RAG_ALLOW_INGEST", nodeEnv === "development"),
     ragSourceDir: readString(
       "RAG_SOURCE_DIR",
@@ -126,7 +181,7 @@ export const loadConfig = (): AppConfig => {
     ragTopK: readNumber("RAG_TOP_K", 3),
     ragExtractorPython: readString("RAG_EXTRACTOR_PYTHON", "python3"),
     ragExtractorMode,
-    ollamaModel: readString("OLLAMA_MODEL", "gemma3:1b"),
+    ollamaModel: readString("OLLAMA_MODEL", "qwen2.5:1.5b"),
     ollamaToolModel: readString("OLLAMA_TOOL_MODEL", ""),
     ollamaSystemPrompt: readString(
       "OLLAMA_SYSTEM_PROMPT",
@@ -139,9 +194,15 @@ export const loadConfig = (): AppConfig => {
     relayRequireConfirmation: readBoolean("RELAY_REQUIRE_CONFIRMATION", true),
     piperBinaryPath: readString("PIPER_BINARY_PATH", "piper"),
     piperModelPath: readString("PIPER_MODEL_PATH", "/path/to/piper/voice/model.onnx"),
+    enableTranscribingCue: readBoolean("ENABLE_TRANSCRIBING_CUE", true),
+    transcribingCueText: readString("TRANSCRIBING_CUE_TEXT", "Got it"),
     marineTelemetryEnabled: readBoolean("MARINE_TELEMETRY_ENABLED", false),
     signalKUrl: readString("SIGNALK_URL", "http://127.0.0.1:3000"),
     signalKToken: readString("SIGNALK_TOKEN", ""),
+    signalKDraftMaxM: readNumber("SIGNALK_DRAFT_MAX_M", 0),
+    remoteSignalKUrl: readString("REMOTE_SIGNALK_URL", ""),
+    remoteSignalKToken: readString("REMOTE_SIGNALK_TOKEN", ""),
+    remoteSignalKPositionMaxAgeSeconds: readNumber("REMOTE_SIGNALK_POSITION_MAX_AGE_SECONDS", 30),
     signalkAliasStorePath: readString(
       "SIGNALK_ALIAS_STORE_PATH",
       nodeEnv === "development"
@@ -162,6 +223,16 @@ export const loadConfig = (): AppConfig => {
     signalkAlertPaths: readStringList("SIGNALK_ALERT_PATHS", ["notifications.environment.depth.belowTransducer"]),
     signalkAlertPollMs: readNumber("SIGNALK_ALERT_POLL_MS", 2000),
     signalkAlertRepeatSeconds: readNumber("SIGNALK_ALERT_REPEAT_SECONDS", 30),
+    enableRasaIntentRouter: readBoolean("ENABLE_RASA_INTENT_ROUTER", true),
+    rasaEndpoint: readString("RASA_ENDPOINT", "http://127.0.0.1:5005"),
+    rasaIntentMinConfidence: readNumber("RASA_INTENT_MIN_CONFIDENCE", 70),
+    enableHarnessEval: readBoolean("ENABLE_HARNESS_EVAL", false),
+    harnessEvalLogPath: readString(
+      "HARNESS_EVAL_LOG_PATH",
+      nodeEnv === "development"
+        ? `${devDataRoot}/logs/harness-eval.jsonl`
+        : "/opt/svkrishna/logs/harness-eval.jsonl",
+    ),
     services,
   };
 };

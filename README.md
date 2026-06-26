@@ -12,8 +12,8 @@ The target hardware for this adaptation is:
 
 - Raspberry Pi 5 with 8GB RAM
 - Standard HDMI monitor
-- Generic microphone connected through the Pi's default audio input path
-- Generic speaker output through the Pi's default audio output path
+- ReSpeaker XVF3800 USB 4-mic array on the audio input path
+- Separate USB playback device on the audio output path
 
 The interaction model for the first build is deliberately narrow:
 
@@ -80,10 +80,15 @@ This project will replace those assumptions with:
 - `docs/target-architecture.md` defines the concrete runtime layout for the Raspberry Pi deployment
 - `docs/rag-drop-folder.md` explains how to feed local PDFs into the offline RAG store
 - `docs/rag-evaluation-report.md` summarizes the RAG extraction/retrieval experiments and the recommended "build machine -> Pi" workflow
-- `docs/speech-pipeline.md` describes the speech-to-text (Whisper) and text-to-speech (Piper) pipeline and configuration
+- `docs/speech-pipeline.md` describes the speech-to-text (Whisper), text-to-speech (Piper), ReSpeaker XVF routing, transcribing cue, and wake-word pipeline
 - `docs/deploy-local-to-pi.md` describes how we deploy builds from the local machine to the Raspberry Pi
+- `docs/openwakeword-okay-krishna-plan-2026-06-25.md` records the wake-word evaluation and deployment notes for the current `Hey Krishna` model path
 - `docs/web-ui-review.md` records the web UI review and why this repo uses a thin built-in UI
 - `docs/signalk-influx-mcp-poc.md` is the runbook for the marine telemetry PoC (`SignalK + InfluxDB + MCP`)
+- `docs/rasa-signalk-ops-log-2026-05-18.md` is the detailed operations and troubleshooting log for RASA, voice routing, and SignalK anchor alarm work on test/live Pi
+- `docs/signalk-plugin-workaround-runbook.md` is the hands-on runbook for the current IMU bridge workaround (authenticated websocket delta publishing to SignalK navigation paths)
+- `docs/signalk-upgrade-backup-runbook.md` is the pre-upgrade backup/rollback runbook for SignalK on the live Pi (`206`)
+- `docs/signalk-usb-instability-ops-log-2026-05-26.md` records USB serial instability findings, likely cable fault evidence, and deployed watchdog mitigation on live Pi (`206`)
 - `docs/profile-readme-archive.md` preserves the original GitHub profile README content from this repository before repurposing it into a codebase
 
 ## License note

@@ -83,6 +83,19 @@ export class PiperClient {
     }
 
     const outputPath = join(this.outputDir, `reply-${Date.now()}.wav`);
+    await this.synthesizeToFile(text, outputPath);
+
+    if (!(await fileExists(outputPath))) {
+      throw new Error(`Piper did not produce an output file at ${outputPath}.`);
+    }
+
+    return outputPath;
+  }
+
+  async synthesizeToFile(text: string, outputPath: string): Promise<void> {
+    if (!this.enabled) {
+      throw new Error("Piper is disabled.");
+    }
 
     await new Promise<void>((resolve, reject) => {
       const child = spawn(this.binaryPath, [
@@ -115,11 +128,5 @@ export class PiperClient {
         reject(error);
       });
     });
-
-    if (!(await fileExists(outputPath))) {
-      throw new Error(`Piper did not produce an output file at ${outputPath}.`);
-    }
-
-    return outputPath;
   }
 }

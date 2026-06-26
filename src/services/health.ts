@@ -35,6 +35,8 @@ const healthTarget = (service: ServiceEndpoint): URL => {
   const url = new URL(service.url);
   if (service.name === "ollama") {
     url.pathname = "/api/tags";
+  } else if (service.name === "rasa") {
+    url.pathname = "/status";
   }
   return url;
 };

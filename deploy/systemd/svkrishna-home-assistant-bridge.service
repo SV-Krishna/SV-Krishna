@@ -1,0 +1,24 @@
+[Unit]
+Description=SV-Krishna Home Assistant Dual-Target Bridge
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=admin
+Group=admin
+WorkingDirectory=/opt/svkrishna/app
+Environment=HOME=/home/admin
+EnvironmentFile=/opt/svkrishna/config/home-assistant-bridge.env
+ExecStart=/opt/svkrishna/venv-home-assistant-bridge/bin/python /opt/svkrishna/app/nlc/scripts/home_assistant_bridge.py
+
+Restart=always
+RestartSec=5
+TimeoutStopSec=10
+KillSignal=SIGINT
+
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

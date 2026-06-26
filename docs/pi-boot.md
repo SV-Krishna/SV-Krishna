@@ -35,6 +35,61 @@ Logs:
 - `journalctl -u svkrishna.service -f`
 - `journalctl -u svkrishna-whisper.service -f`
 
+## Wake word runtime
+
+Wake-word detection runs inside the main `svkrishna.service` process. It does not use a separate systemd unit.
+
+Prerequisites on the Pi:
+
+- `python3`
+- `python3-venv`
+- `sox` or `arecord`
+- `openwakeword` installed into the configured Python environment
+- a trained wake-word model file for `"Hey Krishna"`
+
+Recommended layout:
+
+- Python runtime: `/opt/svkrishna/venvs/wakeword/bin/python`
+- model file: `/opt/svkrishna/models/openwakeword/hey-krishna.onnx`
+
+Required `.env` settings:
+
+```text
+ENABLE_WAKE_WORD=true
+WAKE_WORD_PHRASE=Hey Krishna
+WAKE_WORD_PYTHON=/opt/svkrishna/venvs/wakeword/bin/python
+WAKE_WORD_MODEL_PATH=/opt/svkrishna/models/openwakeword/hey-krishna.onnx
+AUDIO_INPUT_DEVICE=plughw:CARD=Array,DEV=0
+AUDIO_INPUT_CHANNELS=2
+AUDIO_INPUT_CHANNEL_SELECT=right
+RESPEAKER_XVF_ENABLED=true
+```
+
+Verification:
+
+- `journalctl -u svkrishna.service -f`
+- open the Web UI and confirm the wake-word status says it is listening
+- if it says enabled but not listening, check the model path, Python path, and `AUDIO_INPUT_DEVICE`
+- during live wake-word checks, look for `Wake-word follow-up looked like filler: ...`, `Wake-word retry captured command: ...`, and `Wake-word retry still looked like filler: ...`
+- if a user pauses after `Hey Krishna`, expect one reprompt before the app asks them to say `Hey Krishna` and the request together
+
+## Transcribing cue runtime
+
+The main service can also play a short `Got it` cue during `transcribing`.
+
+Recommended `.env` settings:
+
+```text
+ENABLE_TRANSCRIBING_CUE=true
+TRANSCRIBING_CUE_TEXT=Got it
+```
+
+Notes:
+
+- the cue uses the existing Piper voice actor and is pre-generated to a local WAV cache
+- playback is best-effort and is stopped before reply playback begins
+- AEC remains deferred because the playback device must stay as-is for now
+
 ## Relay addressing
 
 For maximum robustness, prefer one of:

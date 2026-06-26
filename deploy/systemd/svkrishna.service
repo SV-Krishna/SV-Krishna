@@ -4,8 +4,8 @@ Wants=network-online.target
 After=network-online.target
 
 # Optional dependencies (SV-Krishna should still run if these are down).
-Wants=ollama.service svkrishna-whisper.service
-After=ollama.service svkrishna-whisper.service
+Wants=svkrishna-whisper.service
+After=svkrishna-whisper.service
 
 [Service]
 Type=simple

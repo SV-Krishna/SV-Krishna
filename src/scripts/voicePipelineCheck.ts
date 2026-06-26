@@ -2,14 +2,14 @@ import { mkdir } from "node:fs/promises";
 import { LinuxAudio } from "../audio/linuxAudio";
 import { loadConfig } from "../config";
 import { PiperClient } from "../services/piperClient";
+import { RasaClient } from "../services/rasaClient";
 import { WhisperClient } from "../services/whisperClient";
-import { ChatService } from "../services/chatService";
 
 const main = async (): Promise<void> => {
   const config = loadConfig();
   const audio = new LinuxAudio(config);
   const whisper = new WhisperClient(config);
-  const chat = new ChatService(config);
+  const rasa = new RasaClient(config);
   const piper = new PiperClient(config);
 
   await mkdir(config.audioWorkDir, { recursive: true });
@@ -20,7 +20,7 @@ const main = async (): Promise<void> => {
   process.stdout.write(`record_seconds=${config.audioRecordSeconds}\n`);
   process.stdout.write(`sample_rate=${config.audioSampleRate}\n`);
   process.stdout.write(`whisper=${config.services.find((s) => s.name === "whisper")?.url}\n`);
-  process.stdout.write(`ollama=${config.services.find((s) => s.name === "ollama")?.url} model=${config.ollamaModel}\n`);
+  process.stdout.write(`rasa=${config.services.find((s) => s.name === "rasa")?.url}\n`);
   process.stdout.write(`tts_enabled=${config.enableTts}\n\n`);
 
   process.stdout.write("Recording...\n");
@@ -36,11 +36,14 @@ const main = async (): Promise<void> => {
     return;
   }
 
-  process.stdout.write("Asking LLM...\n");
-  const { reply } = await chat.ask(transcript);
-  process.stdout.write(`Reply: ${reply || "[empty]"}\n`);
+  process.stdout.write("Parsing with Rasa...\n");
+  const parsed = await rasa.parse(transcript);
+  const reply = parsed
+    ? `Intent ${parsed.intentName} at ${(parsed.confidence * 100).toFixed(1)}% confidence.`
+    : "No Rasa intent returned.";
+  process.stdout.write(`Reply: ${reply}\n`);
 
-  if (config.enableTts && reply) {
+  if (config.enableTts) {
     process.stdout.write("Synthesizing (Piper)...\n");
     const speechPath = await piper.synthesize(reply);
     process.stdout.write(`Speech: ${speechPath}\n`);
@@ -56,4 +59,3 @@ main().catch((error) => {
   process.stderr.write(`voice check failed: ${detail}\n`);
   process.exit(1);
 });
-

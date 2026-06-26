@@ -12,12 +12,22 @@ test("loadConfig returns expected default service topology", () => {
   delete process.env.ENABLE_WEB_UI;
   delete process.env.WEB_UI_HOST;
   delete process.env.WEB_UI_PORT;
+  delete process.env.ENABLE_WAKE_WORD;
+  delete process.env.WAKE_WORD_PHRASE;
+  delete process.env.WAKE_WORD_CONFIG_PATH;
+  delete process.env.WAKE_WORD_PYTHON;
+  delete process.env.WAKE_WORD_MODEL_PATH;
+  delete process.env.WAKE_WORD_THRESHOLD;
+  delete process.env.WAKE_WORD_CHUNK_SIZE;
+  delete process.env.WAKE_WORD_COOLDOWN_MS;
   delete process.env.ENABLE_EMBEDDING_POC;
   delete process.env.EMBEDDING_MODEL;
   delete process.env.EMBEDDING_STORE_PATH;
   delete process.env.EMBEDDING_TOP_K;
   delete process.env.PUSH_TO_TALK_KEY;
   delete process.env.AUDIO_INPUT_DEVICE;
+  delete process.env.AUDIO_INPUT_CHANNELS;
+  delete process.env.AUDIO_INPUT_CHANNEL_SELECT;
   delete process.env.AUDIO_OUTPUT_DEVICE;
   delete process.env.AUDIO_WORK_DIR;
   delete process.env.AUDIO_RECORD_SECONDS;
@@ -27,6 +37,18 @@ test("loadConfig returns expected default service topology", () => {
   delete process.env.AUDIO_VAD_MAX_SECONDS;
   delete process.env.AUDIO_VAD_THRESHOLD_PERCENT;
   delete process.env.AUDIO_SAMPLE_RATE;
+  delete process.env.AUDIO_CAPTURE_BOOST_DB;
+  delete process.env.AUDIO_CAPTURE_HIGHPASS_HZ;
+  delete process.env.AUDIO_CAPTURE_LOWPASS_HZ;
+  delete process.env.RESPEAKER_LED_ENABLED;
+  delete process.env.RESPEAKER_LED_HOST_PATH;
+  delete process.env.RESPEAKER_XVF_ENABLED;
+  delete process.env.RESPEAKER_XVF_HOST_PATH;
+  delete process.env.RESPEAKER_XVF_AUTO_ROUTE;
+  delete process.env.RESPEAKER_XVF_OUTPUT_LEFT_CATEGORY;
+  delete process.env.RESPEAKER_XVF_OUTPUT_LEFT_SOURCE;
+  delete process.env.RESPEAKER_XVF_OUTPUT_RIGHT_CATEGORY;
+  delete process.env.RESPEAKER_XVF_OUTPUT_RIGHT_SOURCE;
   delete process.env.ENABLE_AUDIO_PLAYBACK_DEBUG;
   delete process.env.WHISPER_LANGUAGE;
   delete process.env.ENABLE_TTS;
@@ -46,9 +68,15 @@ test("loadConfig returns expected default service topology", () => {
   delete process.env.RELAY_REQUIRE_CONFIRMATION;
   delete process.env.PIPER_BINARY_PATH;
   delete process.env.PIPER_MODEL_PATH;
+  delete process.env.ENABLE_TRANSCRIBING_CUE;
+  delete process.env.TRANSCRIBING_CUE_TEXT;
   delete process.env.MARINE_TELEMETRY_ENABLED;
   delete process.env.SIGNALK_URL;
   delete process.env.SIGNALK_TOKEN;
+  delete process.env.SIGNALK_DRAFT_MAX_M;
+  delete process.env.REMOTE_SIGNALK_URL;
+  delete process.env.REMOTE_SIGNALK_TOKEN;
+  delete process.env.REMOTE_SIGNALK_POSITION_MAX_AGE_SECONDS;
   delete process.env.SIGNALK_ALIAS_STORE_PATH;
   delete process.env.INFLUXDB_URL;
   delete process.env.INFLUXDB_ORG;
@@ -64,19 +92,32 @@ test("loadConfig returns expected default service topology", () => {
   delete process.env.SIGNALK_ALERT_PATHS;
   delete process.env.SIGNALK_ALERT_POLL_MS;
   delete process.env.SIGNALK_ALERT_REPEAT_SECONDS;
+  delete process.env.ENABLE_RASA_INTENT_ROUTER;
+  delete process.env.RASA_ENDPOINT;
+  delete process.env.RASA_INTENT_MIN_CONFIDENCE;
+  delete process.env.ENABLE_HARNESS_EVAL;
+  delete process.env.HARNESS_EVAL_LOG_PATH;
 
   const config = loadConfig();
   assert.equal(config.nodeEnv, "development");
   assert.equal(config.services.length, 3);
-  assert.equal(config.services[0]?.name, "ollama");
+  assert.equal(config.services[0]?.name, "whisper");
   assert.equal(config.services[0]?.enabled, true);
-  assert.equal(config.services[1]?.name, "whisper");
-  assert.equal(config.services[1]?.enabled, true);
-  assert.equal(config.services[2]?.name, "piper");
-  assert.equal(config.services[2]?.enabled, false);
+  assert.equal(config.services[1]?.name, "piper");
+  assert.equal(config.services[1]?.enabled, false);
+  assert.equal(config.services[2]?.name, "rasa");
+  assert.equal(config.services[2]?.enabled, true);
   assert.equal(config.enableWebUi, true);
   assert.equal(config.webUiHost, "0.0.0.0");
   assert.equal(config.webUiPort, 8080);
+  assert.equal(config.enableWakeWord, false);
+  assert.equal(config.wakeWordPhrase, "Okay Krishna");
+  assert.equal(config.wakeWordConfigPath, `${process.cwd()}/local/svkrishna/config/wake-word.json`);
+  assert.equal(config.wakeWordPythonPath, "python3");
+  assert.equal(config.wakeWordModelPath, `${process.cwd()}/local/svkrishna/models/openwakeword/krishna.onnx`);
+  assert.equal(config.wakeWordThreshold, 0.5);
+  assert.equal(config.wakeWordChunkSize, 1280);
+  assert.equal(config.wakeWordCooldownMs, 8000);
   assert.equal(config.enableEmbeddingPoc, false);
   assert.equal(config.embeddingModel, "all-minilm:33m");
   assert.equal(
@@ -84,6 +125,8 @@ test("loadConfig returns expected default service topology", () => {
     `${process.cwd()}/local/svkrishna/rag/embeddings.json`,
   );
   assert.equal(config.embeddingTopK, 3);
+  assert.equal(config.audioInputChannels, 1);
+  assert.equal(config.audioInputChannelSelect, "mix");
   assert.equal(config.audioWorkDir, `${process.cwd()}/local/svkrishna/audio`);
   assert.equal(config.audioRecordSeconds, 5);
   assert.equal(config.audioUseVad, true);
@@ -92,10 +135,22 @@ test("loadConfig returns expected default service topology", () => {
   assert.equal(config.audioVadMaxSeconds, 8);
   assert.equal(config.audioVadThresholdPercent, 2);
   assert.equal(config.audioSampleRate, 16000);
+  assert.equal(config.audioCaptureBoostDb, 0);
+  assert.equal(config.audioCaptureHighpassHz, 120);
+  assert.equal(config.audioCaptureLowpassHz, 7000);
+  assert.equal(config.reSpeakerLedEnabled, false);
+  assert.equal(config.reSpeakerLedHostPath, `${process.cwd()}/local/tools/respeaker-xvf3800/xvf_host`);
+  assert.equal(config.reSpeakerXvfEnabled, false);
+  assert.equal(config.reSpeakerXvfHostPath, `${process.cwd()}/local/tools/respeaker-xvf3800/xvf_host`);
+  assert.equal(config.reSpeakerXvfAutoRoute, true);
+  assert.equal(config.reSpeakerXvfOutputLeftCategory, 8);
+  assert.equal(config.reSpeakerXvfOutputLeftSource, 0);
+  assert.equal(config.reSpeakerXvfOutputRightCategory, 7);
+  assert.equal(config.reSpeakerXvfOutputRightSource, 3);
   assert.equal(config.enableAudioPlaybackDebug, false);
   assert.equal(config.whisperLanguage, "en");
   assert.equal(config.enableTts, true);
-  assert.equal(config.enableRag, true);
+  assert.equal(config.enableRag, false);
   assert.equal(config.ragAllowIngest, true);
   assert.equal(config.ragSourceDir, `${process.cwd()}/local/svkrishna/rag/inbox`);
   assert.equal(config.ragStorePath, `${process.cwd()}/local/svkrishna/rag/store.json`);
@@ -111,9 +166,15 @@ test("loadConfig returns expected default service topology", () => {
   assert.equal(config.relayRequireConfirmation, true);
   assert.equal(config.piperBinaryPath, "piper");
   assert.equal(config.piperModelPath, "/path/to/piper/voice/model.onnx");
+  assert.equal(config.enableTranscribingCue, true);
+  assert.equal(config.transcribingCueText, "Got it");
   assert.equal(config.marineTelemetryEnabled, false);
   assert.equal(config.signalKUrl, "http://127.0.0.1:3000");
   assert.equal(config.signalKToken, "");
+  assert.equal(config.signalKDraftMaxM, 0);
+  assert.equal(config.remoteSignalKUrl, "");
+  assert.equal(config.remoteSignalKToken, "");
+  assert.equal(config.remoteSignalKPositionMaxAgeSeconds, 30);
   assert.equal(config.signalkAliasStorePath, `${process.cwd()}/local/svkrishna/config/signalk-alias-store.json`);
   assert.equal(config.influxdbUrl, "http://127.0.0.1:8086");
   assert.equal(config.influxdbOrg, "");
@@ -129,4 +190,66 @@ test("loadConfig returns expected default service topology", () => {
   assert.deepEqual(config.signalkAlertPaths, ["notifications.environment.depth.belowTransducer"]);
   assert.equal(config.signalkAlertPollMs, 2000);
   assert.equal(config.signalkAlertRepeatSeconds, 30);
+  assert.equal(config.enableRasaIntentRouter, true);
+  assert.equal(config.rasaEndpoint, "http://127.0.0.1:5005");
+  assert.equal(config.rasaIntentMinConfidence, 70);
+  assert.equal(config.enableHarnessEval, false);
+  assert.equal(config.harnessEvalLogPath, `${process.cwd()}/local/svkrishna/logs/harness-eval.jsonl`);
+});
+
+test("loadConfig reads audio capture boost settings", () => {
+  process.env.AUDIO_CAPTURE_BOOST_DB = "24";
+  process.env.AUDIO_CAPTURE_HIGHPASS_HZ = "150";
+  process.env.AUDIO_CAPTURE_LOWPASS_HZ = "6800";
+
+  const config = loadConfig();
+
+  assert.equal(config.audioCaptureBoostDb, 24);
+  assert.equal(config.audioCaptureHighpassHz, 150);
+  assert.equal(config.audioCaptureLowpassHz, 6800);
+
+  delete process.env.AUDIO_CAPTURE_BOOST_DB;
+  delete process.env.AUDIO_CAPTURE_HIGHPASS_HZ;
+  delete process.env.AUDIO_CAPTURE_LOWPASS_HZ;
+});
+
+test("loadConfig reads respeaker stereo capture settings", () => {
+  process.env.AUDIO_INPUT_CHANNELS = "2";
+  process.env.AUDIO_INPUT_CHANNEL_SELECT = "right";
+  process.env.RESPEAKER_XVF_ENABLED = "true";
+  process.env.RESPEAKER_XVF_OUTPUT_LEFT_CATEGORY = "8";
+  process.env.RESPEAKER_XVF_OUTPUT_LEFT_SOURCE = "0";
+  process.env.RESPEAKER_XVF_OUTPUT_RIGHT_CATEGORY = "7";
+  process.env.RESPEAKER_XVF_OUTPUT_RIGHT_SOURCE = "3";
+
+  const config = loadConfig();
+
+  assert.equal(config.audioInputChannels, 2);
+  assert.equal(config.audioInputChannelSelect, "right");
+  assert.equal(config.reSpeakerXvfEnabled, true);
+  assert.equal(config.reSpeakerXvfOutputLeftCategory, 8);
+  assert.equal(config.reSpeakerXvfOutputLeftSource, 0);
+  assert.equal(config.reSpeakerXvfOutputRightCategory, 7);
+  assert.equal(config.reSpeakerXvfOutputRightSource, 3);
+
+  delete process.env.AUDIO_INPUT_CHANNELS;
+  delete process.env.AUDIO_INPUT_CHANNEL_SELECT;
+  delete process.env.RESPEAKER_XVF_ENABLED;
+  delete process.env.RESPEAKER_XVF_OUTPUT_LEFT_CATEGORY;
+  delete process.env.RESPEAKER_XVF_OUTPUT_LEFT_SOURCE;
+  delete process.env.RESPEAKER_XVF_OUTPUT_RIGHT_CATEGORY;
+  delete process.env.RESPEAKER_XVF_OUTPUT_RIGHT_SOURCE;
+});
+
+test("loadConfig reads transcribing cue settings", () => {
+  process.env.ENABLE_TRANSCRIBING_CUE = "false";
+  process.env.TRANSCRIBING_CUE_TEXT = "Understood";
+
+  const config = loadConfig();
+
+  assert.equal(config.enableTranscribingCue, false);
+  assert.equal(config.transcribingCueText, "Understood");
+
+  delete process.env.ENABLE_TRANSCRIBING_CUE;
+  delete process.env.TRANSCRIBING_CUE_TEXT;
 });

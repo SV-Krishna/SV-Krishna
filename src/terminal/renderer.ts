@@ -23,11 +23,9 @@ export class TerminalRenderer {
     process.stdout.write(`Sample rate: ${config.audioSampleRate}Hz\n`);
     process.stdout.write(`Playback debug: ${config.enableAudioPlaybackDebug ? "on" : "off"}\n`);
     process.stdout.write(`Whisper language: ${config.whisperLanguage}\n`);
-    process.stdout.write(`Ollama model: ${config.ollamaModel}\n\n`);
+    process.stdout.write(`Rasa endpoint: ${config.rasaEndpoint}\n`);
+    process.stdout.write(`Wake word: ${config.enableWakeWord ? config.wakeWordPhrase : "disabled"}\n\n`);
     process.stdout.write(`TTS enabled: ${config.enableTts ? "on" : "off"}\n\n`);
-    process.stdout.write(
-      `RAG source: ${config.enableRag ? config.ragSourceDir : "disabled"}\n\n`,
-    );
     process.stdout.write("Service health\n");
     process.stdout.write("--------------\n");
     for (const service of health) {
@@ -53,8 +51,7 @@ export class TerminalRenderer {
     process.stdout.write("Controls\n");
     process.stdout.write("--------\n");
     process.stdout.write("Press Space to run the full voice loop: record, transcribe, think, and speak.\n");
-    process.stdout.write("Press t to enter typed-input mode and send a prompt directly to Ollama.\n");
-    process.stdout.write("Press r to rebuild the local PDF RAG store from the drop folder.\n");
+    process.stdout.write("Press t to enter typed-input mode and send a prompt through Rasa.\n");
     process.stdout.write("Press h to show this help.\n");
     process.stdout.write("Press q or Ctrl+C to quit.\n\n");
   }

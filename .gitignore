@@ -13,6 +13,9 @@ python/**/*.pyc
 
 # Hardware/firmware local tooling venv
 .venv-esptool/
+.venv/
+.venv-home-assistant-bridge/
+.pytest_cache/
 
 # Local runtime data (PDFs, stores, audio exports, etc.)
 local/
@@ -22,3 +25,7 @@ firmware/**/build/
 firmware/**/*.bin
 firmware/**/*.elf
 firmware/**/*.map
+
+# Nested local repos / workspaces that are managed independently
+NLC/
+nlc/

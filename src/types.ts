@@ -1,7 +1,7 @@
 export type LogLevel = "debug" | "info" | "warn" | "error";
 
 export interface ServiceEndpoint {
-  name: "ollama" | "whisper" | "piper";
+  name: "ollama" | "whisper" | "piper" | "rasa";
   enabled: boolean;
   url: string;
 }
@@ -12,12 +12,22 @@ export interface AppConfig {
   enableWebUi: boolean;
   webUiHost: string;
   webUiPort: number;
+  enableWakeWord: boolean;
+  wakeWordPhrase: string;
+  wakeWordConfigPath: string;
+  wakeWordPythonPath: string;
+  wakeWordModelPath: string;
+  wakeWordThreshold: number;
+  wakeWordChunkSize: number;
+  wakeWordCooldownMs: number;
   enableEmbeddingPoc: boolean;
   embeddingModel: string;
   embeddingStorePath: string;
   embeddingTopK: number;
   pushToTalkKey: string;
   audioInputDevice: string;
+  audioInputChannels: number;
+  audioInputChannelSelect: "left" | "right" | "mix";
   audioOutputDevice: string;
   audioWorkDir: string;
   audioRecordSeconds: number;
@@ -27,6 +37,18 @@ export interface AppConfig {
   audioVadMaxSeconds: number;
   audioVadThresholdPercent: number;
   audioSampleRate: number;
+  audioCaptureBoostDb: number;
+  audioCaptureHighpassHz: number;
+  audioCaptureLowpassHz: number;
+  reSpeakerLedEnabled: boolean;
+  reSpeakerLedHostPath: string;
+  reSpeakerXvfEnabled: boolean;
+  reSpeakerXvfHostPath: string;
+  reSpeakerXvfAutoRoute: boolean;
+  reSpeakerXvfOutputLeftCategory: number;
+  reSpeakerXvfOutputLeftSource: number;
+  reSpeakerXvfOutputRightCategory: number;
+  reSpeakerXvfOutputRightSource: number;
   enableAudioPlaybackDebug: boolean;
   whisperLanguage: string;
   enableTts: boolean;
@@ -50,9 +72,15 @@ export interface AppConfig {
   relayRequireConfirmation: boolean;
   piperBinaryPath: string;
   piperModelPath: string;
+  enableTranscribingCue: boolean;
+  transcribingCueText: string;
   marineTelemetryEnabled: boolean;
   signalKUrl: string;
   signalKToken: string;
+  signalKDraftMaxM: number;
+  remoteSignalKUrl: string;
+  remoteSignalKToken: string;
+  remoteSignalKPositionMaxAgeSeconds: number;
   signalkAliasStorePath: string;
   influxdbUrl: string;
   influxdbOrg: string;
@@ -68,6 +96,11 @@ export interface AppConfig {
   signalkAlertPaths: string[];
   signalkAlertPollMs: number;
   signalkAlertRepeatSeconds: number;
+  enableRasaIntentRouter: boolean;
+  rasaEndpoint: string;
+  rasaIntentMinConfidence: number;
+  enableHarnessEval: boolean;
+  harnessEvalLogPath: string;
   services: ServiceEndpoint[];
 }
 

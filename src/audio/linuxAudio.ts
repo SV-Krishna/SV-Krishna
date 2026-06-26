@@ -1,4 +1,4 @@
-import { access } from "node:fs/promises";
+import { access, rename, unlink } from "node:fs/promises";
 import { constants as fsConstants } from "node:fs";
 import { stat } from "node:fs/promises";
 import { join } from "node:path";
@@ -59,6 +59,12 @@ export class LinuxAudio {
       (await commandExists("arecord")) || (await commandExists("sox"));
     const playbackAvailable =
       (await commandExists("aplay")) || (await commandExists("play"));
+    const captureBoostEnabled = this.config.audioCaptureBoostDb > 0;
+    const captureChannelProcessingRequired = this.config.audioInputChannels > 1;
+    const capturePostprocessAvailable =
+      (!captureBoostEnabled && !captureChannelProcessingRequired) ||
+      (await commandExists("sox")) ||
+      (await commandExists("ffmpeg"));
 
     return [
       {
@@ -74,6 +80,19 @@ export class LinuxAudio {
         detail: playbackAvailable
           ? "playback command available"
           : "install `aplay` or `sox`",
+      },
+      {
+        name: "audio-postprocess",
+        ok: capturePostprocessAvailable,
+        detail: capturePostprocessAvailable
+          ? buildAudioPostprocessDetail(
+              this.config.audioCaptureBoostDb,
+              this.config.audioInputChannels,
+              this.config.audioInputChannelSelect,
+            )
+          : captureBoostEnabled || captureChannelProcessingRequired
+            ? "install `sox` or `ffmpeg` for capture channel processing/post-processing"
+            : "capture post-processing disabled",
       },
     ];
   }
@@ -95,7 +114,7 @@ export class LinuxAudio {
         "-r",
         String(this.config.audioSampleRate),
         "-c",
-        "1",
+        String(this.config.audioInputChannels),
         outputPath,
         "silence",
         "1",
@@ -136,7 +155,7 @@ export class LinuxAudio {
           "-f",
           "S16_LE",
           "-c",
-          "1",
+          String(this.config.audioInputChannels),
           "-r",
           String(this.config.audioSampleRate),
           outputPath,
@@ -150,7 +169,7 @@ export class LinuxAudio {
           "-r",
           String(this.config.audioSampleRate),
           "-c",
-          "1",
+          String(this.config.audioInputChannels),
           outputPath,
           "trim",
           "0",
@@ -167,7 +186,7 @@ export class LinuxAudio {
         "-f",
         "S16_LE",
         "-c",
-        "1",
+        String(this.config.audioInputChannels),
         "-r",
         String(this.config.audioSampleRate),
         outputPath,
@@ -181,7 +200,7 @@ export class LinuxAudio {
         "-r",
         String(this.config.audioSampleRate),
         "-c",
-        "1",
+        String(this.config.audioInputChannels),
         outputPath,
         "trim",
         "0",
@@ -196,7 +215,103 @@ export class LinuxAudio {
       throw new Error(`Recording did not produce an output file at ${outputPath}.`);
     }
 
+    await this.normalizeCaptureChannels(outputPath);
+    await this.postProcessRecording(outputPath);
+
     return outputPath;
+  }
+
+  private async normalizeCaptureChannels(outputPath: string): Promise<void> {
+    if (this.config.audioInputChannels <= 1) {
+      return;
+    }
+
+    const normalizedPath = `${outputPath}.mono.wav`;
+    try {
+      if (await commandExists("sox")) {
+        const remixTarget =
+          this.config.audioInputChannelSelect === "left"
+            ? "1"
+            : this.config.audioInputChannelSelect === "right"
+              ? "2"
+              : "1,2";
+        await runCommand("sox", [outputPath, normalizedPath, "remix", remixTarget]);
+      } else if (await commandExists("ffmpeg")) {
+        const pan =
+          this.config.audioInputChannelSelect === "left"
+            ? "mono|c0=FL"
+            : this.config.audioInputChannelSelect === "right"
+              ? "mono|c0=FR"
+              : "mono|c0=0.5*FL+0.5*FR";
+        await runCommand("ffmpeg", ["-y", "-i", outputPath, "-af", `pan=${pan}`, normalizedPath]);
+      } else {
+        throw new Error("No supported capture channel processor found. Install `sox` or `ffmpeg`.");
+      }
+
+      await rename(normalizedPath, outputPath);
+    } catch (error) {
+      await unlink(normalizedPath).catch(() => undefined);
+      throw error;
+    }
+  }
+
+  private async postProcessRecording(outputPath: string): Promise<void> {
+    if (this.config.audioCaptureBoostDb <= 0) {
+      return;
+    }
+
+    const processedPath = `${outputPath}.processed.wav`;
+    try {
+      if (await commandExists("sox")) {
+        await this.postProcessWithSox(outputPath, processedPath);
+      } else if (await commandExists("ffmpeg")) {
+        await this.postProcessWithFfmpeg(outputPath, processedPath);
+      } else {
+        throw new Error("No supported post-processor found. Install `sox` or `ffmpeg`.");
+      }
+
+      await rename(processedPath, outputPath);
+    } catch (error) {
+      await unlink(processedPath).catch(() => undefined);
+      throw error;
+    }
+  }
+
+  private async postProcessWithSox(inputPath: string, outputPath: string): Promise<void> {
+    const args = [
+      inputPath,
+      outputPath,
+      "highpass",
+      String(Math.max(20, this.config.audioCaptureHighpassHz)),
+      "lowpass",
+      String(Math.max(1000, this.config.audioCaptureLowpassHz)),
+      "gain",
+      String(this.config.audioCaptureBoostDb),
+      "gain",
+      "-n",
+      "-1",
+    ];
+    await runCommand("sox", args);
+  }
+
+  private async postProcessWithFfmpeg(inputPath: string, outputPath: string): Promise<void> {
+    const filters = [
+      `highpass=f=${Math.max(20, this.config.audioCaptureHighpassHz)}`,
+      `lowpass=f=${Math.max(1000, this.config.audioCaptureLowpassHz)}`,
+      `volume=${this.config.audioCaptureBoostDb}dB`,
+      "alimiter=limit=0.92",
+    ];
+    const args = [
+      "-y",
+      "-i",
+      inputPath,
+      "-af",
+      filters.join(","),
+      "-c:a",
+      "pcm_s16le",
+      outputPath,
+    ];
+    await runCommand("ffmpeg", args);
   }
 
   async playFile(path: string): Promise<void> {
@@ -213,3 +328,18 @@ export class LinuxAudio {
     throw new Error("No supported playback command found. Install `aplay` or `sox`.");
   }
 }
+
+const buildAudioPostprocessDetail = (
+  boostDb: number,
+  inputChannels: number,
+  inputChannelSelect: AppConfig["audioInputChannelSelect"],
+): string => {
+  const parts: string[] = [];
+  if (inputChannels > 1) {
+    parts.push(`capture channel select ${inputChannelSelect} from ${inputChannels}ch input`);
+  }
+  if (boostDb > 0) {
+    parts.push(`capture boost enabled at ${boostDb} dB`);
+  }
+  return parts.length > 0 ? parts.join("; ") : "capture post-processing disabled";
+};
