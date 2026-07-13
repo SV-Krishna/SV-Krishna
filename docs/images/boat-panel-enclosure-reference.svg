@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900">
+  <style>
+    .bg{fill:#f4f5f7}.panel{fill:#fff;stroke:#c7ccd4;stroke-width:2}.part{fill:#34383e;stroke:#15171a;stroke-width:3}.cut{fill:#111820;stroke:#64748b;stroke-width:2}.line{stroke:#2563eb;stroke-width:2;fill:none}.dim{font:18px Arial;fill:#1d4ed8}.title{font:bold 27px Arial;fill:#15171a}.sub{font:17px Arial;fill:#333}.label{font:16px Arial;fill:#222}.brass{fill:#c99736;stroke:#5f4215;stroke-width:2}.vent{fill:#f4f5f7}.pcb{fill:#1f2937;stroke:#111827;stroke-width:2}.terminal{fill:#34834b;stroke:#173f23;stroke-width:2}
+  </style>
+  <rect class="bg" width="1400" height="900"/>
+  <rect class="panel" x="15" y="15" width="675" height="425" rx="8"/>
+  <rect class="panel" x="710" y="15" width="675" height="425" rx="8"/>
+  <rect class="panel" x="15" y="460" width="675" height="425" rx="8"/>
+  <rect class="panel" x="710" y="460" width="675" height="425" rx="8"/>
+
+  <text class="title" x="40" y="55">1. FRONT BEZEL</text><text class="sub" x="40" y="82">Visible side</text>
+  <rect class="part" x="105" y="105" width="500" height="285" rx="25"/>
+  <rect class="cut" x="190" y="155" width="330" height="190" rx="5"/>
+  <rect x="300" y="355" width="110" height="22" rx="4" fill="#2c3035" stroke="#8b7355" stroke-dasharray="6 4"/>
+  <text class="label" x="420" y="374">Presence sensor zone</text>
+  <path class="line" d="M105 91h500M105 84v14M605 84v14"/><text class="dim" x="320" y="85">216 mm</text>
+  <path class="line" d="M90 105v285M83 105h14M83 390h14"/><text class="dim" x="25" y="255" transform="rotate(-90 25 255)">142 mm</text>
+  <text class="label" x="240" y="145">Visible opening 156 × 88 mm</text>
+  <text class="label" x="40" y="420">Bezel thickness: 3.0 mm; radar wall target: 1.5 mm</text>
+
+  <text class="title" x="735" y="55">2. DISPLAY CARRIER / CLAMPING FRAME</text><text class="sub" x="735" y="82">Rear view</text>
+  <rect class="part" x="810" y="110" width="475" height="270" rx="20"/>
+  <rect class="panel" x="900" y="155" width="295" height="180" rx="6"/>
+  <circle class="brass" cx="920" cy="170" r="10"/><circle class="brass" cx="1175" cy="170" r="10"/><circle class="brass" cx="920" cy="320" r="10"/><circle class="brass" cx="1175" cy="320" r="10"/>
+  <path class="line" d="M920 135h255M920 128v14M1175 128v14"/><text class="dim" x="980" y="125">126.20 mm</text>
+  <path class="line" d="M875 170v150M868 170h14M868 320h14"/><text class="dim" x="845" y="280" transform="rotate(-90 845 280)">65.65 mm</text>
+  <text class="label" x="915" y="245">Four M3 display mounts</text>
+  <text class="label" x="735" y="420">Rear plate envelope: 165.72 × 97.60 mm; standoff target: 8 mm</text>
+
+  <text class="title" x="40" y="500">3. REAR ELECTRONICS ENCLOSURE</text><text class="sub" x="40" y="527">Front view — open</text>
+  <rect class="part" x="95" y="550" width="515" height="285" rx="18"/>
+  <rect class="pcb" x="260" y="585" width="200" height="205" rx="8"/>
+  <circle class="brass" cx="280" cy="605" r="7"/><circle class="brass" cx="440" cy="605" r="7"/><circle class="brass" cx="280" cy="770" r="7"/><circle class="brass" cx="440" cy="770" r="7"/>
+  <rect class="terminal" x="120" y="600" width="40" height="72"/><rect class="terminal" x="120" y="695" width="40" height="72"/>
+  <rect class="terminal" x="535" y="620" width="40" height="58"/>
+  <text class="label" x="170" y="625">BME280 terminal</text><text class="label" x="170" y="720">LD2410C terminal</text>
+  <text class="label" x="490" y="610">5 V input</text><text class="label" x="485" y="745">Cable strain relief</text>
+  <path class="line" d="M95 540h515M95 533v14M610 533v14"/><text class="dim" x="305" y="535">168 mm</text>
+  <text class="label" x="40" y="865">External size: 168 × 100 mm; internal depth target: 35 mm; wall: 2.5–3.0 mm</text>
+
+  <text class="title" x="735" y="500">4. REAR SERVICE COVER</text><text class="sub" x="735" y="527">Outside view</text>
+  <rect class="part" x="815" y="555" width="470" height="275" rx="20"/>
+  <circle class="brass" cx="840" cy="580" r="8"/><circle class="brass" cx="1260" cy="580" r="8"/><circle class="brass" cx="840" cy="805" r="8"/><circle class="brass" cx="1260" cy="805" r="8"/>
+  <g class="vent"><rect x="905" y="625" width="120" height="10" rx="5"/><rect x="905" y="650" width="120" height="10" rx="5"/><rect x="905" y="675" width="120" height="10" rx="5"/><rect x="905" y="700" width="120" height="10" rx="5"/><rect x="1080" y="625" width="120" height="10" rx="5"/><rect x="1080" y="650" width="120" height="10" rx="5"/><rect x="1080" y="675" width="120" height="10" rx="5"/><rect x="1080" y="700" width="120" height="10" rx="5"/></g>
+  <path class="vent" d="M1005 830v-35h90v35z"/>
+  <text class="label" x="970" y="760">Downward-facing ventilation</text><text class="label" x="995" y="855">6–8 mm cable entry</text>
+</svg>
