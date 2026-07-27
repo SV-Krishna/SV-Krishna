@@ -125,6 +125,39 @@ surface finish have not yet been recorded as physically verified.
 assembly, test the printed bezel against the physical display and record the
 remaining fit measurements above.
 
+## 2026-07-27 carrier slice review
+
+**G-code verified:** `carrier.stl` was sliced in Creality Print 7.0.1.4212
+using the Ender-3 V3 SE 0.4 mm and custom Hyper PETG profiles.
+
+| Property | Sliced result |
+|---|---:|
+| Footprint | X=18-202 mm, Y=50-170 mm |
+| Maximum height | 12.0 mm |
+| Layers | 60 at 0.20 mm |
+| Estimated time | 8299.91 s (about 2 h 18 min) |
+| Estimated filament | 14.12115 m (about 43 g at 1.27 g/cm3) |
+| Supports | Disabled |
+| Brim | Disabled |
+| Initial temperatures | 230 C nozzle, 70 C bed |
+| Subsequent nozzle temperature | 225 C |
+| Normal cooling | 40% |
+| Maximum cooling command | 60% (`M106 S153`) |
+| Retraction | 1.2 mm at 25 mm/s |
+| Slicer Z offset | 0 |
+
+No outside-bed, floating-part, collision, empty-layer, or slicing-completion
+warning was found. The carrier is oriented with its frame and rails on the
+bed; the four vertical standoffs and through-holes do not require generated
+support.
+
+**Proposed before printing:** Change the subsequent nozzle temperature from
+225 C to 220 C and reslice, because the bezel print produced significant
+stringing or wisps at the hotter baseline. Confirm physically that the
+part-cooling fan starts after layer three and reaches the requested value; the
+previous bezel print remained at 0% despite non-zero commands in its G-code.
+Dry the PETG before printing if that has not already been done.
+
 ## Documentation policy for this CAD
 
 - Keep geometry parameters and their rationale in the `.scad` source.
