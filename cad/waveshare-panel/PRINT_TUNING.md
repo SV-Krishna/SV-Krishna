@@ -193,6 +193,34 @@ dimensionally validated.
 `service_cover.stl`. Print the smaller radar clip and BME280 pod components
 after their physical modules have been measured.
 
+## 2026-07-27 rear-box review blocker
+
+**Modelled:** The front bezel is 212 x 142 x 3 mm, the display carrier is
+184 x 120 x 12 mm, the cabin-panel cut-out is 170 x 102 mm, and the rear
+electronics box is 168 x 100 x 38 mm.
+
+The size progression is intentional. The bezel overlaps the panel cut-out,
+the carrier is larger than the cut-out so it can clamp from the rear, and the
+rear box is nominally 1 mm clear of each cut-out edge.
+
+**Design review finding:** The current carrier and rear box do not have a
+defined shared screw pattern, locating lip, captive-nut arrangement, or other
+positive mechanical connection. Their envelopes align conceptually, but the
+current STLs do not form a securely fastened assembly.
+
+**Blocked:** Do not print `rear_box.stl` as the next production prototype until
+the CAD adds and validates:
+
+1. a positive carrier-to-box locating interface;
+2. four accessible M3 attachment points;
+3. heat-set inserts, captive nuts, or another specified thread strategy;
+4. clearance from the display standoffs, display PCB, ribbon cables, and
+   connector projections;
+5. an assembly sequence that leaves the service cover removable.
+
+The printed bezel and carrier remain useful. This blocker applies to the
+transition from those parts to the rear enclosure.
+
 ## Documentation policy for this CAD
 
 - Keep geometry parameters and their rationale in the `.scad` source.

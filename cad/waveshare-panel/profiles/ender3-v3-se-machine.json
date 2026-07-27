@@ -1,0 +1,10 @@
+{
+  "base_id": "192628",
+  "from": "User",
+  "inherits": "Creality Ender-3 V3 SE 0.4 nozzle",
+  "is_custom_defined": "0",
+  "name": "Creality Ender-3 V3 SE 0.4 nozzle - Copy(1)",
+  "printer_settings_id": "Creality Ender-3 V3 SE 0.4 nozzle - Copy(1)",
+  "version": "26.1.31.14",
+  "z_offset": "0"
+}

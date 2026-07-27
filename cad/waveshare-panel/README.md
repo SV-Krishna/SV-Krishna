@@ -90,3 +90,7 @@ overlap at each side of the 170 mm cut-out.
 Printer-, filament-, and first-print findings are recorded in
 [`PRINT_TUNING.md`](PRINT_TUNING.md). Review that file before slicing another
 part; it includes settings that are not represented in the geometry.
+
+The complete continuation state and unresolved mechanical work are recorded
+in [`HANDOVER.md`](HANDOVER.md). Portable snapshots of the validated Creality
+Print presets are under [`profiles/`](profiles/README.md).
