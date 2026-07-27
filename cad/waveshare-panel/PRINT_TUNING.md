@@ -163,6 +163,20 @@ layer three and reaches the requested value; the previous bezel print remained
 at 0% despite non-zero commands in its G-code. Dry the PETG before printing if
 that has not already been done.
 
+### Carrier reslice verification
+
+**G-code verified 2026-07-27:** The carrier was resliced after the temperature
+amendment. The replacement G-code contains 230 C for the first layer, 220 C
+thereafter, 70 C bed temperature, 40% normal cooling, and no fan command above
+60% (`M106 S153`). Retraction remains 1.2 mm at 25 mm/s and slicer Z offset
+remains 0.
+
+The reslice retains the 184 x 120 x 12 mm envelope, 60 layers, disabled
+supports, disabled brim, approximately 2 h 18 min estimate, and 14.12115 m
+filament estimate. No outside-bed, collision, floating-part, or empty-layer
+warning was found. This verifies the replacement G-code configuration; the
+220 C setting and printer fan response still await physical validation.
+
 ## Documentation policy for this CAD
 
 - Keep geometry parameters and their rationale in the `.scad` source.
