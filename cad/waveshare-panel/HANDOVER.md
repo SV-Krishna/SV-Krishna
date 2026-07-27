@@ -10,9 +10,15 @@ Working branch: `feature/lightweight-llm-poc`
 
 A parametric OpenSCAD prototype was created for the Waveshare ESP32-S3
 7-inch boat-panel enclosure. The front bezel and display carrier have been
-printed successfully in Creality Hyper PETG. Work must pause before printing
-the rear electronics box because the carrier-to-box mechanical attachment is
-not yet designed.
+printed successfully in Creality Hyper PETG. The rear electronics box remains
+blocked from printing while its newly modelled carrier attachment awaits
+coupon and hardware-clearance validation.
+
+Update on 2026-07-27: the attachment is now modelled as four carrier towers
+with M3 heat-set inserts and locating spigots engaging the rear-box floor.
+`box_interface_coupon.stl` was added for fit validation. The production box
+remains blocked from printing until that coupon and physical display-clearance
+checks pass.
 
 ## Source design
 
@@ -139,26 +145,36 @@ Important: on the bezel print, the printer did not physically apply the
 non-zero fan command when expected. For every future print, check that the fan
 actually starts after layer three. Do not rely only on the slicer profile.
 
-## Blocking mechanical issue
+## Carrier-to-box attachment
 
-The current carrier and rear box have no shared screw pattern, locating lip,
-captive nut, heat-set insert, or other positive attachment. The assembly
-preview visually stacks them, but it does not define a buildable connection.
+The previous carrier and rear box had no shared screw pattern, locating
+feature, or positive attachment. The current model now defines that connection,
+but the interface is not yet physically validated.
 
-Do not print the current `rear_box.stl` as a production prototype.
+Do not print `rear_box.stl` as a production prototype yet.
 
-The next CAD revision must:
+### Modelled resolution
 
-1. Choose an assembly direction and service procedure.
-2. Add a positive locating lip or register between carrier and rear box.
-3. Add four M3 attachment points accessible during assembly.
-4. Specify thread retention: heat-set inserts, captive nuts, or tapped
-   hardware.
-5. Ensure fasteners do not collide with the display mounts, bezel clamps,
-   display PCB, ribbons, connector projections, or antenna.
-6. Ensure the service cover remains independently removable.
-7. Confirm the rear box still passes through the 170 x 102 mm panel cut-out.
-8. Render all parts and print an interface coupon before the full rear box.
+The current CAD revision adds four carrier towers on a 136 x 80 mm pattern,
+with structural bridges to the carrier side frame. Each accepts a short M3
+heat-set insert and has an 8 x 1.5 mm locating spigot. Matching rear-box floor
+counterbores provide 0.25 mm radial clearance, and the attachment screws are
+accessible inside the box after removing the independent service cover.
+
+This resolves the missing assembly definition in CAD, but does not yet
+physically validate the fit or hardware clearances. Print and test
+`box_interface_coupon.stl` before reprinting the carrier or printing the full
+rear box.
+
+Before releasing the full rear box:
+
+1. Measure the physical display PCB, ribbons, connectors, and antenna against
+   the modelled tower and bridge positions.
+2. Print and test the interface coupon with the exact intended M3 insert and
+   screw.
+3. Confirm the revised carrier still fits the bezel, display, and panel.
+4. Slice the revised carrier and rear box and verify bed bounds, support state,
+   temperatures, fan commands, layer count, and slicer Z offset.
 
 ## Physical verification still required
 

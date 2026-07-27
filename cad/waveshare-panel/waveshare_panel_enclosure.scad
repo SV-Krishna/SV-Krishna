@@ -10,7 +10,7 @@
  *   openscad -o bezel.stl -D 'part="bezel"' waveshare_panel_enclosure.scad
  */
 
-part = "assembly"; // [assembly,bezel,carrier,rear_box,service_cover,radar_clip,bme_pod,bme_cover,dimension_gauge,bezel_corner,radar_test]
+part = "assembly"; // [assembly,bezel,carrier,rear_box,service_cover,box_interface_coupon,radar_clip,bme_pod,bme_cover,dimension_gauge,bezel_corner,radar_test]
 $fn = 48;
 eps = 0.02;
 
@@ -70,6 +70,17 @@ cover_clearance = 0.4;
 cover_screw_inset = 7;
 cable_entry_w = 8;
 cable_entry_h = 7;
+// Four towers keep the rear-box floor clear of the display and positively
+// locate it with short spigots in matching floor counterbores. M3 screws are
+// inserted from inside the open box into heat-set inserts in the towers.
+box_mount_dx = 136;
+box_mount_dy = 80;
+box_mount_tower_d = 10;
+box_mount_height = carrier_t + display_standoff_h;
+box_register_d = 8;
+box_register_h = 1.5;
+box_register_clearance = 0.25; // radial clearance; validate with coupon
+box_insert_depth = 5;
 
 // Interface PCB placeholder
 interface_pcb_w = 70;
@@ -136,6 +147,12 @@ module cover_screw_positions() {
             translate([x,y]) children();
 }
 
+module box_mount_positions() {
+    for (x=[-box_mount_dx/2,box_mount_dx/2])
+        for (y=[-box_mount_dy/2,box_mount_dy/2])
+            translate([x,y]) children();
+}
+
 module gasket_groove_cut() {
     translate([0,0,bezel_t-gasket_groove_depth])
         linear_extrude(height=gasket_groove_depth+eps)
@@ -187,6 +204,15 @@ module carrier() {
                     translate([0,y,carrier_t/2])
                         cube([carrier_w-2*carrier_frame_w,8,carrier_t],
                              center=true);
+                // Short side bridges tie the four box towers into the
+                // perimeter frame; the tower centres sit inside its opening.
+                for (sx=[-1,1])
+                    for (y=[-box_mount_dy/2,box_mount_dy/2])
+                        translate([sx*(box_mount_dx/4+carrier_w/4),
+                                   y,carrier_t/2])
+                            cube([(carrier_w-box_mount_dx)/2,
+                                  box_mount_tower_d,carrier_t],
+                                 center=true);
             }
             clamp_positions()
                 translate([0,0,-eps])
@@ -204,6 +230,25 @@ module carrier() {
                     cylinder(d=m3_clearance,
                              h=carrier_t+display_standoff_h+2*eps);
         }
+        // Rear-box attachment towers are outside the provisional display PCB
+        // and its four mounting pads. Their top spigots register the box;
+        // short M3 heat-set inserts are installed from the rear.
+        difference() {
+            box_mount_positions()
+                cylinder(d=box_mount_tower_d, h=box_mount_height);
+            box_mount_positions()
+                translate([0,0,box_mount_height-box_insert_depth])
+                    cylinder(d=m3_insert_d,
+                             h=box_insert_depth+eps);
+        }
+        box_mount_positions()
+            translate([0,0,box_mount_height-eps])
+                difference() {
+                    cylinder(d=box_register_d, h=box_register_h+eps);
+                    translate([0,0,-eps])
+                        cylinder(d=m3_insert_d,
+                                 h=box_register_h+2*eps);
+                }
     }
 }
 
@@ -227,6 +272,16 @@ module rear_box() {
         cover_screw_positions()
             translate([0,0,total_d-7])
                 cylinder(d=m3_insert_d, h=7+eps);
+        // Accessible M3 screws pass through the floor into carrier inserts.
+        box_mount_positions()
+            translate([0,0,-eps])
+                cylinder(d=m3_clearance, h=rear_floor+2*eps);
+        // Close-fit counterbores receive the carrier tower spigots and locate
+        // the box in X/Y without changing its panel pass-through envelope.
+        box_mount_positions()
+            translate([0,0,-eps])
+                cylinder(d=box_register_d+2*box_register_clearance,
+                         h=box_register_h+eps);
         // Downward-facing cable entry through lower wall.
         translate([0,-rear_box_h/2,-eps])
             cube([cable_entry_w,rear_wall+2*eps,cable_entry_h],
@@ -245,6 +300,37 @@ module rear_box() {
         difference() {
             cube([28,8,6]);
             translate([3,-eps,2]) cube([22,8+2*eps,2.5]);
+        }
+}
+
+module box_interface_coupon() {
+    coupon_w = 28;
+    coupon_h = 28;
+    gap = 8;
+
+    // Carrier-side tower coupon: printed upright, as on the carrier.
+    translate([-(coupon_w+gap)/2,0,0])
+        difference() {
+            union() {
+                rounded_plate([coupon_w,coupon_h],3,carrier_t);
+                cylinder(d=box_mount_tower_d,h=box_mount_height+eps);
+                translate([0,0,box_mount_height-eps])
+                    cylinder(d=box_register_d,h=box_register_h+eps);
+            }
+            translate([0,0,box_mount_height-box_insert_depth])
+                cylinder(d=m3_insert_d,
+                         h=box_insert_depth+box_register_h+eps);
+        }
+
+    // Box-floor coupon: printed beside it in the production orientation.
+    translate([(coupon_w+gap)/2,0,0])
+        difference() {
+            rounded_plate([coupon_w,coupon_h],3,rear_floor);
+            translate([0,0,-eps])
+                cylinder(d=m3_clearance,h=rear_floor+2*eps);
+            translate([0,0,-eps])
+                cylinder(d=box_register_d+2*box_register_clearance,
+                         h=box_register_h+eps);
         }
 }
 
@@ -372,9 +458,12 @@ module radar_test() {
 module assembly() {
     color("#30343b") bezel();
     color("#667085") translate([0,0,8]) carrier();
-    color("#3d4755") translate([0,0,25]) rear_box();
+    color("#3d4755")
+        translate([0,0,8+box_mount_height+box_register_h])
+            rear_box();
     color("#596579")
-        translate([0,0,25+rear_internal_depth+rear_floor+4])
+        translate([0,0,8+box_mount_height+box_register_h+
+                         rear_internal_depth+rear_floor+4])
             service_cover();
     color("#36684a") translate([125,0,0]) bme_pod();
     color("#667b8d") translate([125,0,bme_d+3]) bme_cover();
@@ -384,6 +473,7 @@ if (part == "bezel") bezel();
 else if (part == "carrier") carrier();
 else if (part == "rear_box") rear_box();
 else if (part == "service_cover") service_cover();
+else if (part == "box_interface_coupon") box_interface_coupon();
 else if (part == "radar_clip") radar_clip();
 else if (part == "bme_pod") bme_pod();
 else if (part == "bme_cover") bme_cover();

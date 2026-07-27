@@ -221,6 +221,38 @@ the CAD adds and validates:
 The printed bezel and carrier remain useful. This blocker applies to the
 transition from those parts to the rear enclosure.
 
+## 2026-07-27 carrier-to-box interface design
+
+**Modelled:** The proposed blocker resolution uses four 10 mm diameter towers
+on a 136 x 80 mm pattern. The tower tops share the nominal 12 mm rear plane of
+the display standoffs. Each tower contains a 4.6 mm diameter, 5 mm deep pilot
+for a short M3 heat-set insert and terminates in an 8 x 1.5 mm locating
+spigot.
+
+Matching rear-box floor features comprise a 3.4 mm M3 clearance hole and an
+8.5 x 1.5 mm counterbore. This provides 0.25 mm modelled radial clearance.
+Four screws are accessible from inside the open rear box and enter the carrier
+inserts. The 168 x 100 mm box envelope is unchanged, so it retains 1 mm
+nominal clearance per side in the 170 x 102 mm panel cut-out. The independent
+service-cover screw pattern and bosses are unchanged.
+
+The tower pattern lies outside the provisional 126.20 x 65.65 mm display-hole
+pattern and inboard of the box walls. Four 24 x 10 x 4 mm modelled bridges tie
+the tower bases into the carrier side frame. Exact display PCB, connector,
+ribbon, and antenna clearances remain physically unverified.
+
+**Proposed validation:** Print `box_interface_coupon.stl` before either revised
+production part. Heat-set the exact intended M3 insert into the tower coupon,
+then check insertion force, splitting, pull-out resistance, screw engagement,
+spigot fit, full seating, and rocking against the floor coupon. Adjust
+`m3_insert_d` or `box_register_clearance` from measured results rather than
+forcing a poor fit.
+
+The already printed carrier predates these attachment towers and cannot form
+the new positive connection without an unvalidated retrofit. Preserve it for
+display/bezel fit checks; plan to print the revised carrier only after the
+interface coupon and physical display-clearance checks pass.
+
 ## Documentation policy for this CAD
 
 - Keep geometry parameters and their rationale in the `.scad` source.

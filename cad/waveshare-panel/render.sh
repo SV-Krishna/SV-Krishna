@@ -14,6 +14,7 @@ parts=(
   carrier
   rear_box
   service_cover
+  box_interface_coupon
   radar_clip
   bme_pod
   bme_cover

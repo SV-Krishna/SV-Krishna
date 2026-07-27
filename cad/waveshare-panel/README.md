@@ -11,10 +11,13 @@ The model provides these printable parts:
 - display carrier with four M3 display standoffs and six bezel clamps;
 - rear electronics box with cover bosses, a 70 x 40 mm interface-PCB mounting
   pattern, cable entry, and strain relief;
+- four accessible M3 carrier-to-box joints whose close-fit tower spigots
+  positively locate the box without enlarging its panel-cut-out envelope;
 - ventilated screw-on service cover;
 - removable LD2410C retaining clip;
 - ventilated BME280 pod and rear cover;
-- dimension gauge, bezel-corner coupon, and radar-window coupon.
+- dimension gauge, bezel-corner coupon, radar-window coupon, and a
+  carrier-to-box interface coupon for validating locating and insert fit.
 
 ## Important prototype status
 
@@ -77,7 +80,17 @@ The optional first argument changes the output directory.
    1.5 mm plastic wall.
 4. Measure the PCB, sensors, connectors, cable bend radii, and installation
    depth; update the parameters at the top of the `.scad` file.
-5. Only then print the complete bezel, carrier, box, cover, clip, and pod.
+5. Print `box_interface_coupon.stl`, install the selected short M3 heat-set
+   insert, and verify that the floor coupon seats without force or rocking.
+6. Only then print the complete bezel, revised carrier, box, cover, clip, and
+   pod.
+
+The revised carrier is required for the rear-box connection. Four towers rise
+to the same nominal rear plane as the display standoffs. Each has a short M3
+heat-set insert and an 8 mm locating spigot. With the service cover removed,
+four M3 screws pass through the rear-box floor into those inserts. The screws
+remain accessible from inside the box, and removing them does not disturb the
+service-cover bosses or fasteners.
 
 Recommended starting print settings from the design specification are PETG
 (ASA for stronger UV/heat exposure), 0.20 mm layers, four perimeters, five
