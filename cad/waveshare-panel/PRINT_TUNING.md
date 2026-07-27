@@ -177,6 +177,22 @@ filament estimate. No outside-bed, collision, floating-part, or empty-layer
 warning was found. This verifies the replacement G-code configuration; the
 220 C setting and printer fan response still await physical validation.
 
+### Carrier prototype result
+
+**Observed 2026-07-27:** The carrier completed printing and was reported as
+printing very well. This physically validates the revised 220 C post-first-
+layer temperature as producing a good initial carrier result with the current
+Hyper PETG profile.
+
+Fit of the four display standoffs, M3 holes, support rails, and six bezel
+clamping positions against the physical display and printed bezel has not yet
+been recorded. Complete those checks before treating the carrier geometry as
+dimensionally validated.
+
+**Next main enclosure part:** Review and slice `rear_box.stl`, followed by
+`service_cover.stl`. Print the smaller radar clip and BME280 pod components
+after their physical modules have been measured.
+
 ## Documentation policy for this CAD
 
 - Keep geometry parameters and their rationale in the `.scad` source.
