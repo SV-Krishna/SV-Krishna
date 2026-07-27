@@ -111,6 +111,20 @@ slice and print must confirm:
 5. Treat 220 C, 60% maximum cooling, and 1.2 mm at 25 mm/s retraction as the
    next test baseline, not as final validated values.
 
+## 2026-07-27 bezel prototype result
+
+**Observed:** The corrected 212 x 142 mm bezel completed printing and was
+reported as looking good.
+
+The current observation confirms successful completion and acceptable initial
+appearance only. Display fit, mounting-hole alignment, radar performance,
+gasket-groove fit, dimensional accuracy, warping, stringing after cleanup, and
+surface finish have not yet been recorded as physically verified.
+
+**Next step:** Review and slice `carrier.stl`. Before committing to the full
+assembly, test the printed bezel against the physical display and record the
+remaining fit measurements above.
+
 ## Documentation policy for this CAD
 
 - Keep geometry parameters and their rationale in the `.scad` source.
