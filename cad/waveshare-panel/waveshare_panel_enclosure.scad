@@ -10,7 +10,7 @@
  *   openscad -o bezel.stl -D 'part="bezel"' waveshare_panel_enclosure.scad
  */
 
-part = "assembly"; // [assembly,bezel,carrier,rear_box,service_cover,box_interface_coupon,radar_clip,bme_pod,bme_cover,dimension_gauge,bezel_corner,radar_test]
+part = "assembly"; // [assembly,design_review_layout,bezel,carrier,rear_box,service_cover,box_interface_coupon,radar_clip,bme_pod,bme_cover,dimension_gauge,bezel_corner,radar_test]
 $fn = 48;
 eps = 0.02;
 
@@ -469,6 +469,15 @@ module assembly() {
     color("#667b8d") translate([125,0,bme_d+3]) bme_cover();
 }
 
+// Single multi-shell STL for spatial review only. It is not arranged or
+// joined for printing: production parts must still be exported separately.
+module design_review_layout() {
+    assembly();
+    color("#8a6470")
+        translate([124,-52,radar_clip_t/2])
+            radar_clip();
+}
+
 if (part == "bezel") bezel();
 else if (part == "carrier") carrier();
 else if (part == "rear_box") rear_box();
@@ -480,4 +489,5 @@ else if (part == "bme_cover") bme_cover();
 else if (part == "dimension_gauge") dimension_gauge();
 else if (part == "bezel_corner") bezel_corner();
 else if (part == "radar_test") radar_test();
+else if (part == "design_review_layout") design_review_layout();
 else assembly();

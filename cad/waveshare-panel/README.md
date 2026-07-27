@@ -70,6 +70,12 @@ cad/waveshare-panel/render.sh
 
 The optional first argument changes the output directory.
 
+`output/design_review_layout.stl` combines the current enclosure stack,
+BME280 pod pieces, and radar clip into one multi-shell model for rotating and
+inspecting the spatial concept in a mesh viewer or slicer. It is not a
+production-print layout: the components overlap or float in their assembly
+positions and must be exported and printed separately.
+
 ## Prototype order
 
 1. Print `dimension_gauge.stl` and compare the glass recess, mounting pattern,

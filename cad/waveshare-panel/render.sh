@@ -31,6 +31,12 @@ for part_name in "${parts[@]}"; do
     "$source_file"
 done
 
+echo "Rendering design review layout STL"
+APPIMAGE_EXTRACT_AND_RUN=1 "$openscad_bin" \
+  -o "$output_dir/design_review_layout.stl" \
+  -D 'part="design_review_layout"' \
+  "$source_file"
+
 echo "Rendering assembly preview"
 QT_QPA_PLATFORM=offscreen APPIMAGE_EXTRACT_AND_RUN=1 "$openscad_bin" \
   -o "$output_dir/assembly.png" \

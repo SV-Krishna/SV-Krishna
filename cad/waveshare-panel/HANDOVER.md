@@ -39,6 +39,8 @@ connector, panel, and cable measurements remain authoritative.
 - `waveshare_panel_enclosure.scad`: parametric CAD source.
 - `render.sh`: exports every STL and the assembly preview.
 - `output/`: current generated STL files and assembly PNG.
+- `output/design_review_layout.stl`: one multi-shell spatial-review model;
+  not intended to be sliced or printed as a combined part.
 - `README.md`: build, rendering, and prototype instructions.
 - `PRINT_TUNING.md`: dated G-code and physical-print evidence.
 - `profiles/`: portable snapshots of the working Creality Print presets.
