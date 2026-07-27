@@ -18,7 +18,7 @@ the nominal geometry.
 |---|---:|
 | Layer height | 0.20 mm |
 | Initial nozzle temperature | 230 C |
-| Subsequent nozzle temperature | 225 C in profile; 220 C recommended for the next test |
+| Subsequent nozzle temperature | 220 C; configured, awaiting physical validation |
 | Bed temperature | 70 C |
 | Normal part cooling | 40-50% after the first three layers |
 | Overhang part cooling | Cap at 60% in the user filament profile |
@@ -151,12 +151,17 @@ warning was found. The carrier is oriented with its frame and rails on the
 bed; the four vertical standoffs and through-holes do not require generated
 support.
 
-**Proposed before printing:** Change the subsequent nozzle temperature from
-225 C to 220 C and reslice, because the bezel print produced significant
-stringing or wisps at the hotter baseline. Confirm physically that the
-part-cooling fan starts after layer three and reaches the requested value; the
-previous bezel print remained at 0% despite non-zero commands in its G-code.
-Dry the PETG before printing if that has not already been done.
+**Configuration amendment applied:** The subsequent nozzle temperature was
+changed from 225 C to 220 C because the bezel print produced significant
+stringing or wisps at the hotter baseline. The carrier must be resliced before
+printing; the G-code values in the table above describe the superseded slice.
+No carrier geometry change was justified by the slice review, so the validated
+CAD was preserved.
+
+For the next print, confirm physically that the part-cooling fan starts after
+layer three and reaches the requested value; the previous bezel print remained
+at 0% despite non-zero commands in its G-code. Dry the PETG before printing if
+that has not already been done.
 
 ## Documentation policy for this CAD
 
