@@ -70,7 +70,7 @@ evidence that the printer applied the command.
 Stop reducing temperature and return to 220-225 C if the extruder clicks,
 walls show gaps, lines become rough, or layer bonding deteriorates.
 
-## Required profile correction before the next slice
+## User-profile correction applied 2026-07-27
 
 The custom Hyper PETG filament profile inherits these values from Creality
 Print's system Generic PETG profile:
@@ -80,15 +80,17 @@ Print's system Generic PETG profile:
 "overhang_fan_speed": "90"
 ```
 
-Do not edit the system profile because Creality Print may replace it during an
-update. Add this user-level override to the custom Hyper PETG profile:
+The system profile was left unchanged because Creality Print may replace it
+during an update. The following override was added to the local custom Hyper
+PETG profile:
 
 ```json
 "enable_overhang_bridge_fan": "1",
 "overhang_fan_speed": "60"
 ```
 
-After slicing, inspect the exported G-code and confirm:
+This records the configured state, not a validated physical result. The next
+slice and print must confirm:
 
 - fan off for only the intended opening layers;
 - normal cooling command after layer three;
