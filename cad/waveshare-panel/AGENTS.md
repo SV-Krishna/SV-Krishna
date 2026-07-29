@@ -35,6 +35,13 @@ Write-ups must distinguish:
 
 Never silently convert a proposed value into a validated value.
 
+For every meaningful CAD, profile, slicing, prototype, or operational change,
+also add a concise dated entry to the repository-level `docs/log.md`. Use that
+entry to record intent, affected files, validation status, recovery preparation,
+and follow-up work. Keep the detailed print and measurement evidence in
+`PRINT_TUNING.md` and link or refer to it from the project log rather than
+duplicating the complete record.
+
 ## Print log minimum
 
 Each dated prototype entry must record, when available:
@@ -69,6 +76,37 @@ superseded.
    has not been physically verified.
 9. Never initiate a physical print without explicit user authorization.
 
+## Validation and completion language
+
+Use the existing evidence classifications above and describe the overall state
+precisely:
+
+- **Rendered**: OpenSCAD completed and the generated geometry passed the
+  required render and visual checks.
+- **Slice verified**: exported G-code was checked for the applicable bed,
+  temperature, cooling, support, layer, and offset requirements.
+- **Printed**: the physical print completed; this says nothing by itself about
+  dimensional fit or operational suitability.
+- **Fit observed**: the relevant physical measurements, interfaces, and
+  clearances were checked and recorded.
+- **Operationally accepted**: the assembled part performed its intended
+  function in the real installation and the result was recorded.
+
+Record every material validation step that was not run, why it was not run,
+the remaining risk, and the exact next test. Never describe a successful
+render, slice, or print as proof of fit, waterproofing, radar performance,
+thermal suitability, or operational acceptance.
+
+## External configuration recovery
+
+- Before materially changing a printer, slicer, filament, machine, or process
+  profile, capture its name, version, relevant current values, and restoration
+  route without recording credentials or proprietary application data.
+- After changing a profile, export or read the saved configuration back and
+  inspect the resulting G-code where applicable. A value shown in a user
+  interface is not sufficient evidence that the printer applied it.
+- Record whether rollback was tested, prepared only, or unavailable.
+
 ## Safety and quality
 
 - Never describe the enclosure as waterproof without a recorded ingress test.
@@ -82,6 +120,20 @@ superseded.
 - Do not commit transient `/tmp` files, application caches, crash dumps, or
   proprietary/third-party executables.
 
+## Parking and continuation
+
+- When the user asks to pause, defer, park, or resume this work later, use the
+  `park-work` skill.
+- Before parking, leave `docs/log.md`, `PRINT_TUNING.md`, `HANDOVER.md`, and
+  other affected durable documentation accurate for the current state.
+- The parked record must include verified state, unverified dimensions and
+  assumptions, remaining work, required physical materials or access, the
+  exact next test, a restart prompt, and an explicit resume date when supplied.
+- Parking supplements the repository documentation and Git state; it does not
+  replace either one.
+- Do not park active work merely because follow-up exists. Park it only when
+  the user intentionally pauses or schedules the work.
+
 ## Git completion requirement
 
 Work in this directory is not complete until it is committed to Git.
@@ -92,8 +144,16 @@ Before handoff:
 2. Stage only files belonging to the requested CAD/documentation task.
 3. Review the staged diff and generated-file list.
 4. Run the relevant rendering and validation checks.
-5. Create a focused commit with an imperative message describing the outcome.
-6. Confirm the commit exists and report its hash.
+5. Confirm `docs/log.md` and all affected source comments, `README.md`,
+   `PRINT_TUNING.md`, profile documentation, and `HANDOVER.md` are current
+   where applicable.
+6. Record skipped validation, remaining risk, recovery readiness, and the next
+   test.
+7. Check staged files for secrets, personal data, proprietary assets,
+   unintended generated files, and unrelated changes.
+8. Create a focused commit with an imperative message describing the outcome
+   and including its required documentation.
+9. Confirm the commit exists and report its hash.
 
 Do not amend, squash, rebase, push, or open a pull request unless the user
 explicitly requests it. If a commit cannot be made, report the reason and leave

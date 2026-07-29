@@ -14,6 +14,44 @@ Entries should be appended in reverse chronological order unless a different ord
 
 ---
 
+## 2026-07-29 - Waveshare CAD documentation governance aligned
+
+### Intent
+
+- align the Waveshare panel CAD workspace with the shared documentation,
+  validation, recovery, and parked-work governance baseline
+- preserve its existing evidence classifications, physical-print safeguards,
+  and focused Git completion requirement
+
+### Files Added Or Changed
+
+- `cad/waveshare-panel/AGENTS.md`
+- `docs/log.md`
+
+### Recovery Preparation
+
+- Documentation-only change; the pre-change instructions remain available in
+  Git history.
+- No CAD, profile, slicer, printer, generated model, or live system state was
+  changed.
+
+### Execution Status
+
+- Status: documented.
+- Added a mandatory concise project-log entry for meaningful CAD, profile,
+  slicing, prototype, and related operational changes.
+- Added explicit rendered, slice-verified, printed, fit-observed, and
+  operationally-accepted completion stages.
+- Added profile recovery/read-back rules, documentation close-out checks, and
+  required use of `park-work` when the user intentionally pauses the work.
+- No render, slice, physical print, fit check, or operational test was required
+  for this documentation-only governance change.
+
+### Follow-Up Actions
+
+- apply the agreed governance baseline to the remaining workspaces one at a
+  time
+
 ## 2026-06-26 - XVF routing validated, Hey Krishna deployed, and transcribing cue documented
 
 ### Intent
