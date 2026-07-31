@@ -1958,3 +1958,8 @@ Entries should be appended in reverse chronological order unless a different ord
 - Prepared the complete documented source/configuration/evidence backlog for
   integration with remote `main` without discarding either side of the
   repository's divergent history.
+- Committed the completed backlog as `24bc2d2`, merged remote `main`'s PCB
+  upload history as `6ffa38f`, and pushed the combined history directly to
+  `origin/main` without force.
+- Final repository validation passed all 51 Node tests, both firmware host
+  telemetry tests, the ESP-IDF build and the attached-device deployment checks.
