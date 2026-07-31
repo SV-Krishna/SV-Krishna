@@ -87,6 +87,10 @@ export class RelayService {
     await this.requestText("/AllOff");
   }
 
+  async powerCyclePi(): Promise<void> {
+    await this.requestText("/PowerCyclePi");
+  }
+
   private async getFlags(): Promise<number[]> {
     const payload = await this.requestJson("/getData");
     if (!Array.isArray(payload)) {

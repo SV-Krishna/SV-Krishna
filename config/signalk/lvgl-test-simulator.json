@@ -1,0 +1,127 @@
+{
+  "configuration": {
+    "items": [
+      {
+        "path": "navigation.speedOverGround",
+        "minValue": 5,
+        "maxValue": 7,
+        "dataPeriod": 10,
+        "outputPeriod": 2
+      },
+      {
+        "path": "environment.depth.belowSurface",
+        "minValue": 3,
+        "maxValue": 3,
+        "dataPeriod": 60,
+        "outputPeriod": 2
+      },
+      {
+        "path": "navigation.gnss.methodQuality",
+        "minValue": 1,
+        "maxValue": 1,
+        "dataPeriod": 60,
+        "outputPeriod": 2
+      },
+      {
+        "path": "navigation.headingTrue",
+        "minValue": 0,
+        "maxValue": 6.283185307,
+        "dataPeriod": 120,
+        "outputPeriod": 2
+      },
+      {
+        "path": "navigation.position",
+        "fixedValue": {
+          "latitude": 55.90018,
+          "longitude": -4.3
+        },
+        "outputPeriod": 2
+      },
+      {
+        "path": "environment.wind.directionTrue",
+        "minValue": 0.8,
+        "maxValue": 1.2,
+        "dataPeriod": 45,
+        "outputPeriod": 2
+      },
+      {
+        "path": "environment.wind.angleTrueWater",
+        "minValue": 0.698131701,
+        "maxValue": 0.698131701,
+        "dataPeriod": 60,
+        "outputPeriod": 2
+      },
+      {
+        "path": "environment.wind.speedApparent",
+        "minValue": 3,
+        "maxValue": 8,
+        "dataPeriod": 45,
+        "outputPeriod": 2
+      },
+      {
+        "path": "environment.wind.speedTrue",
+        "minValue": 4,
+        "maxValue": 9,
+        "dataPeriod": 55,
+        "outputPeriod": 2
+      },
+      {
+        "path": "electrical.batteries.house.capacity.stateOfCharge",
+        "minValue": 0.68,
+        "maxValue": 0.82,
+        "dataPeriod": 90,
+        "outputPeriod": 2
+      },
+      {
+        "path": "electrical.batteries.house.voltage",
+        "minValue": 12.5,
+        "maxValue": 13,
+        "dataPeriod": 75,
+        "outputPeriod": 2
+      },
+      {
+        "path": "electrical.batteries.house.current",
+        "minValue": -6,
+        "maxValue": 12,
+        "dataPeriod": 60,
+        "outputPeriod": 2
+      },
+      {
+        "path": "electrical.batteries.start.capacity.stateOfCharge",
+        "minValue": 0.9,
+        "maxValue": 0.98,
+        "dataPeriod": 120,
+        "outputPeriod": 2
+      },
+      {
+        "path": "electrical.batteries.start.voltage",
+        "minValue": 12.65,
+        "maxValue": 12.85,
+        "dataPeriod": 100,
+        "outputPeriod": 2
+      },
+      {
+        "path": "electrical.batteries.start.current",
+        "minValue": -0.2,
+        "maxValue": 0.5,
+        "dataPeriod": 80,
+        "outputPeriod": 2
+      },
+      {
+        "path": "tanks.freshWater.0.currentLevel",
+        "minValue": 0.55,
+        "maxValue": 0.82,
+        "dataPeriod": 180,
+        "outputPeriod": 2
+      },
+      {
+        "path": "electrical.solar.0.panelPower",
+        "minValue": 8,
+        "maxValue": 48,
+        "dataPeriod": 90,
+        "outputPeriod": 2
+      }
+    ]
+  },
+  "enabled": true
+}

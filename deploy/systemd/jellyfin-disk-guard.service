@@ -1,0 +1,8 @@
+[Unit]
+Description=Protect Jellyfin from a full data filesystem
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/jellyfin-disk-guard

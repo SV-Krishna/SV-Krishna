@@ -97,14 +97,15 @@ export class LinuxAudio {
     ];
   }
 
-  async recordSample(): Promise<string> {
+  async recordSample(options?: { disableVad?: boolean }): Promise<string> {
     const outputPath = join(
       this.config.audioWorkDir,
       `sample-${Date.now()}.wav`,
     );
 
     let attemptedVad = false;
-    if (this.config.audioUseVad && (await commandExists("sox"))) {
+    const shouldUseVad = this.config.audioUseVad && !options?.disableVad;
+    if (shouldUseVad && (await commandExists("sox"))) {
       attemptedVad = true;
       const threshold = `${Math.max(1, this.config.audioVadThresholdPercent)}%`;
       const vadArgs = [

@@ -13,6 +13,10 @@ import { RasaClient, type RasaIntentResult } from "./services/rasaClient";
 import { ReSpeakerLedService } from "./services/reSpeakerLedService";
 import { ReSpeakerXvfService } from "./services/reSpeakerXvfService";
 import { RelayService } from "./services/relayService";
+import {
+  SignalKAlertMonitorStore,
+  type SignalKAlertMonitorSettings,
+} from "./services/signalkAlertMonitorStore";
 import { WakeWordStore, type WakeWordSettings } from "./services/wakeWordStore";
 import { WakeWordService } from "./services/wakeWordService";
 import { WhisperClient } from "./services/whisperClient";
@@ -61,8 +65,9 @@ export class ControllerApp {
   private readonly reSpeakerLed?: ReSpeakerLedService;
   private readonly reSpeakerXvf?: ReSpeakerXvfService;
   private readonly wakeWordStore: WakeWordStore;
+  private readonly signalkAlertMonitorStore: SignalKAlertMonitorStore;
   private readonly wakeWordService: WakeWordService;
-  private readonly signalkAlertMonitor?: SignalKAlertMonitor;
+  private readonly signalkAlertMonitor: SignalKAlertMonitor;
   private piperReady = false;
   private serviceHealth: ServiceHealth[] = [];
   private healthTimer?: NodeJS.Timeout;
@@ -93,12 +98,14 @@ export class ControllerApp {
       config.wakeWordPhrase,
       config.enableWakeWord,
     );
+    this.signalkAlertMonitorStore = new SignalKAlertMonitorStore(
+      config.signalkAlertMonitorConfigPath,
+      config.signalkAlertMonitorEnabled,
+    );
     this.wakeWordService = new WakeWordService(config, async (event) => {
       await this.handleWakeWordDetected(event);
     });
-    this.signalkAlertMonitor = config.signalkAlertMonitorEnabled
-      ? new SignalKAlertMonitor(config, async (alert) => this.handleSignalKAlert(alert))
-      : undefined;
+    this.signalkAlertMonitor = new SignalKAlertMonitor(config, async (alert) => this.handleSignalKAlert(alert));
     this.wakeWordEnabled = config.enableWakeWord;
     this.wakeWordPhrase = config.wakeWordPhrase;
   }
@@ -107,6 +114,7 @@ export class ControllerApp {
     const enableTerminalInput = options?.enableTerminalInput ?? true;
     await mkdir(this.config.audioWorkDir, { recursive: true });
     await this.loadWakeWordSettings();
+    await this.loadSignalKAlertMonitorSettings();
 
     const health = await this.refreshServiceHealth();
     const checks = await this.runPreflightChecks();
@@ -128,7 +136,7 @@ export class ControllerApp {
     }
 
     this.startHealthPolling();
-    this.signalkAlertMonitor?.start();
+    this.signalkAlertMonitor.start();
     await this.syncWakeWordRuntime();
     void this.audioCue?.prepare().catch((error) => {
       const detail = error instanceof Error ? error.message : String(error);
@@ -146,7 +154,7 @@ export class ControllerApp {
       this.healthTimer = undefined;
     }
     this.input.stop();
-    this.signalkAlertMonitor?.stop();
+    this.signalkAlertMonitor.stop();
     this.wakeWordService.stop();
     void this.audioCue?.stop();
     this.logger.info("Controller stopped.");
@@ -159,6 +167,7 @@ export class ControllerApp {
     transcript: string | null;
     wakeWordEnabled: boolean;
     wakeWordPhrase: string;
+    signalkAlertMonitorEnabled: boolean;
   }> {
     return {
       state: this.state,
@@ -167,6 +176,7 @@ export class ControllerApp {
       transcript: this.latestTranscript,
       wakeWordEnabled: this.wakeWordEnabled,
       wakeWordPhrase: this.wakeWordPhrase,
+      signalkAlertMonitorEnabled: this.signalkAlertMonitor.isEnabled(),
     };
   }
 
@@ -188,6 +198,30 @@ export class ControllerApp {
     await this.syncWakeWordRuntime();
     this.logger.info(`Wake word ${this.wakeWordPhrase} ${enabled ? "enabled" : "disabled"}.`);
     return await this.getWakeWordSettings();
+  }
+
+  async getSignalKAlertMonitorSettings(): Promise<SignalKAlertMonitorSettings> {
+    const settings = await this.signalkAlertMonitorStore.get();
+    return {
+      ...settings,
+      enabled: this.signalkAlertMonitor.isEnabled(),
+      running: this.signalkAlertMonitor.isRunning(),
+    };
+  }
+
+  async setSignalKAlertMonitorEnabled(enabled: boolean): Promise<SignalKAlertMonitorSettings> {
+    const saved = await this.signalkAlertMonitorStore.save(enabled);
+    this.signalkAlertMonitor.setEnabled(saved.enabled);
+    this.logger.info(`SignalK alert monitor ${enabled ? "enabled" : "disabled"}.`);
+    return await this.getSignalKAlertMonitorSettings();
+  }
+
+  snoozeActiveSignalKAlerts(): { count: number; durationSeconds: number } {
+    const snoozed = this.signalkAlertMonitor.snoozeActiveAlerts();
+    return {
+      count: snoozed.length,
+      durationSeconds: Math.max(5, this.config.signalkAlertSnoozeSeconds),
+    };
   }
 
   async runVoiceOnce(options?: {
@@ -307,6 +341,11 @@ export class ControllerApp {
       return { statusLine: await this.relay.getStatusLine() };
     }
 
+    if (command.action === "power_cycle_pi") {
+      await this.relay.powerCyclePi();
+      return { statusLine: await this.relay.getStatusLine() };
+    }
+
     if (command.action === "all") {
       if (command.state === "on") {
         await this.relay.allOn();
@@ -382,6 +421,17 @@ export class ControllerApp {
     }
 
     try {
+      const notificationReply = await this.tryHandleSignalKAlertMonitorCommand(routedPrompt);
+      if (notificationReply) {
+        await this.speakReplyIfEnabled(
+          notificationReply,
+          "Synthesizing SignalK notification confirmation with Piper...",
+          speakReply,
+        );
+        this.setState("idle", `You: ${userText}\nAssistant: ${notificationReply}`);
+        return { normalizedTranscript: routedPrompt, reply: notificationReply, relay: { kind: "none" } };
+      }
+
       const anchorReply = await this.tryHandleAnchorAlarmCommand(routedPrompt);
       if (anchorReply) {
         await this.speakReplyIfEnabled(anchorReply, "Synthesizing anchor alarm confirmation with Piper...", speakReply);
@@ -586,6 +636,16 @@ export class ControllerApp {
     }
   }
 
+  private async loadSignalKAlertMonitorSettings(): Promise<void> {
+    try {
+      const settings = await this.signalkAlertMonitorStore.get();
+      this.signalkAlertMonitor.setEnabled(settings.enabled);
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`Failed to load SignalK alert monitor settings: ${detail}`);
+    }
+  }
+
   private async syncWakeWordRuntime(): Promise<void> {
     if (this.wakeWordEnabled) {
       await this.wakeWordService.start();
@@ -678,6 +738,11 @@ export class ControllerApp {
     const normalizedAlias = normalizeKnownCommandAlias(transcript);
     if (normalizedAlias) {
       return normalizedAlias;
+    }
+
+    const normalizedTranscript = transcript.toLowerCase().replace(/[.?!]/g, " ").replace(/\s+/g, " ").trim();
+    if (isSignalKAlertMonitorSnoozeCommand(normalizedTranscript)) {
+      return transcript;
     }
 
     if (!this.rasa) {
@@ -884,16 +949,58 @@ export class ControllerApp {
     return null;
   }
 
+  private async tryHandleSignalKAlertMonitorCommand(userText: string): Promise<string | null> {
+    const normalized = userText.toLowerCase().replace(/[.?!]/g, " ").replace(/\s+/g, " ").trim();
+
+    if (isSignalKAlertMonitorStatusCommand(normalized)) {
+      const settings = await this.getSignalKAlertMonitorSettings();
+      return settings.enabled
+        ? "Signal K notifications are enabled."
+        : "Signal K notifications are disabled.";
+    }
+
+    if (isSignalKAlertMonitorOnCommand(normalized)) {
+      const settings = await this.getSignalKAlertMonitorSettings();
+      if (settings.enabled) {
+        return "Signal K notifications are already enabled.";
+      }
+      this.setState("thinking", "Enabling SignalK notifications...");
+      await this.setSignalKAlertMonitorEnabled(true);
+      return "Signal K notifications are now enabled.";
+    }
+
+    if (isSignalKAlertMonitorOffCommand(normalized)) {
+      const settings = await this.getSignalKAlertMonitorSettings();
+      if (!settings.enabled) {
+        return "Signal K notifications are already disabled.";
+      }
+      this.setState("thinking", "Disabling SignalK notifications...");
+      await this.setSignalKAlertMonitorEnabled(false);
+      return "Signal K notifications are now disabled.";
+    }
+
+    if (isSignalKAlertMonitorSnoozeCommand(normalized)) {
+      const snoozed = this.snoozeActiveSignalKAlerts();
+      if (snoozed.count === 0) {
+        return "There are no active Signal K notifications to snooze right now.";
+      }
+      return `Snoozed ${snoozed.count === 1 ? "that Signal K notification" : `${snoozed.count} Signal K notifications`} for ${formatDurationSeconds(snoozed.durationSeconds)}.`;
+    }
+
+    return null;
+  }
+
   private async captureAnchorRodeFollowUp(
     initialTranscript: string,
     initialNormalizedTranscript: string,
   ): Promise<VoiceRunResult> {
     this.setState("listening", "Listening for rode length in meters...");
-    const recordingPath = await this.audio.recordSample();
+    // Start follow-up capture immediately; VAD-first capture can miss short numeric replies.
+    const recordingPath = await this.audio.recordSample({ disableVad: true });
     this.logger.info(`Recorded rode-length follow-up to ${recordingPath}`);
 
     const transcript = await this.transcribeSample(recordingPath);
-    if (!isUsableTranscript(transcript)) {
+    if (!isUsableAnchorRodeTranscript(transcript)) {
       const fallback = "I did not catch the rode length. Please try dropping anchor again.";
       if (this.config.enableTts && this.piperReady) {
         this.setState("speaking", "Synthesizing follow-up prompt with Piper...");
@@ -1041,6 +1148,14 @@ const isUsableTranscript = (value: string | null | undefined): value is string =
   }
 
   return normalized.length >= 3;
+};
+
+const isUsableAnchorRodeTranscript = (value: string | null | undefined): value is string => {
+  if (!value) {
+    return false;
+  }
+
+  return isUsableTranscript(value) || parseMeters(value) !== null;
 };
 
 const isWakeWordFillerTranscript = (value: string, wakeWordPhrase: string): boolean => {
@@ -1234,6 +1349,43 @@ const isAnchorAlarmSetRadiusCommand = (normalized: string): boolean =>
   /\bradius\b/.test(normalized) &&
   (/\bset\b/.test(normalized) || /\bchange\b/.test(normalized) || /\bupdate\b/.test(normalized));
 
+const refersToSignalKNotifications = (normalized: string): boolean => {
+  const mentionsNotifications = /\bnotification(s)?\b/.test(normalized) || /\balert monitor\b/.test(normalized);
+  if (!mentionsNotifications) {
+    return false;
+  }
+  return /\b(signalk|signal k)\b/.test(normalized) || /\bnotification(s)?\b/.test(normalized);
+};
+
+const isSignalKAlertMonitorOnCommand = (normalized: string): boolean =>
+  refersToSignalKNotifications(normalized) &&
+  (/\benable\b/.test(normalized) || /\bturn on\b/.test(normalized) || /\bswitch on\b/.test(normalized));
+
+const isSignalKAlertMonitorOffCommand = (normalized: string): boolean =>
+  refersToSignalKNotifications(normalized) &&
+  (/\bdisable\b/.test(normalized) || /\bturn off\b/.test(normalized) || /\bswitch off\b/.test(normalized));
+
+const isSignalKAlertMonitorStatusCommand = (normalized: string): boolean =>
+  refersToSignalKNotifications(normalized) &&
+  (/\bstatus\b/.test(normalized) || /\bare\b/.test(normalized) || /\bwhat\b/.test(normalized));
+
+const isSignalKAlertMonitorSnoozeCommand = (normalized: string): boolean =>
+  /\bsnooze\b/.test(normalized) &&
+  (
+    /\bthat notification\b/.test(normalized) ||
+    /\bthat alert\b/.test(normalized) ||
+    /\bnotification(s)?\b/.test(normalized) ||
+    /\balert(s)?\b/.test(normalized)
+  );
+
+const formatDurationSeconds = (seconds: number): string => {
+  if (seconds % 60 === 0) {
+    const minutes = seconds / 60;
+    return `${minutes} minute${minutes === 1 ? "" : "s"}`;
+  }
+  return `${seconds} seconds`;
+};
+
 const looksLikeRelayIntent = (text: string): boolean => {
   const normalized = text.toLowerCase();
   if (normalized.includes("relay") || normalized.includes("relays")) {
@@ -1300,6 +1452,13 @@ const parseRelayCommandFromText = (text: string): RelayCommand | null => {
   const normalized = text.toLowerCase().replace(/[.?!]/g, " ").replace(/\s+/g, " ").trim();
   if (!normalized) {
     return null;
+  }
+
+  if (
+    /(power\s*cycle|reboot|restart)/.test(normalized) &&
+    /\b(pi|raspberry pi|computer)\b/.test(normalized)
+  ) {
+    return { action: "power_cycle_pi" };
   }
 
   if (normalized.includes("status") && normalized.includes("relay")) {
@@ -1498,6 +1657,18 @@ const mapRasaIntentToPrompt = (result: RasaIntentResult): string | null => {
   }
   if (intent === "anchor_set_rode") {
     return meters ? `switch on anchor alarm ${meters} meters` : "switch on anchor alarm";
+  }
+  if (intent === "signalk_notifications_on") {
+    return "enable signalk notifications";
+  }
+  if (intent === "signalk_notifications_off") {
+    return "disable signalk notifications";
+  }
+  if (intent === "signalk_notifications_status") {
+    return "what is the signalk notification status";
+  }
+  if (intent === "signalk_notifications_snooze") {
+    return "snooze that notification";
   }
   if (intent === "leisure_battery_soc_query") {
     return "tell me the state of charge of the leisure battery";

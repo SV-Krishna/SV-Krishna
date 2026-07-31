@@ -84,3 +84,35 @@ journalctl -u signalk.service -n 200 --no-pager
 journalctl -k -n 200 --no-pager
 ```
 
+## 7) Follow-up live finding (2026-07-04)
+
+Additional live investigation on `206` after another loss of SSH access found:
+
+- repeated abrupt boot termination patterns in `last -x`, rather than clean shutdowns
+- no ext4 or block I/O fault signature suggesting root disk failure
+- no current undervoltage indication from `vcgencmd get_throttled` (`0x0`)
+- no preserved panic trace in `/sys/fs/pstore`
+- SignalK and the USB watchdog both appearing healthy right up until the affected boot journal stopped
+
+Current interpretation:
+
+- the failure still looks more like a host-level hang or low-level USB/power event than a normal SignalK process crash
+- the physical USB topology remains a risk factor because all active NMEA serial devices sit behind a cascaded hub chain
+
+Observed live serial topology during the July 4 session:
+
+- `ttyOP_windin -> ttyUSB0` = Prolific `067b:23a3`
+- `ttyOP_nmeaout -> ttyUSB1` = FTDI `0403:6001`
+- `ttyOP_nmea2000 -> ttyUSB2` = CH341 `1a86:7523`
+- `ttyOP_nmeain -> ttyACM0` = STM32 `0483:5740`, serial `00000000003A`
+
+Important software caveat discovered during the same session:
+
+- `/home/pi/svkrishna/bin/usb_serial_watchdog.sh` has a state-file bug
+- it writes `last_action=<epoch>n` instead of a clean integer line
+- its `awk` parsing of `last_action` is also malformed
+- this should be fixed before relying on cooldown behavior during future serial-loss events
+
+Practical implication:
+
+- the watchdog may still detect missing links and attempt recovery, but its cooldown bookkeeping is not trustworthy until repaired

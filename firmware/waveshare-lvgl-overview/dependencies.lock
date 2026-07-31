@@ -1,0 +1,42 @@
+dependencies:
+  espressif/esp_lcd_touch:
+    dependencies: []
+    source:
+      path: /home/antony-slack/Documents/repos/SV-Krishna/firmware/waveshare-lvgl-overview/components/espressif__esp_lcd_touch
+      type: local
+    version: 1.1.2
+  espressif/esp_lcd_touch_gt911:
+    dependencies: []
+    source:
+      path: /home/antony-slack/Documents/repos/SV-Krishna/firmware/waveshare-lvgl-overview/components/espressif__esp_lcd_touch_gt911
+      type: local
+    version: 1.1.1~1
+  espressif/esp_websocket_client:
+    component_hash: dc00233af846f3a744ada283a300e0d586040aadc3ee67361645ecdce4523672
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=5.0'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 1.8.0
+  idf:
+    source:
+      type: idf
+    version: 5.5.5
+  lvgl/lvgl:
+    dependencies: []
+    source:
+      path: /home/antony-slack/Documents/repos/SV-Krishna/firmware/waveshare-lvgl-overview/components/lvgl__lvgl
+      type: local
+    version: 8.4.0
+direct_dependencies:
+- espressif/esp_lcd_touch
+- espressif/esp_lcd_touch_gt911
+- espressif/esp_websocket_client
+- idf
+- lvgl/lvgl
+manifest_hash: aaeb6874349d52edd3784d3fc5e66f2cc6ced527ddcac59c505aec4ff66315dd
+target: esp32s3
+version: 2.0.0

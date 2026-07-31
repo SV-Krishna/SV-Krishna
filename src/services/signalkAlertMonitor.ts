@@ -3,14 +3,29 @@ import type { AppConfig } from "../types";
 export interface SpokenSignalKAlert {
   path: string;
   message: string;
+  state: string;
 }
 
 interface AlertState {
-  fingerprint: string;
   lastSpokenAt: number;
+  severity: number;
+}
+
+interface SnoozedAlertState {
+  until: number;
+  severity: number;
 }
 
 const ACTIVE_STATES = new Set(["alarm", "emergency", "warn", "warning", "alert", "critical"]);
+const ALERT_SEVERITY: Record<string, number> = {
+  normal: 0,
+  alert: 1,
+  warn: 2,
+  warning: 2,
+  alarm: 3,
+  critical: 3,
+  emergency: 4,
+};
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
@@ -76,6 +91,8 @@ const formatDepthAlertMessage = (payload: Record<string, unknown>, path: string,
   return `Warning shallow depth. Depth currently ${depthMeters.toFixed(1)} meters.`;
 };
 
+const getAlertSeverity = (state: string): number => ALERT_SEVERITY[state] ?? 0;
+
 export const extractSpokenSignalKAlerts = (
   payload: unknown,
   requestedPaths: string[],
@@ -100,7 +117,7 @@ export const extractSpokenSignalKAlerts = (
     if (!message || !ACTIVE_STATES.has(state)) {
       continue;
     }
-    alerts.push({ path, message: formatDepthAlertMessage(payload, path, message) });
+    alerts.push({ path, message: formatDepthAlertMessage(payload, path, message), state });
   }
 
   return alerts;
@@ -109,20 +126,26 @@ export const extractSpokenSignalKAlerts = (
 export class SignalKAlertMonitor {
   private timer?: NodeJS.Timeout;
   private readonly seen = new Map<string, AlertState>();
+  private readonly activeAlerts = new Map<string, SpokenSignalKAlert>();
+  private readonly snoozed = new Map<string, SnoozedAlertState>();
+  private enabled: boolean;
 
   constructor(
     private readonly config: AppConfig,
     private readonly onAlert: (alert: SpokenSignalKAlert) => Promise<void>,
-  ) {}
+    enabled = config.signalkAlertMonitorEnabled,
+  ) {
+    this.enabled = enabled;
+  }
 
   start(): void {
-    if (!this.config.signalkAlertMonitorEnabled || this.timer) {
+    if (!this.enabled || this.timer) {
       return;
     }
     this.timer = setInterval(() => {
-      void this.pollOnce();
+      void this.pollOnce().catch(() => undefined);
     }, Math.max(500, this.config.signalkAlertPollMs));
-    void this.pollOnce();
+    void this.pollOnce().catch(() => undefined);
   }
 
   stop(): void {
@@ -130,6 +153,38 @@ export class SignalKAlertMonitor {
       clearInterval(this.timer);
       this.timer = undefined;
     }
+  }
+
+  setEnabled(enabled: boolean): void {
+    this.enabled = enabled;
+    if (enabled) {
+      this.start();
+      return;
+    }
+    this.stop();
+    this.seen.clear();
+  }
+
+  isEnabled(): boolean {
+    return this.enabled;
+  }
+
+  isRunning(): boolean {
+    return Boolean(this.timer);
+  }
+
+  snoozeActiveAlerts(): SpokenSignalKAlert[] {
+    const activeAlerts = Array.from(this.activeAlerts.values());
+    if (activeAlerts.length === 0) {
+      return [];
+    }
+
+    const now = Date.now();
+    const snoozeMs = Math.max(5, this.config.signalkAlertSnoozeSeconds) * 1000;
+    for (const alert of activeAlerts) {
+      this.snoozed.set(alert.path, { until: now + snoozeMs, severity: getAlertSeverity(alert.state) });
+    }
+    return activeAlerts;
   }
 
   private async pollOnce(): Promise<void> {
@@ -146,19 +201,37 @@ export class SignalKAlertMonitor {
 
     const body = (await response.json()) as unknown;
     const alerts = extractSpokenSignalKAlerts(body, this.config.signalkAlertPaths);
+    const activePaths = new Set(alerts.map((alert) => alert.path));
+    for (const path of this.activeAlerts.keys()) {
+      if (!activePaths.has(path)) {
+        this.activeAlerts.delete(path);
+        this.seen.delete(path);
+        this.snoozed.delete(path);
+      }
+    }
     if (alerts.length === 0) {
       return;
     }
 
     const now = Date.now();
     for (const alert of alerts) {
-      const fingerprint = `${alert.path}|${alert.message}`;
+      this.activeAlerts.set(alert.path, alert);
+      const severity = getAlertSeverity(alert.state);
+      const snoozed = this.snoozed.get(alert.path);
+      if (snoozed && severity > snoozed.severity) {
+        this.snoozed.delete(alert.path);
+      } else if (snoozed && now < snoozed.until) {
+        continue;
+      } else if (snoozed && now >= snoozed.until) {
+        this.snoozed.delete(alert.path);
+      }
+
       const prior = this.seen.get(alert.path);
       const cooldownMs = Math.max(5, this.config.signalkAlertRepeatSeconds) * 1000;
-      if (prior && prior.fingerprint === fingerprint && now - prior.lastSpokenAt < cooldownMs) {
+      if (prior && severity <= prior.severity && now - prior.lastSpokenAt < cooldownMs) {
         continue;
       }
-      this.seen.set(alert.path, { fingerprint, lastSpokenAt: now });
+      this.seen.set(alert.path, { lastSpokenAt: now, severity });
       await this.onAlert(alert);
     }
   }

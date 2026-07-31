@@ -11,6 +11,8 @@ const main = async (): Promise<void> => {
       runTextCommand: async (text, history) => await controller.runTextCommand(text, history),
       getWakeWordSettings: async () => await controller.getWakeWordSettings(),
       setWakeWordEnabled: async (enabled) => await controller.setWakeWordEnabled(enabled),
+      getSignalKAlertMonitorSettings: async () => await controller.getSignalKAlertMonitorSettings(),
+      setSignalKAlertMonitorEnabled: async (enabled) => await controller.setSignalKAlertMonitorEnabled(enabled),
       getStatus: async () => await controller.getStatus(),
     },
   });

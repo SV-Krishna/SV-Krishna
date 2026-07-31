@@ -97,6 +97,12 @@ export const loadConfig = (): AppConfig => {
         ? `${devDataRoot}/config/wake-word.json`
         : "/opt/svkrishna/config/wake-word.json",
     ),
+    signalkAlertMonitorConfigPath: readString(
+      "SIGNALK_ALERT_MONITOR_CONFIG_PATH",
+      nodeEnv === "development"
+        ? `${devDataRoot}/config/signalk-alert-monitor.json`
+        : "/opt/svkrishna/config/signalk-alert-monitor.json",
+    ),
     wakeWordPythonPath: readString("WAKE_WORD_PYTHON", "python3"),
     wakeWordModelPath: readString(
       "WAKE_WORD_MODEL_PATH",
@@ -223,6 +229,7 @@ export const loadConfig = (): AppConfig => {
     signalkAlertPaths: readStringList("SIGNALK_ALERT_PATHS", ["notifications.environment.depth.belowTransducer"]),
     signalkAlertPollMs: readNumber("SIGNALK_ALERT_POLL_MS", 2000),
     signalkAlertRepeatSeconds: readNumber("SIGNALK_ALERT_REPEAT_SECONDS", 30),
+    signalkAlertSnoozeSeconds: readNumber("SIGNALK_ALERT_SNOOZE_SECONDS", 300),
     enableRasaIntentRouter: readBoolean("ENABLE_RASA_INTENT_ROUTER", true),
     rasaEndpoint: readString("RASA_ENDPOINT", "http://127.0.0.1:5005"),
     rasaIntentMinConfidence: readNumber("RASA_INTENT_MIN_CONFIDENCE", 70),

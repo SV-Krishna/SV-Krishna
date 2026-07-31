@@ -22,5 +22,6 @@ void GPIO_Init() {
   pinMode(GPIO_PIN_RGB, OUTPUT);
   pinMode(GPIO_PIN_Buzzer, OUTPUT);
 
-  ledcAttachChannel(GPIO_PIN_Buzzer, Frequency, Resolution, PWM_Channel);
+  ledcSetup(PWM_Channel, Frequency, Resolution);
+  ledcAttachPin(GPIO_PIN_Buzzer, PWM_Channel);
 }

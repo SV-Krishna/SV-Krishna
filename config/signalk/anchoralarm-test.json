@@ -1,0 +1,19 @@
+{
+  "configuration": {
+    "delay": 0,
+    "warningPercentage": 80,
+    "warningNotification": true,
+    "noPositionAlarmTime": 10,
+    "fudge": 0,
+    "bowHeight": 0,
+    "state": "alarm",
+    "incompleteAnchorAlarmTime": 0,
+    "enableRodeAutomation": false,
+    "rodeCounterPath": "navigation.anchor.rodeCounterLength",
+    "rodeActivationMethod": "depth",
+    "rodeThreshold": 5,
+    "rodeStabilizationTime": 10,
+    "useRodeCounterForRadius": false
+  },
+  "enabled": true
+}

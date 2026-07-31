@@ -4,6 +4,7 @@ import type { VoiceRunResult } from "../controller";
 import { ConversationStore } from "../services/conversationStore";
 import type { ConversationMessage } from "../services/conversationStore";
 import type { AppConfig } from "../types";
+import type { SignalKAlertMonitorSettings } from "../services/signalkAlertMonitorStore";
 
 interface VoiceApi {
   runOnce: (options?: { history?: ConversationMessage[] }) => Promise<VoiceRunResult>;
@@ -22,6 +23,8 @@ interface VoiceApi {
     running?: boolean;
     lastError?: string | null;
   }>;
+  getSignalKAlertMonitorSettings?: () => Promise<SignalKAlertMonitorSettings>;
+  setSignalKAlertMonitorEnabled?: (enabled: boolean) => Promise<SignalKAlertMonitorSettings>;
   getStatus?: () => Promise<{
     state: string;
     message: string;
@@ -29,6 +32,7 @@ interface VoiceApi {
     transcript?: string | null;
     wakeWordEnabled?: boolean;
     wakeWordPhrase?: string;
+    signalkAlertMonitorEnabled?: boolean;
   }>;
 }
 
@@ -702,6 +706,31 @@ export class WebServer {
       const settings = await this.apis?.voice?.setWakeWordEnabled?.(payload.enabled);
       if (!settings) {
         json(response, 501, { error: "wake word api not configured" });
+        return;
+      }
+      json(response, 200, settings);
+      return;
+    }
+
+    if (method === "GET" && url.pathname === "/api/signalk-alert-monitor") {
+      const settings = await this.apis?.voice?.getSignalKAlertMonitorSettings?.();
+      if (!settings) {
+        json(response, 200, { enabled: this.config.signalkAlertMonitorEnabled, updatedAt: null, running: false });
+        return;
+      }
+      json(response, 200, settings);
+      return;
+    }
+
+    if (method === "PUT" && url.pathname === "/api/signalk-alert-monitor") {
+      const payload = await readJsonBody<{ enabled?: boolean }>(request);
+      if (typeof payload.enabled !== "boolean") {
+        json(response, 400, { error: "enabled must be boolean" });
+        return;
+      }
+      const settings = await this.apis?.voice?.setSignalKAlertMonitorEnabled?.(payload.enabled);
+      if (!settings) {
+        json(response, 501, { error: "signalk alert monitor api not configured" });
         return;
       }
       json(response, 200, settings);

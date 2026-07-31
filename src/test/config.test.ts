@@ -89,9 +89,11 @@ test("loadConfig returns expected default service topology", () => {
   delete process.env.MARINE_MCP_REQUEST_TIMEOUT_MS;
   delete process.env.MARINE_MCP_MAX_CALLS;
   delete process.env.SIGNALK_ALERT_MONITOR_ENABLED;
+  delete process.env.SIGNALK_ALERT_MONITOR_CONFIG_PATH;
   delete process.env.SIGNALK_ALERT_PATHS;
   delete process.env.SIGNALK_ALERT_POLL_MS;
   delete process.env.SIGNALK_ALERT_REPEAT_SECONDS;
+  delete process.env.SIGNALK_ALERT_SNOOZE_SECONDS;
   delete process.env.ENABLE_RASA_INTENT_ROUTER;
   delete process.env.RASA_ENDPOINT;
   delete process.env.RASA_INTENT_MIN_CONFIDENCE;
@@ -187,9 +189,11 @@ test("loadConfig returns expected default service topology", () => {
   assert.equal(config.marineMcpRequestTimeoutMs, 15000);
   assert.equal(config.marineMcpMaxCalls, 4);
   assert.equal(config.signalkAlertMonitorEnabled, false);
+  assert.equal(config.signalkAlertMonitorConfigPath, `${process.cwd()}/local/svkrishna/config/signalk-alert-monitor.json`);
   assert.deepEqual(config.signalkAlertPaths, ["notifications.environment.depth.belowTransducer"]);
   assert.equal(config.signalkAlertPollMs, 2000);
   assert.equal(config.signalkAlertRepeatSeconds, 30);
+  assert.equal(config.signalkAlertSnoozeSeconds, 300);
   assert.equal(config.enableRasaIntentRouter, true);
   assert.equal(config.rasaEndpoint, "http://127.0.0.1:5005");
   assert.equal(config.rasaIntentMinConfidence, 70);

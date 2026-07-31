@@ -9,7 +9,8 @@
 // --- Provisioning AP defaults ---
 static constexpr const char *kApPass = "svkrishna";
 static constexpr uint16_t kHttpPort = 80;
-static constexpr uint32_t kStaConnectTimeoutMs = 15'000;
+static constexpr uint32_t kStaConnectTimeoutMs = 15000;
+static constexpr uint32_t kPiPowerCyclePulseMs = 5000;
 
 // SoftAP network (explicit so we can report it reliably)
 static const IPAddress kApIp(192, 168, 4, 1);
@@ -60,6 +61,12 @@ static void applyRelayPinsFromFlags() {
   digitalWrite(GPIO_PIN_CH6, relayFlags[5] ? HIGH : LOW);
 }
 
+static void setRelayChannel(uint8_t channel1to6, bool on) {
+  if (channel1to6 < 1 || channel1to6 > 6) return;
+  relayFlags[channel1to6 - 1] = on;
+  applyRelayPinsFromFlags();
+}
+
 static void toggleRelayChannel(uint8_t channel1to6) {
   if (channel1to6 < 1 || channel1to6 > 6) return;
   const uint8_t idx = channel1to6 - 1;
@@ -96,6 +103,16 @@ static void handleAllOn() {
 
 static void handleAllOff() {
   setAllRelays(false);
+  server.send(200, "text/plain", "OK");
+}
+
+static void handlePowerCyclePi() {
+  // CH6 is reserved for Pi power-cycle wiring. Assert it briefly, then restore OFF.
+  setRelayChannel(6, true);
+  Buzzer_PWM(220);
+  delay(kPiPowerCyclePulseMs);
+  setRelayChannel(6, false);
+  Buzzer_PWM(140);
   server.send(200, "text/plain", "OK");
 }
 
@@ -218,7 +235,7 @@ static void handleRoot() {
   page += "<style>body{font-family:Arial,sans-serif;background:#f0f0f0;margin:0} .header{padding:16px;background:#333;color:#fff;text-align:center} .container{max-width:720px;margin:16px auto;background:#fff;border-radius:8px;padding:16px;box-shadow:0 0 8px rgba(0,0,0,.2)} .row{display:flex;align-items:center;gap:10px;margin:10px 0} .row label{width:52px} input{flex:1;padding:8px} button{padding:10px 12px;background:#333;color:#fff;border:0;border-radius:6px;cursor:pointer} button:hover{background:#555} .actions{display:flex;gap:10px;justify-content:center;margin-top:14px} .toplinks{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px} code{background:#f2f2f2;padding:2px 4px;border-radius:4px}</style>";
   page += "<script>";
   page += "function req(path){var x=new XMLHttpRequest();x.open('GET',path,true);x.send();}";
-  page += "function ledSwitch(n){if(n>=1&&n<=6)req('/Switch'+n); else if(n==7)req('/AllOn'); else if(n==8)req('/AllOff');}";
+  page += "function ledSwitch(n){if(n>=1&&n<=6)req('/Switch'+n); else if(n==7)req('/AllOn'); else if(n==8)req('/AllOff'); else if(n==9)req('/PowerCyclePi');}";
   page += "function updateData(){var x=new XMLHttpRequest();x.open('GET','/getData',true);x.onreadystatechange=function(){if(x.readyState===4&&x.status===200){var d=JSON.parse(x.responseText);for(var i=0;i<6;i++){document.getElementById('ch'+(i+1)).value=d[i];}}};x.send();}";
   page += "setInterval(updateData,250);";
   page += "</script></head><body>";
@@ -231,7 +248,7 @@ static void handleRoot() {
     page += "<div class='row'><label>CH" + String(i) + "</label><input id='ch" + String(i) + "' readonly/><button onclick='ledSwitch(" + String(i) + ")'>Toggle</button></div>";
   }
 
-  page += "<div class='actions'><button onclick='ledSwitch(7)'>All On</button><button onclick='ledSwitch(8)'>All Off</button></div>";
+  page += "<div class='actions'><button onclick='ledSwitch(7)'>All On</button><button onclick='ledSwitch(8)'>All Off</button><button onclick='ledSwitch(9)'>Power Cycle Pi (CH6)</button></div>";
   page += "<p style='margin-top:14px'>STA: " + htmlEscape(staStatusLine()) + "</p>";
   page += "</div></body></html>";
 
@@ -252,6 +269,7 @@ static void setupServer() {
   server.on("/Switch6", HTTP_GET, [] { handleSwitch(6); });
   server.on("/AllOn", HTTP_GET, handleAllOn);
   server.on("/AllOff", HTTP_GET, handleAllOff);
+  server.on("/PowerCyclePi", HTTP_GET, handlePowerCyclePi);
 
   server.onNotFound([] { server.send(404, "text/plain", "Not found"); });
   server.begin();

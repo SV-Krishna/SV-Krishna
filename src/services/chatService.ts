@@ -10,6 +10,7 @@ import { readFile } from "node:fs/promises";
 export type RelayCommand =
   | { action: "none" }
   | { action: "status" }
+  | { action: "power_cycle_pi" }
   | { action: "all"; state: "on" | "off" }
   | { action: "set"; channel: number; state: "on" | "off" };
 
@@ -161,9 +162,11 @@ export class ChatService {
       "Allowed actions:",
       '- {"action":"set","channel":1-6,"state":"on"|"off"}',
       '- {"action":"all","state":"on"|"off"}',
+      '- {"action":"power_cycle_pi"}',
       '- {"action":"status"}',
       '- {"action":"none"}',
       "Rules:",
+      "- Use {\"action\":\"power_cycle_pi\"} for requests to restart, reboot, or power-cycle the Pi/computer via the relay.",
       "- Use relay actions ONLY if the user clearly asks about relays/channels or turning something on/off.",
       "- If the user says something short like 'turn it off' and prior chat context is about relays, assume they mean the relays.",
       "- If the user is ambiguous (e.g. 'turn it on' with no channel), return {\"action\":\"none\"}.",
@@ -184,9 +187,11 @@ export class ChatService {
       "Allowed actions:",
       '- {"action":"set","channel":1-6,"state":"on"|"off"}',
       '- {"action":"all","state":"on"|"off"}',
+      '- {"action":"power_cycle_pi"}',
       '- {"action":"status"}',
       '- {"action":"none"}',
       "Rules:",
+      "- Use {\"action\":\"power_cycle_pi\"} for requests to restart, reboot, or power-cycle the Pi/computer via the relay.",
       "- If the user says something short like 'turn it off' and the conversation is about relays, assume they mean the relays.",
       "- If the user is ambiguous and the conversation is not about relays, return {\"action\":\"none\"}.",
       "- Prefer explicit set/all/status over toggling.",
@@ -267,6 +272,10 @@ const parseRelayCommand = (raw: string): RelayCommand => {
 
   if (parsed.action === "status") {
     return { action: "status" };
+  }
+
+  if (parsed.action === "power_cycle_pi") {
+    return { action: "power_cycle_pi" };
   }
 
   if (parsed.action === "all") {

@@ -2,7 +2,12 @@ import type { AppConfig } from "../types";
 
 interface VesselSelfResponse {
   navigation?: {
-    position?: { value?: { latitude?: number; longitude?: number }; timestamp?: string };
+    position?: {
+      value?: { latitude?: number; longitude?: number };
+      latitude?: { value?: number; timestamp?: string } | number;
+      longitude?: { value?: number; timestamp?: string } | number;
+      timestamp?: string;
+    };
   };
   environment?: {
     depth?: {
@@ -21,11 +26,6 @@ interface PluginConfiguration {
   bowHeight?: number;
   fudge?: number;
 }
-
-const TEST_POSITION = {
-  longitude: -3.4112001666666667,
-  latitude: 55.995147,
-};
 
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);
@@ -159,9 +159,28 @@ export class AnchorAlarmService {
   }
 
   private async resolveBestPosition(self: VesselSelfResponse): Promise<{ latitude: number; longitude: number }> {
-    const localPosition = self.navigation?.position?.value;
-    if (localPosition && isFiniteNumber(localPosition.latitude) && isFiniteNumber(localPosition.longitude)) {
-      return localPosition as { latitude: number; longitude: number };
+    const positionNode = self.navigation?.position;
+    const objectPosition = positionNode?.value;
+    const leafLatitude = readNumberNode(positionNode?.latitude);
+    const leafLongitude = readNumberNode(positionNode?.longitude);
+    const latitude = isFiniteNumber(objectPosition?.latitude)
+      ? objectPosition.latitude : leafLatitude;
+    const longitude = isFiniteNumber(objectPosition?.longitude)
+      ? objectPosition.longitude : leafLongitude;
+    const latitudeTimestamp =
+      positionNode?.latitude && typeof positionNode.latitude === "object"
+        ? positionNode.latitude.timestamp : undefined;
+    const longitudeTimestamp =
+      positionNode?.longitude && typeof positionNode.longitude === "object"
+        ? positionNode.longitude.timestamp : undefined;
+    const timestamp = positionNode?.timestamp ??
+      (latitudeTimestamp && longitudeTimestamp
+        ? (Date.parse(latitudeTimestamp) <= Date.parse(longitudeTimestamp)
+          ? latitudeTimestamp : longitudeTimestamp)
+        : undefined);
+    if (latitude !== null && longitude !== null &&
+        isFreshTimestamp(timestamp, this.config.remoteSignalKPositionMaxAgeSeconds)) {
+      return { latitude, longitude };
     }
 
     const remotePosition = await this.getRemotePosition();
@@ -169,7 +188,7 @@ export class AnchorAlarmService {
       return remotePosition;
     }
 
-    return TEST_POSITION;
+    throw new Error("SignalK position is unavailable or stale; anchor alarm was not changed.");
   }
 
   private async getRemotePosition(): Promise<{ latitude: number; longitude: number } | null> {

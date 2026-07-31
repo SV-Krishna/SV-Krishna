@@ -1,0 +1,947 @@
+{
+  "app": {
+    "configVersion": 12,
+    "autoNightMode": false,
+    "dataSets": [],
+    "unitDefaults": {
+      "Unitless": "unitless",
+      "Speed": "knots",
+      "Flow": "l/h",
+      "Temperature": "celsius",
+      "Length": "m",
+      "Volume": "liter",
+      "Current": "A",
+      "Potential": "V",
+      "Charge": "Ah",
+      "Power": "W",
+      "Energy": "J",
+      "Resistance": "ohm",
+      "Pressure": "mmHg",
+      "Density": "kg/m3",
+      "Time": "Hours",
+      "Angular Velocity": "deg/min",
+      "Angle": "deg",
+      "Frequency": "Hz",
+      "Ratio": "ratio"
+    },
+    "notificationConfig": {
+      "disableNotifications": false,
+      "menuGrouping": true,
+      "security": {
+        "disableSecurity": true
+      },
+      "devices": {
+        "disableDevices": false,
+        "showNormalState": false
+      },
+      "sound": {
+        "disableSound": false,
+        "muteNormal": false,
+        "muteWarning": false,
+        "muteAlert": false,
+        "muteAlarm": false,
+        "muteEmergency": false
+      }
+    },
+    "nightModeBrightness": 0.27,
+    "splitShellEnabled": false,
+    "splitShellSide": "left",
+    "splitShellWidth": 0.2,
+    "splitShellSwipeDisabled": false
+  },
+  "dashboards": [
+    {
+      "id": "6ec8095f-a9cb-4f08-96ba-ef96ca9d7011",
+      "name": "Overview",
+      "icon": null,
+      "configuration": [
+        {
+          "id": "31e2e7c3-21d7-4ae4-a57d-3000ec25ac11",
+          "selector": "widget-host2",
+          "input": {
+            "widgetProperties": {
+              "type": "widget-numeric",
+              "uuid": "31e2e7c3-21d7-4ae4-a57d-3000ec25ac11",
+              "config": {
+                "displayName": "DEPTH BELOW KEEL",
+                "filterSelfPaths": true,
+                "paths": {
+                  "numericPath": {
+                    "description": "Depth below keel",
+                    "path": "self.environment.depth.belowKeel",
+                    "source": "default",
+                    "pathType": "number",
+                    "suppressBootstrapNull": true,
+                    "isPathConfigurable": true,
+                    "convertUnitTo": "m",
+                    "showPathSkUnitsFilter": true,
+                    "pathSkUnitsFilter": null,
+                    "sampleTime": 1000
+                  }
+                },
+                "showMax": false,
+                "showMin": false,
+                "showMiniChart": false,
+                "numDecimal": 1,
+                "color": "blue",
+                "enableTimeout": true,
+                "dataTimeout": 5,
+                "ignoreZones": false
+              }
+            }
+          },
+          "x": 0,
+          "y": 0,
+          "w": 6,
+          "h": 8
+        },
+        {
+          "id": "b7e90ba9-dc83-465c-9c34-8bc5ca821e12",
+          "selector": "widget-host2",
+          "input": {
+            "widgetProperties": {
+              "type": "widget-position",
+              "uuid": "b7e90ba9-dc83-465c-9c34-8bc5ca821e12",
+              "config": {
+                "displayName": "POSITION",
+                "filterSelfPaths": true,
+                "paths": {
+                  "longPath": {
+                    "description": "Longitude",
+                    "path": "self.navigation.position.longitude",
+                    "source": "default",
+                    "pathType": "number",
+                    "isPathConfigurable": true,
+                    "convertUnitTo": "longitudeMin",
+                    "showPathSkUnitsFilter": true,
+                    "pathSkUnitsFilter": null,
+                    "sampleTime": 1000
+                  },
+                  "latPath": {
+                    "description": "Latitude",
+                    "path": "self.navigation.position.latitude",
+                    "source": "default",
+                    "pathType": "number",
+                    "isPathConfigurable": true,
+                    "convertUnitTo": "latitudeMin",
+                    "showPathSkUnitsFilter": true,
+                    "pathSkUnitsFilter": null,
+                    "sampleTime": 1000
+                  }
+                },
+                "color": "contrast",
+                "enableTimeout": true,
+                "dataTimeout": 5
+              }
+            }
+          },
+          "x": 0,
+          "y": 8,
+          "w": 6,
+          "h": 8
+        },
+        {
+          "id": "8ea27dc5-1302-43c9-91ef-b697217dae13",
+          "selector": "widget-host2",
+          "input": {
+            "widgetProperties": {
+              "type": "widget-ais-radar",
+              "uuid": "8ea27dc5-1302-43c9-91ef-b697217dae13",
+              "config": {
+                "filterSelfPaths": false,
+                "enableTimeout": true,
+                "dataTimeout": 15,
+                "ais": {
+                  "filters": {
+                    "anchoredMoored": false,
+                    "noCollisionRisk": false,
+                    "allAton": false,
+                    "allButSar": false,
+                    "allVessels": false,
+                    "vesselTypes": []
+                  },
+                  "viewMode": "north-up",
+                  "rangeRings": [
+                    1,
+                    3,
+                    6,
+                    12,
+                    24,
+                    48
+                  ],
+                  "rangeIndex": "1",
+                  "showCogVectors": true,
+                  "cogVectorsMinutes": 10,
+                  "showLostTargets": true,
+                  "showUnconfirmedTargets": true,
+                  "showSelf": true
+                },
+                "color": "grey"
+              }
+            }
+          },
+          "x": 0,
+          "y": 16,
+          "w": 6,
+          "h": 8
+        },
+        {
+          "id": "0bde4807-54f7-48a2-b7b5-b941c8b58e14",
+          "selector": "widget-host2",
+          "input": {
+            "widgetProperties": {
+              "type": "widget-label",
+              "uuid": "0bde4807-54f7-48a2-b7b5-b941c8b58e14",
+              "config": {
+                "displayName": "ANCHOR WATCH — UNAVAILABLE",
+                "color": "orange",
+                "bgColor": "grey",
+                "noColor": false,
+                "noBgColor": false
+              }
+            }
+          },
+          "x": 6,
+          "y": 0,
+          "w": 10,
+          "h": 12
+        },
+        {
+          "id": "c9095ed7-2db1-4de6-a292-b93e61ef6e15",
+          "selector": "widget-host2",
+          "input": {
+            "widgetProperties": {
+              "type": "widget-wind-steer",
+              "uuid": "c9095ed7-2db1-4de6-a292-b93e61ef6e15",
+              "config": {
+                "filterSelfPaths": true,
+                "paths": {
+                  "headingPath": {
+                    "description": "Heading",
+                    "path": "self.navigation.headingTrue",
+                    "source": "default",
+                    "pathType": "number",
+                    "isPathConfigurable": true,
+                    "convertUnitTo": "deg",
+                    "sampleTime": 1000
+                  },
+                  "courseOverGround": {
+                    "description": "Course over ground",
+                    "path": "self.navigation.courseOverGroundTrue",
+                    "source": "default",
+                    "pathType": "number",
+                    "isPathConfigurable": true,
+                    "convertUnitTo": "deg",
+                    "sampleTime": 1000
+                  },
+                  "trueWindAngle": {
+                    "description": "True wind angle",
+                    "path": "self.environment.wind.angleTrueWater",
+                    "source": "default",
+                    "pathType": "number",
+                    "isPathConfigurable": true,
+                    "convertUnitTo": "deg",
+                    "sampleTime": 1000
+                  },
+                  "trueWindSpeed": {
+                    "description": "True wind speed",
+                    "path": "self.environment.wind.speedTrue",
+                    "source": "default",
+                    "pathType": "number",
+                    "isPathConfigurable": true,
+                    "convertUnitTo": "knots",
+                    "sampleTime": 1000
+                  },
+                  "appWindAngle": {
+                    "description": "Apparent wind angle",
+                    "path": "self.environment.wind.angleApparent",
+                    "source": "default",
+                    "pathType": "number",
+                    "isPathConfigurable": true,
+                    "convertUnitTo": "deg",
+                    "sampleTime": 1000
+                  },
+                  "appWindSpeed": {
+                    "description": "Apparent wind speed",
+                    "path": "self.environment.wind.speedApparent",
+                    "source": "default",
+                    "pathType": "number",
+                    "isPathConfigurable": true,
+                    "convertUnitTo": "knots",
+                    "sampleTime": 1000
+                  },
+                  "nextWaypointBearing": {
+                    "description": "Next waypoint bearing",
+                    "path": "self.navigation.courseGreatCircle.nextPoint.bearingTrue",
+                    "source": "default",
+                    "pathType": "number",
+                    "isPathConfigurable": true,
+                    "convertUnitTo": "deg",
+                    "sampleTime": 1000
+                  }
+                },
+                "windSectorEnable": true,
+                "windSectorWindowSeconds": 5,
+                "laylineEnable": false,
+                "laylineAngle": 40,
+                "waypointEnable": false,
+                "courseOverGroundEnable": true,
+                "sailSetupEnable": false,
+                "enableTimeout": true,
+                "dataTimeout": 5
+              }
+            }
+          },
+          "x": 6,
+          "y": 12,
+          "w": 10,
+          "h": 12
+        },
+        {
+          "id": "2ab79dca-a3e7-4701-8a52-c0112e061e16",
+          "selector": "widget-host2",
+          "input": {
+            "widgetProperties": {
+              "type": "widget-numeric",
+              "uuid": "2ab79dca-a3e7-4701-8a52-c0112e061e16",
+              "config": {
+                "displayName": "LEISURE SOC",
+                "filterSelfPaths": true,
+                "paths": {
+                  "numericPath": {
+                    "description": "Leisure battery state of charge",
+                    "path": "self.electrical.batteries.A.capacity.stateOfCharge",
+                    "source": "default",
+                    "pathType": "number",
+                    "suppressBootstrapNull": true,
+                    "isPathConfigurable": true,
+                    "convertUnitTo": "percent",
+                    "showPathSkUnitsFilter": true,
+                    "pathSkUnitsFilter": null,
+                    "sampleTime": 1000
+                  }
+                },
+                "showMax": false,
+                "showMin": false,
+                "showMiniChart": false,
+                "numDecimal": 0,
+                "color": "green",
+                "enableTimeout": true,
+                "dataTimeout": 5,
+                "ignoreZones": false
+              }
+            }
+          },
+          "x": 16,
+          "y": 0,
+          "w": 4,
+          "h": 8
+        },
+        {
+          "id": "3406f120-03d0-4a50-9464-861910c51217",
+          "selector": "widget-host2",
+          "input": {
+            "widgetProperties": {
+              "type": "widget-numeric",
+              "uuid": "3406f120-03d0-4a50-9464-861910c51217",
+              "config": {
+                "displayName": "LEISURE VOLTS",
+                "filterSelfPaths": true,
+                "paths": {
+                  "numericPath": {
+                    "description": "Leisure battery voltage",
+                    "path": "self.electrical.batteries.A.voltage",
+                    "source": "default",
+                    "pathType": "number",
+                    "suppressBootstrapNull": true,
+                    "isPathConfigurable": true,
+                    "convertUnitTo": "V",
+                    "showPathSkUnitsFilter": true,
+                    "pathSkUnitsFilter": null,
+                    "sampleTime": 1000
+                  }
+                },
+                "showMax": false,
+                "showMin": false,
+                "showMiniChart": false,
+                "numDecimal": 1,
+                "color": "green",
+                "enableTimeout": true,
+                "dataTimeout": 5,
+                "ignoreZones": false
+              }
+            }
+          },
+          "x": 20,
+          "y": 0,
+          "w": 4,
+          "h": 8
+        },
+        {
+          "id": "a41c016b-2577-447f-a79c-c5f07ff5a318",
+          "selector": "widget-host2",
+          "input": {
+            "widgetProperties": {
+              "type": "widget-numeric",
+              "uuid": "a41c016b-2577-447f-a79c-c5f07ff5a318",
+              "config": {
+                "displayName": "STARTER VOLTS",
+                "filterSelfPaths": true,
+                "paths": {
+                  "numericPath": {
+                    "description": "Starter battery voltage",
+                    "path": "self.electrical.batteries.B.voltage",
+                    "source": "default",
+                    "pathType": "number",
+                    "suppressBootstrapNull": true,
+                    "isPathConfigurable": true,
+                    "convertUnitTo": "V",
+                    "showPathSkUnitsFilter": true,
+                    "pathSkUnitsFilter": null,
+                    "sampleTime": 1000
+                  }
+                },
+                "showMax": false,
+                "showMin": false,
+                "showMiniChart": false,
+                "numDecimal": 1,
+                "color": "yellow",
+                "enableTimeout": true,
+                "dataTimeout": 5,
+                "ignoreZones": false
+              }
+            }
+          },
+          "x": 16,
+          "y": 8,
+          "w": 4,
+          "h": 8
+        },
+        {
+          "id": "47c1f84d-525b-4885-8dd4-38efbdffb319",
+          "selector": "widget-host2",
+          "input": {
+            "widgetProperties": {
+              "type": "widget-label",
+              "uuid": "47c1f84d-525b-4885-8dd4-38efbdffb319",
+              "config": {
+                "displayName": "SOLAR — UNAVAILABLE",
+                "color": "orange",
+                "bgColor": "grey",
+                "noColor": false,
+                "noBgColor": false
+              }
+            }
+          },
+          "x": 20,
+          "y": 8,
+          "w": 4,
+          "h": 8
+        },
+        {
+          "id": "d7aa8317-9a14-47db-93ae-f238dc2b5c1a",
+          "selector": "widget-host2",
+          "input": {
+            "widgetProperties": {
+              "type": "widget-label",
+              "uuid": "d7aa8317-9a14-47db-93ae-f238dc2b5c1a",
+              "config": {
+                "displayName": "TANKS AND RELAYS — UNAVAILABLE",
+                "color": "orange",
+                "bgColor": "grey",
+                "noColor": false,
+                "noBgColor": false
+              }
+            }
+          },
+          "x": 16,
+          "y": 16,
+          "w": 8,
+          "h": 8
+        }
+      ]
+    },
+    {
+      "id": "d5a6ad0a-18d9-42ad-a4fc-f2df21754322",
+      "name": "Anchor Watch",
+      "icon": null,
+      "configuration": [
+        {
+          "id": "639d4aab-bc44-46a0-bda0-1648c199af21",
+          "selector": "widget-host2",
+          "input": {
+            "widgetProperties": {
+              "type": "widget-label",
+              "uuid": "639d4aab-bc44-46a0-bda0-1648c199af21",
+              "config": {
+                "displayName": "ANCHOR POSITION AND ALARM — UNAVAILABLE",
+                "color": "orange",
+                "bgColor": "grey",
+                "noColor": false,
+                "noBgColor": false
+              }
+            }
+          },
+          "x": 0,
+          "y": 0,
+          "w": 12,
+          "h": 16
+        },
+        {
+          "id": "b24d2800-ce1b-4df8-ad39-df5017205622",
+          "selector": "widget-host2",
+          "input": {
+            "widgetProperties": {
+              "type": "widget-ais-radar",
+              "uuid": "b24d2800-ce1b-4df8-ad39-df5017205622",
+              "config": {
+                "filterSelfPaths": false,
+                "enableTimeout": true,
+                "dataTimeout": 15,
+                "ais": {
+                  "filters": {
+                    "anchoredMoored": false,
+                    "noCollisionRisk": false,
+                    "allAton": false,
+                    "allButSar": false,
+                    "allVessels": false,
+                    "vesselTypes": []
+                  },
+                  "viewMode": "north-up",
+                  "rangeRings": [
+                    1,
+                    3,
+                    6,
+                    12,
+                    24,
+                    48
+                  ],
+                  "rangeIndex": "1",
+                  "showCogVectors": true,
+                  "cogVectorsMinutes": 10,
+                  "showLostTargets": true,
+                  "showUnconfirmedTargets": true,
+                  "showSelf": true
+                },
+                "color": "grey"
+              }
+            }
+          },
+          "x": 0,
+          "y": 16,
+          "w": 12,
+          "h": 8
+        },
+        {
+          "id": "9c4e4282-41f4-445f-8d4e-3197a0dc4f23",
+          "selector": "widget-host2",
+          "input": {
+            "widgetProperties": {
+              "type": "widget-position",
+              "uuid": "9c4e4282-41f4-445f-8d4e-3197a0dc4f23",
+              "config": {
+                "displayName": "LAST POSITION",
+                "filterSelfPaths": true,
+                "paths": {
+                  "longPath": {
+                    "description": "Longitude",
+                    "path": "self.navigation.position.longitude",
+                    "source": "default",
+                    "pathType": "number",
+                    "isPathConfigurable": true,
+                    "convertUnitTo": "longitudeMin",
+                    "showPathSkUnitsFilter": true,
+                    "pathSkUnitsFilter": null,
+                    "sampleTime": 1000
+                  },
+                  "latPath": {
+                    "description": "Latitude",
+                    "path": "self.navigation.position.latitude",
+                    "source": "default",
+                    "pathType": "number",
+                    "isPathConfigurable": true,
+                    "convertUnitTo": "latitudeMin",
+                    "showPathSkUnitsFilter": true,
+                    "pathSkUnitsFilter": null,
+                    "sampleTime": 1000
+                  }
+                },
+                "color": "contrast",
+                "enableTimeout": true,
+                "dataTimeout": 5
+              }
+            }
+          },
+          "x": 12,
+          "y": 0,
+          "w": 6,
+          "h": 8
+        },
+        {
+          "id": "2b89b341-373e-4f46-b646-114f32d8b124",
+          "selector": "widget-host2",
+          "input": {
+            "widgetProperties": {
+              "type": "widget-numeric",
+              "uuid": "2b89b341-373e-4f46-b646-114f32d8b124",
+              "config": {
+                "displayName": "HEADING TRUE",
+                "filterSelfPaths": true,
+                "paths": {
+                  "numericPath": {
+                    "description": "True heading",
+                    "path": "self.navigation.headingTrue",
+                    "source": "default",
+                    "pathType": "number",
+                    "suppressBootstrapNull": true,
+                    "isPathConfigurable": true,
+                    "convertUnitTo": "deg",
+                    "showPathSkUnitsFilter": true,
+                    "pathSkUnitsFilter": null,
+                    "sampleTime": 1000
+                  }
+                },
+                "showMax": false,
+                "showMin": false,
+                "showMiniChart": false,
+                "numDecimal": 0,
+                "color": "blue",
+                "enableTimeout": true,
+                "dataTimeout": 5,
+                "ignoreZones": false
+              }
+            }
+          },
+          "x": 18,
+          "y": 0,
+          "w": 6,
+          "h": 8
+        },
+        {
+          "id": "b2c9695e-c477-4ad7-9db9-84fe5314ed25",
+          "selector": "widget-host2",
+          "input": {
+            "widgetProperties": {
+              "type": "widget-wind-steer",
+              "uuid": "b2c9695e-c477-4ad7-9db9-84fe5314ed25",
+              "config": {
+                "filterSelfPaths": true,
+                "paths": {
+                  "headingPath": {
+                    "description": "Heading",
+                    "path": "self.navigation.headingTrue",
+                    "source": "default",
+                    "pathType": "number",
+                    "isPathConfigurable": true,
+                    "convertUnitTo": "deg",
+                    "sampleTime": 1000
+                  },
+                  "courseOverGround": {
+                    "description": "Course over ground",
+                    "path": "self.navigation.courseOverGroundTrue",
+                    "source": "default",
+                    "pathType": "number",
+                    "isPathConfigurable": true,
+                    "convertUnitTo": "deg",
+                    "sampleTime": 1000
+                  },
+                  "trueWindAngle": {
+                    "description": "True wind angle",
+                    "path": "self.environment.wind.angleTrueWater",
+                    "source": "default",
+                    "pathType": "number",
+                    "isPathConfigurable": true,
+                    "convertUnitTo": "deg",
+                    "sampleTime": 1000
+                  },
+                  "trueWindSpeed": {
+                    "description": "True wind speed",
+                    "path": "self.environment.wind.speedTrue",
+                    "source": "default",
+                    "pathType": "number",
+                    "isPathConfigurable": true,
+                    "convertUnitTo": "knots",
+                    "sampleTime": 1000
+                  },
+                  "appWindAngle": {
+                    "description": "Apparent wind angle",
+                    "path": "self.environment.wind.angleApparent",
+                    "source": "default",
+                    "pathType": "number",
+                    "isPathConfigurable": true,
+                    "convertUnitTo": "deg",
+                    "sampleTime": 1000
+                  },
+                  "appWindSpeed": {
+                    "description": "Apparent wind speed",
+                    "path": "self.environment.wind.speedApparent",
+                    "source": "default",
+                    "pathType": "number",
+                    "isPathConfigurable": true,
+                    "convertUnitTo": "knots",
+                    "sampleTime": 1000
+                  },
+                  "nextWaypointBearing": {
+                    "description": "Next waypoint bearing",
+                    "path": "self.navigation.courseGreatCircle.nextPoint.bearingTrue",
+                    "source": "default",
+                    "pathType": "number",
+                    "isPathConfigurable": true,
+                    "convertUnitTo": "deg",
+                    "sampleTime": 1000
+                  }
+                },
+                "windSectorEnable": true,
+                "windSectorWindowSeconds": 5,
+                "laylineEnable": false,
+                "laylineAngle": 40,
+                "waypointEnable": false,
+                "courseOverGroundEnable": true,
+                "sailSetupEnable": false,
+                "enableTimeout": true,
+                "dataTimeout": 5
+              }
+            }
+          },
+          "x": 12,
+          "y": 8,
+          "w": 12,
+          "h": 16
+        }
+      ]
+    },
+    {
+      "id": "7fa79568-26b2-42f9-9363-858805392733",
+      "name": "Systems",
+      "icon": null,
+      "configuration": [
+        {
+          "id": "5e5b99a7-b146-4338-bd4d-ef2ed590a631",
+          "selector": "widget-host2",
+          "input": {
+            "widgetProperties": {
+              "type": "widget-numeric",
+              "uuid": "5e5b99a7-b146-4338-bd4d-ef2ed590a631",
+              "config": {
+                "displayName": "LEISURE SOC",
+                "filterSelfPaths": true,
+                "paths": {
+                  "numericPath": {
+                    "description": "Leisure battery state of charge",
+                    "path": "self.electrical.batteries.A.capacity.stateOfCharge",
+                    "source": "default",
+                    "pathType": "number",
+                    "suppressBootstrapNull": true,
+                    "isPathConfigurable": true,
+                    "convertUnitTo": "percent",
+                    "showPathSkUnitsFilter": true,
+                    "pathSkUnitsFilter": null,
+                    "sampleTime": 1000
+                  }
+                },
+                "showMax": false,
+                "showMin": false,
+                "showMiniChart": false,
+                "numDecimal": 0,
+                "color": "green",
+                "enableTimeout": true,
+                "dataTimeout": 5,
+                "ignoreZones": false
+              }
+            }
+          },
+          "x": 0,
+          "y": 0,
+          "w": 6,
+          "h": 8
+        },
+        {
+          "id": "9a16a0a6-c4d6-44a4-9fac-660ee871f332",
+          "selector": "widget-host2",
+          "input": {
+            "widgetProperties": {
+              "type": "widget-numeric",
+              "uuid": "9a16a0a6-c4d6-44a4-9fac-660ee871f332",
+              "config": {
+                "displayName": "LEISURE VOLTS",
+                "filterSelfPaths": true,
+                "paths": {
+                  "numericPath": {
+                    "description": "Leisure battery voltage",
+                    "path": "self.electrical.batteries.A.voltage",
+                    "source": "default",
+                    "pathType": "number",
+                    "suppressBootstrapNull": true,
+                    "isPathConfigurable": true,
+                    "convertUnitTo": "V",
+                    "showPathSkUnitsFilter": true,
+                    "pathSkUnitsFilter": null,
+                    "sampleTime": 1000
+                  }
+                },
+                "showMax": false,
+                "showMin": false,
+                "showMiniChart": false,
+                "numDecimal": 1,
+                "color": "green",
+                "enableTimeout": true,
+                "dataTimeout": 5,
+                "ignoreZones": false
+              }
+            }
+          },
+          "x": 6,
+          "y": 0,
+          "w": 6,
+          "h": 8
+        },
+        {
+          "id": "4ed18671-a2ef-4c52-ab78-fe6dfa2a3c33",
+          "selector": "widget-host2",
+          "input": {
+            "widgetProperties": {
+              "type": "widget-numeric",
+              "uuid": "4ed18671-a2ef-4c52-ab78-fe6dfa2a3c33",
+              "config": {
+                "displayName": "LEISURE CURRENT",
+                "filterSelfPaths": true,
+                "paths": {
+                  "numericPath": {
+                    "description": "Leisure battery current",
+                    "path": "self.electrical.batteries.A.current",
+                    "source": "default",
+                    "pathType": "number",
+                    "suppressBootstrapNull": true,
+                    "isPathConfigurable": true,
+                    "convertUnitTo": "A",
+                    "showPathSkUnitsFilter": true,
+                    "pathSkUnitsFilter": null,
+                    "sampleTime": 1000
+                  }
+                },
+                "showMax": false,
+                "showMin": false,
+                "showMiniChart": false,
+                "numDecimal": 1,
+                "color": "green",
+                "enableTimeout": true,
+                "dataTimeout": 5,
+                "ignoreZones": false
+              }
+            }
+          },
+          "x": 12,
+          "y": 0,
+          "w": 6,
+          "h": 8
+        },
+        {
+          "id": "b2a21813-c6b0-4f40-9a48-00e0341a7934",
+          "selector": "widget-host2",
+          "input": {
+            "widgetProperties": {
+              "type": "widget-numeric",
+              "uuid": "b2a21813-c6b0-4f40-9a48-00e0341a7934",
+              "config": {
+                "displayName": "STARTER VOLTS",
+                "filterSelfPaths": true,
+                "paths": {
+                  "numericPath": {
+                    "description": "Starter battery voltage",
+                    "path": "self.electrical.batteries.B.voltage",
+                    "source": "default",
+                    "pathType": "number",
+                    "suppressBootstrapNull": true,
+                    "isPathConfigurable": true,
+                    "convertUnitTo": "V",
+                    "showPathSkUnitsFilter": true,
+                    "pathSkUnitsFilter": null,
+                    "sampleTime": 1000
+                  }
+                },
+                "showMax": false,
+                "showMin": false,
+                "showMiniChart": false,
+                "numDecimal": 1,
+                "color": "yellow",
+                "enableTimeout": true,
+                "dataTimeout": 5,
+                "ignoreZones": false
+              }
+            }
+          },
+          "x": 18,
+          "y": 0,
+          "w": 6,
+          "h": 8
+        },
+        {
+          "id": "64e909cf-ef14-4985-8ebd-5eb4e568b735",
+          "selector": "widget-host2",
+          "input": {
+            "widgetProperties": {
+              "type": "widget-label",
+              "uuid": "64e909cf-ef14-4985-8ebd-5eb4e568b735",
+              "config": {
+                "displayName": "SOLAR CHARGING — UNAVAILABLE",
+                "color": "orange",
+                "bgColor": "grey",
+                "noColor": false,
+                "noBgColor": false
+              }
+            }
+          },
+          "x": 0,
+          "y": 8,
+          "w": 12,
+          "h": 8
+        },
+        {
+          "id": "40cfdeab-d303-445e-86ba-b05139653436",
+          "selector": "widget-host2",
+          "input": {
+            "widgetProperties": {
+              "type": "widget-label",
+              "uuid": "40cfdeab-d303-445e-86ba-b05139653436",
+              "config": {
+                "displayName": "FRESH WATER · DIESEL · LPG — UNAVAILABLE",
+                "color": "orange",
+                "bgColor": "grey",
+                "noColor": false,
+                "noBgColor": false
+              }
+            }
+          },
+          "x": 12,
+          "y": 8,
+          "w": 12,
+          "h": 8
+        },
+        {
+          "id": "03d40c2e-afb5-4d69-b16a-5f2c18a48637",
+          "selector": "widget-host2",
+          "input": {
+            "widgetProperties": {
+              "type": "widget-label",
+              "uuid": "03d40c2e-afb5-4d69-b16a-5f2c18a48637",
+              "config": {
+                "displayName": "RELAYS — READ-ONLY · DATA UNAVAILABLE",
+                "color": "orange",
+                "bgColor": "grey",
+                "noColor": false,
+                "noBgColor": false
+              }
+            }
+          },
+          "x": 0,
+          "y": 16,
+          "w": 24,
+          "h": 8
+        }
+      ]
+    }
+  ],
+  "theme": {
+    "themeName": ""
+  }
+}

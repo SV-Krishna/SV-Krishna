@@ -148,6 +148,151 @@ test("executeAnchorAlarmCommand accepts rode length on follow-up turn", async ()
   }
 });
 
+test("anchor activation fails closed when local and remote position are unavailable", async () => {
+  const originalFetch = global.fetch;
+  let writeAttempted = false;
+  global.fetch = (async (input, init) => {
+    const url = typeof input === "string" ? input : input.toString();
+    if (url.endsWith("/signalk/v1/api/vessels/self")) {
+      return new Response(JSON.stringify({
+        environment: { depth: { belowSurface: { value: 3 } } },
+      }), { status: 200 });
+    }
+    if (init?.method === "POST") writeAttempted = true;
+    return new Response("unexpected", { status: 500 });
+  }) as typeof fetch;
+
+  try {
+    const controller = buildController();
+    await assert.rejects(
+      controller.executeAnchorAlarmCommand("switch on anchor alarm 15 meters"),
+      /position is unavailable or stale/i,
+    );
+    assert.equal(writeAttempted, false);
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
+test("runVoiceOnce accepts a bare numeric rode-length follow-up", async () => {
+  const originalFetch = global.fetch;
+  global.fetch = (async (input, init) => {
+    const url = typeof input === "string" ? input : input.toString();
+    if (url.endsWith("/signalk/v1/api/vessels/self")) {
+      return new Response(
+        JSON.stringify({
+          navigation: {
+            position: {
+              value: { latitude: 55.99, longitude: -3.41 },
+              timestamp: new Date().toISOString(),
+            },
+          },
+          environment: {
+            depth: {
+              belowSurface: { value: 6.4 },
+            },
+          },
+        }),
+        { status: 200 },
+      );
+    }
+    if (url.endsWith("/plugins/")) {
+      return new Response(JSON.stringify([]), { status: 200 });
+    }
+    if (url.endsWith("/plugins/anchoralarm/dropAnchor")) {
+      return new Response("ok", { status: 200 });
+    }
+    if (url.endsWith("/plugins/anchoralarm/setRadius")) {
+      return new Response("ok", { status: 200 });
+    }
+    assert.fail(`Unexpected fetch ${init?.method ?? "GET"} ${url}`);
+  }) as typeof fetch;
+
+  try {
+    const controller = buildController();
+    const app = controller as any;
+
+    let recordings = 0;
+    app.refreshServiceHealth = async () => [
+      { name: "whisper", enabled: true, ok: true, detail: "ok" },
+      { name: "rasa", enabled: true, ok: true, detail: "ok" },
+    ];
+    app.audio.recordSample = async () => `sample-${++recordings}.wav`;
+    app.whisper.transcribe = async (path: string) =>
+      path.endsWith("1.wav") ? "switch on anchor alarm" : "20";
+
+    const result = await controller.runVoiceOnce({ wakeTriggered: true });
+
+    assert.equal(recordings, 2);
+    assert.equal(result.transcript, "20");
+    assert.equal(result.reply?.includes("Anchor alarm is now on"), true);
+    assert.equal(result.reply?.includes("current depth is 6.4 meters"), true);
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
+test("runVoiceOnce bypasses VAD for rode-length follow-up capture", async () => {
+  const originalFetch = global.fetch;
+  global.fetch = (async (input, init) => {
+    const url = typeof input === "string" ? input : input.toString();
+    if (url.endsWith("/signalk/v1/api/vessels/self")) {
+      return new Response(
+        JSON.stringify({
+          navigation: {
+            position: {
+              value: { latitude: 55.99, longitude: -3.41 },
+              timestamp: new Date().toISOString(),
+            },
+          },
+          environment: {
+            depth: {
+              belowSurface: { value: 6.4 },
+            },
+          },
+        }),
+        { status: 200 },
+      );
+    }
+    if (url.endsWith("/plugins/")) {
+      return new Response(JSON.stringify([]), { status: 200 });
+    }
+    if (url.endsWith("/plugins/anchoralarm/dropAnchor")) {
+      return new Response("ok", { status: 200 });
+    }
+    if (url.endsWith("/plugins/anchoralarm/setRadius")) {
+      return new Response("ok", { status: 200 });
+    }
+    assert.fail(`Unexpected fetch ${init?.method ?? "GET"} ${url}`);
+  }) as typeof fetch;
+
+  try {
+    const controller = buildController();
+    const app = controller as any;
+
+    const recordOptions: Array<{ disableVad?: boolean } | undefined> = [];
+    let recordings = 0;
+    app.refreshServiceHealth = async () => [
+      { name: "whisper", enabled: true, ok: true, detail: "ok" },
+      { name: "rasa", enabled: true, ok: true, detail: "ok" },
+    ];
+    app.audio.recordSample = async (options?: { disableVad?: boolean }) => {
+      recordOptions.push(options);
+      return `sample-${++recordings}.wav`;
+    };
+    app.whisper.transcribe = async (path: string) =>
+      path.endsWith("1.wav") ? "switch on anchor alarm" : "20";
+
+    await controller.runVoiceOnce({ wakeTriggered: true });
+
+    assert.equal(recordings, 2);
+    assert.equal(recordOptions[0], undefined);
+    assert.deepEqual(recordOptions[1], { disableVad: true });
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
 test("executeTelemetryQuery supports generic routed prompts", async () => {
   const originalFetch = global.fetch;
   global.fetch = (async () =>
@@ -208,6 +353,74 @@ test("normalizeTranscriptWithRasa applies deterministic aliases for short comman
   assert.equal(await app.normalizeTranscriptWithRasa("cabin temperature"), "what is the cabin temperature");
   assert.equal(await app.normalizeTranscriptWithRasa("anchor alarm"), "what is the anchor alarm status");
   assert.equal(await app.normalizeTranscriptWithRasa("today's date"), "tell me todays date");
+});
+
+test("execute signalk alert monitor command toggles and reports status", async () => {
+  const controller = buildController();
+
+  assert.equal(await (controller as any).tryHandleSignalKAlertMonitorCommand("what is the signalk notification status"), "Signal K notifications are disabled.");
+  assert.equal(await controller.runTextCommand("enable signalk notifications").then((result) => result.reply), "Signal K notifications are now enabled.");
+  assert.equal(await (controller as any).tryHandleSignalKAlertMonitorCommand("what is the signalk notification status"), "Signal K notifications are enabled.");
+  assert.equal(await controller.runTextCommand("disable signalk notifications").then((result) => result.reply), "Signal K notifications are now disabled.");
+});
+
+test("execute signalk alert monitor snooze command snoozes active alerts", async () => {
+  const controller = buildController();
+  (controller as any).signalkAlertMonitor = {
+    snoozeActiveAlerts: () => [{ path: "environment.depth.belowTransducer", message: "Warning shallow depth." }],
+  };
+
+  assert.equal(
+    await controller.runTextCommand("snooze that notification").then((result) => result.reply),
+    "Snoozed that Signal K notification for 5 minutes.",
+  );
+});
+
+test("execute signalk alert monitor snooze command reports when nothing is active", async () => {
+  const controller = buildController();
+  (controller as any).signalkAlertMonitor = {
+    snoozeActiveAlerts: () => [],
+  };
+
+  assert.equal(
+    await controller.runTextCommand("snooze that notification").then((result) => result.reply),
+    "There are no active Signal K notifications to snooze right now.",
+  );
+});
+
+test("mapRasaIntentToPrompt routes signalk notification intents", async () => {
+  const controller = buildController();
+  const app = controller as any;
+  app.rasa = {
+    parse: async () => ({ intentName: "signalk_notifications_on", confidence: 0.99, entities: [] }),
+  };
+  assert.equal(await app.normalizeTranscriptWithRasa("turn the signalk notifications on"), "enable signalk notifications");
+
+  app.rasa = {
+    parse: async () => ({ intentName: "signalk_notifications_off", confidence: 0.99, entities: [] }),
+  };
+  assert.equal(await app.normalizeTranscriptWithRasa("disable signalk alerts"), "disable signalk notifications");
+
+  app.rasa = {
+    parse: async () => ({ intentName: "signalk_notifications_status", confidence: 0.99, entities: [] }),
+  };
+  assert.equal(await app.normalizeTranscriptWithRasa("are signalk notifications enabled"), "what is the signalk notification status");
+
+  app.rasa = {
+    parse: async () => ({ intentName: "signalk_notifications_snooze", confidence: 0.99, entities: [] }),
+  };
+  assert.equal(await app.normalizeTranscriptWithRasa("snooze active notifications"), "snooze active notifications");
+});
+
+test("normalizeTranscriptWithRasa preserves snooze phrasing when Rasa misclassifies it as notifications on", async () => {
+  const controller = buildController();
+  const app = controller as any;
+  app.rasa = {
+    parse: async () => ({ intentName: "signalk_notifications_on", confidence: 0.99, entities: [] }),
+  };
+
+  assert.equal(await app.normalizeTranscriptWithRasa("snooze notifications"), "snooze notifications");
+  assert.equal(await app.normalizeTranscriptWithRasa("snooze active notifications"), "snooze active notifications");
 });
 
 test("runVoiceOnce retries a filler transcript after wake-word detection", async () => {

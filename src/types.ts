@@ -15,6 +15,7 @@ export interface AppConfig {
   enableWakeWord: boolean;
   wakeWordPhrase: string;
   wakeWordConfigPath: string;
+  signalkAlertMonitorConfigPath: string;
   wakeWordPythonPath: string;
   wakeWordModelPath: string;
   wakeWordThreshold: number;
@@ -96,6 +97,7 @@ export interface AppConfig {
   signalkAlertPaths: string[];
   signalkAlertPollMs: number;
   signalkAlertRepeatSeconds: number;
+  signalkAlertSnoozeSeconds: number;
   enableRasaIntentRouter: boolean;
   rasaEndpoint: string;
   rasaIntentMinConfidence: number;

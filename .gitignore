@@ -22,9 +22,20 @@ local/
 
 # Firmware build outputs
 firmware/**/build/
+firmware/**/components/
+firmware/**/managed_components/
+firmware/**/sdkconfig
+firmware/**/sdkconfig.old
 firmware/**/*.bin
 firmware/**/*.elf
 firmware/**/*.map
+
+# Full device recovery captures can contain private runtime configuration.
+backups/**/*.bin
+backups/
+
+# Generated review captures and packaged release artifacts stay local.
+artifacts/
 
 # Nested local repos / workspaces that are managed independently
 NLC/
