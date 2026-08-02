@@ -135,3 +135,21 @@ LVGL screens. The checked-in defaults now explicitly allocate 8 KiB. This is a
 targeted correction for the observed startup overflow; it does not alter the
 presence policy. Build, flash and repeated physical reboot results are recorded
 below when executed.
+
+### Stack-corrected deployment result
+
+- Verified application SHA-256:
+  `816a04a8f53adbcfc12ae6510522a4a621b0144b3edbabaefb951ee28c6917be`.
+- Reconfirmed the full-flash recovery checksum before writing. Esptool verified
+  all bootloader, partition-table and application writes.
+- Device read-back reported ELF SHA-256 prefix `96b10d919`.
+- Five consecutive native-USB monitor/reset cycles passed with 8 MB PSRAM,
+  display/touch startup, `app_main` return, presence monitoring and Wi-Fi
+  recovery. No panic, watchdog or stack-overflow report occurred.
+- Signal K restored complete dashboard readiness; one initial WebSocket timeout
+  recovered through the normal retry path.
+- This validates the previously failing monitor/reset path. Five physical
+  cold-power boots were not run, so cold-start robustness remains a separate
+  acceptance item. The presence policy was unchanged and its earlier physical
+  on/off/on acceptance remains applicable, but it was not repeated after this
+  configuration-only correction.

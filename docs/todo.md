@@ -2,10 +2,12 @@
 
 ## Waveshare display reboot robustness and power commissioning
 
-Status: main-task stack correction prepared after physical event on 2026-08-02
+Status: monitor-reset validated on 2026-08-02; cold boots and current draw remain
 
-- Validate the checked-in 8 KiB main-task stack on the physical Waveshare with
-  repeated cold boots and native-USB monitor attachment.
+- The checked-in 8 KiB main-task stack passed five consecutive native-USB
+  monitor/reset boots without a panic, watchdog or stack-overflow report.
+- Complete five repeated cold-power boots; these require physically removing
+  and restoring power and were not performed during the monitor-reset test.
 - Confirm each boot reaches display/touch initialization, SD mount, Wi-Fi,
   Signal K subscription, dashboard readiness and presence monitoring without a
   panic, watchdog reset or stack-overflow report.
@@ -18,8 +20,9 @@ Status: main-task stack correction prepared after physical event on 2026-08-02
 
 Acceptance checks:
 
-- Five consecutive cold boots and five monitor/reset cycles complete without
-  restart or stack exhaustion.
+- [ ] Five consecutive cold boots complete without restart or stack exhaustion.
+- [x] Five consecutive monitor/reset cycles complete without restart or stack
+  exhaustion.
 - Presence still produces a complete on/off/on backlight cycle after reboot.
 - Measured peak and steady-state currents are recorded and remain within the
   selected regulator, wiring and fuse margins.

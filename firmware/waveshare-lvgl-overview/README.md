@@ -181,7 +181,7 @@ redundant read-only caption. The Anchor Watch plot is head-up: its
 boat symbol is centred from the plot object's actual centre, always points
 upward, and the north marker moves on a fixed-radius orbit just beyond the
 20 NM ring. The outer range label is drawn inside the plot in high contrast.
-from true heading. When anchor watch is inactive, only AIS targets with fresh
+When anchor watch is inactive, only AIS targets with fresh
 position and SOG above 0.5 kn are plotted, out to 20 NM, after transformation
 into this same head-up frame. The development FPS/CPU overlay is disabled.
 
@@ -218,8 +218,11 @@ The deployed build has verified flash integrity, boot, PSRAM, RGB/LVGL
 startup, GT911 identification, 30,436 MiB SD mount and write, Wi-Fi association,
 Signal K WebSocket subscription, and complete live dashboard readiness. Host
 tests cover telemetry state/quality, self-versus-AIS context separation, and
-valid, null, unknown, missing, and malformed delta inputs. Live AIS rendering
-has not been end-to-end accepted because the test feed has no AIS targets.
-WebSocket fragmentation, long-duration reconnect/soak behaviour,
-touch interactions, daylight readability, and reduced brightness remain to be
-validated.
+valid, null, unknown, missing, and malformed delta inputs. The solder-free
+LD2410C input and presence-controlled backlight have passed a physical
+clear/present cycle. The stack-corrected image passed five consecutive
+native-USB monitor/reset boots, but five cold-power boots and installed
+on/off-current measurements remain outstanding. Live AIS rendering has not
+been end-to-end accepted because the test feed has no AIS targets. WebSocket
+fragmentation, long-duration reconnect/soak behaviour, touch interactions,
+daylight readability, and reduced brightness remain to be validated.

@@ -38,6 +38,23 @@ Entries should be appended in reverse chronological order unless a different ord
   recovery was not required. Status is validated locally pending flash and
   repeated physical reboot observation.
 
+### Deployment and reboot follow-up
+
+- Reconfirmed the recovery image checksum, then flashed the exact committed
+  stack-hardened application over native USB. Esptool verified bootloader,
+  partition-table and application hashes.
+- The deployed application reported ELF SHA-256 prefix `96b10d919` and passed
+  five consecutive native-USB monitor/reset boots. Every cycle passed the 8 MB
+  PSRAM test, initialized display/touch and presence, returned from `app_main`
+  and restored Wi-Fi without panic, watchdog or stack-overflow output.
+- Signal K reached complete dashboard readiness during the observation. One
+  reset encountered an initial WebSocket connection timeout and recovered on
+  the built-in retry without intervention.
+- Status: deployed and monitor-reset validated. Five physical cold-power boots,
+  installed current measurements and a post-correction presence off/on cycle
+  were not run and remain explicitly listed in `docs/todo.md`. Recovery was
+  prepared but not exercised; no boat or Signal K configuration changed.
+
 ## 2026-08-02 - Presence-controlled backlight physically accepted
 
 - Confirmed the existing 16 MB recovery image before deployment; SHA-256
