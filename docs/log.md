@@ -14,6 +14,27 @@ Entries should be appended in reverse chronological order unless a different ord
 
 ---
 
+## 2026-08-02 - Prepared presence-controlled display backlight
+
+- Connected the accepted LD2410C digital presence state to the Waveshare LCD
+  backlight control: initial and stable `PRESENT` states enable the backlight,
+  while `CLEAR` disables it.
+- The ESP32, RGB/LVGL pipeline, touch controller, telemetry and presence task
+  remain active while dark; this change does not power-cycle the display or
+  introduce Signal K, alarm or other automation effects.
+- Preserved CH422G `USB_SEL` low in both backlight states so native USB remains
+  available with the board selector at UART2. Backlight I2C failures are now
+  returned and logged instead of being reported as success.
+- Updated the firmware README with the current sensor commissioning values:
+  1.5 m range and 15-second no-person delay.
+- `presence_filter_test` passed with `-Wall -Wextra -Werror`, including stable
+  transitions, bounce rejection and timer wrapping. The complete ESP-IDF 5.5.5
+  build passed; the application is `0x15ab70` bytes with 66% of the smallest
+  application partition free.
+- No device, boat or external environment was changed and no recovery action
+  was required. Status is validated locally pending a controlled physical
+  flash and presence cycle.
+
 ## 2026-08-02 - LD2410C complete presence/absence cycle accepted
 
 - Ran a controlled empty-room test with the Waveshare selector at UART2 and

@@ -188,29 +188,35 @@ esp_err_t waveshare_esp32_s3_rgb_lcd_init()
 }
 
 /******************************* Turn on the screen backlight **************************************/
-esp_err_t wavesahre_rgb_lcd_bl_on()
+esp_err_t waveshare_rgb_lcd_bl_on(void)
 {
     //Configure CH422G to output mode
     uint8_t write_buf = 0x01;
-    i2c_master_write_to_device(I2C_MASTER_NUM, 0x24, &write_buf, 1, I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
+    esp_err_t err = i2c_master_write_to_device(I2C_MASTER_NUM, 0x24,
+                                               &write_buf, 1,
+                                               I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
+    if (err != ESP_OK) return err;
 
     //Pull the backlight pin high to light the screen backlight
     write_buf = 0x1E;
-    i2c_master_write_to_device(I2C_MASTER_NUM, 0x38, &write_buf, 1, I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
-    return ESP_OK;
+    return i2c_master_write_to_device(I2C_MASTER_NUM, 0x38, &write_buf, 1,
+                                      I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
 }
 
 /******************************* Turn off the screen backlight **************************************/
-esp_err_t wavesahre_rgb_lcd_bl_off()
+esp_err_t waveshare_rgb_lcd_bl_off(void)
 {
     //Configure CH422G to output mode
     uint8_t write_buf = 0x01;
-    i2c_master_write_to_device(I2C_MASTER_NUM, 0x24, &write_buf, 1, I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
+    esp_err_t err = i2c_master_write_to_device(I2C_MASTER_NUM, 0x24,
+                                               &write_buf, 1,
+                                               I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
+    if (err != ESP_OK) return err;
 
     //Turn off the screen backlight by pulling the backlight pin low
     write_buf = 0x1A;
-    i2c_master_write_to_device(I2C_MASTER_NUM, 0x38, &write_buf, 1, I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
-    return ESP_OK;
+    return i2c_master_write_to_device(I2C_MASTER_NUM, 0x38, &write_buf, 1,
+                                      I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
 }
 
 /******************************* Example code **************************************/

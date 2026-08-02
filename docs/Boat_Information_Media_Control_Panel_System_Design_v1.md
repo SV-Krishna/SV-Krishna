@@ -153,7 +153,8 @@ ESP32 communicates with a REST API on the Raspberry Pi supporting:
 
 ### Idle
 
-- Dim display after inactivity.
+- Future option: dim display after inactivity. This is not implemented in the
+  current firmware.
 
 ### Sleep
 
@@ -165,8 +166,11 @@ ESP32 communicates with a REST API on the Raspberry Pi supporting:
 
 ### Wake
 
-- LD2410C presence.
-- Touchscreen.
+- LD2410C `PRESENT` enables the backlight immediately. The commissioned sensor
+  currently uses a 1.5 m range and 15-second no-person delay; its stable
+  `CLEAR` output disables the backlight.
+- Future option: touchscreen wake. This is not implemented because the
+  backlight is currently controlled directly from presence state.
 
 ## 12. microSD Usage
 
@@ -214,7 +218,9 @@ Modules:
 ## 16. Open Items
 
 - Confirm exact PCB revision.
-- Confirm LD2410C OUT voltage level.
+- Measure and record LD2410C OUT voltage level on the installed sensor; the
+  manufacturer's documented logic-high level is 3.3 V and the physical
+  digital-state path has been accepted.
 - Measure real current draw with backlight on/off.
 - Finalise media API.
 - Produce enclosure drawings.

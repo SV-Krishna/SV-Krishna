@@ -22,8 +22,8 @@ request or a verified defect correction.
   inactive/within/warning/critical/stale/unavailable/fault states
 - four-tier Wi-Fi RSSI, Signal K freshness, and GPS freshness indicators
 - local display time derived from Signal K UTC delta timestamps
-- local LD2410C digital presence proof of concept with debounced transition
-  logging; it does not yet drive the UI or any automation
+- local LD2410C digital presence input with debounced transition logging and
+  presence-controlled display backlight
 - 32 GB microSD support for portable Signal K endpoint configuration
 
 The current workstation test feed supplies the dashboard telemetry but does
@@ -91,10 +91,15 @@ LD2410C presence changed: PRESENT
 LD2410C presence changed: CLEAR
 ```
 
-This milestone deliberately performs no screen blanking, alarm, Signal K
-publication, or other consequential action. During physical commissioning it
-also logs the raw and debounced state every five seconds so a static wiring
-level can be distinguished from a missed transition.
+The initial debounced state and each subsequent stable transition drive only
+the LCD backlight: `PRESENT` turns it on and `CLEAR` turns it off. The ESP32,
+LVGL application, touch controller, telemetry and presence task continue
+running while the backlight is off, so detection can wake it immediately. The
+LD2410C's configured no-person delay determines how long after the space clears
+the `OUT` signal remains high; the commissioned sensor is currently set to a
+1.5 m range and 15-second no-person delay. Presence is not published to Signal
+K and does not drive alarms or any other automation. The firmware continues to
+log the raw and debounced state every five seconds for commissioning visibility.
 
 ## Build
 
