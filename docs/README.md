@@ -11,6 +11,10 @@ The documentation is operational rather than promotional. It is intended to help
 
 ## Current-State Notes
 
+- [Waveshare LD2410C presence and display-power handover](/home/antony-slack/Documents/repos/SV-Krishna/docs/agent-handover-2026-08-02-waveshare-presence.md)
+  Current deployed firmware, solder-free wiring, sensor commissioning,
+  validation, recovery, remaining work, and exact restart prompt.
+
 - [Waveshare LVGL Overview and Anchor Watch handover](/home/antony-slack/Documents/repos/SV-Krishna/docs/agent-handover-2026-07-31-waveshare-lvgl-anchor-watch.md)
   Locked Overview baseline, attached-device state, recovery points, read-only
   Anchor Watch boundary, exact next action, and restart prompt.

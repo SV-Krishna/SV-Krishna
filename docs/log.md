@@ -14,6 +14,20 @@ Entries should be appended in reverse chronological order unless a different ord
 
 ---
 
+## 2026-08-02 - Added current Waveshare presence handover
+
+- Added `docs/agent-handover-2026-08-02-waveshare-presence.md` with the deployed
+  build identity, accepted solder-free wiring, sensor configuration, physical
+  and reset validation, recovery checksum, remaining risks and a concrete
+  restart prompt for the next agent.
+- Added the handover to `docs/README.md`. Documentation only: no firmware,
+  device, boat, Signal K or other external configuration changed, and no
+  recovery action was required.
+- Validation comprised Markdown/diff review, tracked-file and secret-material
+  checks, and repository-cleanliness verification before commit. Runtime tests
+  were not repeated because the handover records the already completed build,
+  flash and physical evidence without changing runtime artefacts.
+
 ## 2026-08-02 - Tidied presence integration and prepared startup-stack correction
 
 - Audited all ten local Waveshare/LD2410C commits against the repository,
