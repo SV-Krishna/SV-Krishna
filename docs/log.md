@@ -14,6 +14,28 @@ Entries should be appended in reverse chronological order unless a different ord
 
 ---
 
+## 2026-08-02 - Added presence-input commissioning heartbeat
+
+- Native USB enumerated successfully after the CH422G mux correction and the
+  firmware retained display, SD, Wi-Fi, Signal K and dashboard readiness with
+  the selector at UART2.
+- A deliberate move-away/approach cycle produced no logged transition. Because
+  the one-time initial state occurred during native-USB re-enumeration, the
+  result could not distinguish a continuously high sensor from a missing
+  GPIO44 signal.
+- Added a five-second diagnostic containing both raw GPIO44 and debounced
+  presence state. This is temporary commissioning visibility and does not
+  change the UI, Signal K or any automation.
+- The presence-filter host test and ESP-IDF 5.5.5 build passed. The `0x15a9a0`
+  application was flashed directly over native USB and all written hashes were
+  verified. Native-USB boot read-back retained dashboard readiness.
+- Repeated diagnostics returned `raw=1 stable=PRESENT`; no low transition was
+  observed during the movement test. Status remains deployed but not
+  physically accepted pending an OUT-wire disconnect test to prove the GPIO44
+  pull-down and then investigation of why the powered sensor stays high.
+- The verified full-flash recovery image remains applicable; no boat or
+  external configuration changed.
+
 ## 2026-08-02 - Corrected native USB/CAN mux for UART2 sensor testing
 
 - Diagnosed the missing native USB device after the board was moved to the

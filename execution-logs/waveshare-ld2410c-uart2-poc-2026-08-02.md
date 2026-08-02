@@ -41,3 +41,19 @@ selector moved to `UART2`, and the native `USB` connector used for logs before
 testing real `CLEAR`/`PRESENT` transitions from the LD2410C `OUT` pin.
 
 Status: deployed but not physically accepted.
+
+## Native USB and GPIO44 diagnostic follow-up
+
+- Corrected the CH422G output state so `EXIO5/USB_SEL` remains low after touch
+  reset. With the selector at UART2, native USB enumerated as Espressif
+  USB Serial/JTAG device `CC:BA:97:15:2D:B8`.
+- Added a five-second raw/debounced presence heartbeat, built an application of
+  `0x15a9a0`, and flashed it directly through native USB. Esptool verified all
+  written hashes.
+- Boot read-back reported ELF SHA-256 prefix `38c6a8894` and retained Wi-Fi,
+  Signal K and dashboard readiness.
+- GPIO44 repeatedly reported `raw=1 stable=PRESENT`. No transition was observed
+  during the deliberate move-away/approach test.
+- Next controlled check: disconnect only LD2410C `OUT` from UART2 `RXD`. GPIO44
+  should fall to `raw=0 stable=CLEAR` through its configured pull-down. This
+  distinguishes a continuously asserted sensor output from a board/input fault.

@@ -14,6 +14,7 @@
 static const char *TAG = "presence";
 
 #define PRESENCE_POLL_MS 50U
+#define PRESENCE_DIAGNOSTIC_MS 5000U
 
 static void presence_sensor_task(void *context)
 {
@@ -22,6 +23,7 @@ static void presence_sensor_task(void *context)
     bool stable = false;
     bool raw = gpio_get_level(CONFIG_KRISHNA_PRESENCE_GPIO) != 0;
     uint32_t now_ms = (uint32_t)(esp_timer_get_time() / 1000);
+    uint32_t last_diagnostic_ms = now_ms;
 
     presence_filter_init(&filter, raw, now_ms);
     ESP_LOGI(TAG, "LD2410C initial state: %s", raw ? "PRESENT" : "CLEAR");
@@ -35,6 +37,12 @@ static void presence_sensor_task(void *context)
                                    &stable)) {
             ESP_LOGI(TAG, "LD2410C presence changed: %s",
                      stable ? "PRESENT" : "CLEAR");
+        }
+        if ((uint32_t)(now_ms - last_diagnostic_ms) >=
+            PRESENCE_DIAGNOSTIC_MS) {
+            ESP_LOGI(TAG, "LD2410C diagnostic: raw=%d stable=%s",
+                     raw, stable ? "PRESENT" : "CLEAR");
+            last_diagnostic_ms = now_ms;
         }
     }
 }

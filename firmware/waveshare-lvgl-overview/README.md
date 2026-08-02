@@ -92,7 +92,9 @@ LD2410C presence changed: CLEAR
 ```
 
 This milestone deliberately performs no screen blanking, alarm, Signal K
-publication, or other consequential action.
+publication, or other consequential action. During physical commissioning it
+also logs the raw and debounced state every five seconds so a static wiring
+level can be distinguished from a missed transition.
 
 ## Build
 
