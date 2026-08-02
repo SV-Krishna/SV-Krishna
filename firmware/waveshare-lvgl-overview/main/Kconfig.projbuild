@@ -30,13 +30,14 @@ menu "Example Configuration"
     config KRISHNA_PRESENCE_GPIO
         int "LD2410C digital OUT GPIO"
         range 0 48
-        default 6
+        default 44
         help
-            GPIO receiving the LD2410C 3.3 V digital OUT signal. GPIO6 is not
-            exposed on the documented Waveshare PH2.0 connectors; use it only
-            through a physically verified GPIO6 solder/test point or interface
-            PCB. Do not substitute the Sensor AD/GPIO4 connector because it is
-            shared with the GT911 touch interrupt/reset sequence.
+            GPIO receiving the LD2410C 3.3 V digital OUT signal. GPIO44 is
+            exposed as RXD on the UART2 PH2.0 connector when the board's UART
+            selector is in the UART2 position. The firmware uses RXD only as a
+            digital input; the LD2410C UART is not enabled. Do not substitute
+            Sensor AD/GPIO4 because it is shared with the GT911 interrupt and
+            is actively driven during the touch reset sequence.
 
     config KRISHNA_PRESENCE_DEBOUNCE_MS
         int "LD2410C presence debounce (ms)"

@@ -62,18 +62,26 @@ its orientation from a photograph:
 | --- | --- |
 | `VCC` | Regulated 5 V supply shared with the display supply |
 | `GND` | Supply ground and Waveshare ground (all common) |
-| `OUT` | Waveshare ESP32-S3 GPIO6 |
+| `OUT` | Waveshare `UART2` header `RXD` (ESP32 GPIO44) |
 | `UART_TX` | Not connected for this proof of concept |
 | `UART_RX` | Not connected for this proof of concept |
 
-GPIO6 is free in the current firmware, but the Waveshare schematic and
-published connector list do not expose it on a PH2.0 peripheral connector.
-Connect `OUT` only to a physically verified GPIO6 solder/test point or through
-the planned interface PCB. Do not connect it to the exposed Sensor AD pin:
-Sensor AD is GPIO4 and is shared with the GT911 touch interrupt/reset sequence.
-Do not power the LD2410C from the Waveshare 3.3 V I2C or Sensor AD connector.
+With power off, move the Waveshare slide selector from `UART1` to `UART2`.
+This routes the four-pin `UART2` header to ESP32 GPIO43/GPIO44. The proof of
+concept repurposes only its `RXD`/GPIO44 pin as a digital input; `TXD` remains
+unused. The LD2410C `OUT` signal is 3.3 V, so it can connect directly to RXD.
 
-On boot, the firmware configures GPIO6 as an input with a pull-down and logs
+Do not connect `OUT` to the exposed Sensor AD pin. Sensor AD is GPIO4 and is
+shared with the actively driven GT911 touch interrupt/reset sequence. An
+inline resistor would limit contention current but would not make the shared
+line a reliable presence input because the touch controller also drives it.
+Do not power the LD2410C from either header's 3.3 V pin.
+
+Moving the selector to `UART2` disconnects the CH343 USB-to-UART path used by
+the `UART1` USB-C connector. Use the board's native `USB` connector for the
+ESP-IDF secondary USB Serial/JTAG log while testing this build.
+
+On boot, the firmware configures GPIO44 as an input with a pull-down and logs
 the initial state. A state that remains changed for 250 ms produces one of:
 
 ```text

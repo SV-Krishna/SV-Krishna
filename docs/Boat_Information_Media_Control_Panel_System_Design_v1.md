@@ -69,7 +69,8 @@ Bosch BME280 connected via I²C.
 
 ### Presence Sensor
 
-Hi-Link LD2410C using digital OUT to GPIO6.
+Hi-Link LD2410C using digital OUT through the Waveshare UART2 RXD header pin
+to GPIO44.
 
 ### Power
 
@@ -88,14 +89,13 @@ Hi-Link LD2410C using digital OUT to GPIO6.
 
 - 5 V
 - GND
-- OUT → GPIO6
+- OUT → UART2 RXD / GPIO44
 
-GPIO6 is not exposed on the documented Waveshare PH2.0 peripheral
-connectors. This connection therefore requires a physically verified GPIO6
-solder/test point or the custom interface PCB. The exposed Sensor AD connector
-is GPIO4 and must not be substituted because GPIO4 is shared with the GT911
-touch interrupt/reset sequence. The first proof of concept uses only the
-LD2410C 3.3 V digital `OUT`; its UART pins remain disconnected.
+Set the board's physical UART selector to `UART2`; the proof of concept treats
+RXD as an ordinary digital input rather than enabling the LD2410C serial
+protocol. The exposed Sensor AD connector remains unsuitable because GPIO4 is
+shared with the actively driven GT911 touch interrupt/reset sequence. The
+LD2410C UART pins remain disconnected.
 
 ### Connectors
 
@@ -105,7 +105,7 @@ LD2410C 3.3 V digital `OUT`; its UART pins remain disconnected.
 
 ## 7. GPIO Allocation
 
-- GPIO6: Presence sensor
+- GPIO44 via UART2 RXD: Presence sensor
 - GPIO8: I²C SDA
 - GPIO9: I²C SCL
 

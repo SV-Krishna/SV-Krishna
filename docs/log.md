@@ -14,11 +14,32 @@ Entries should be appended in reverse chronological order unless a different ord
 
 ---
 
+## 2026-08-02 - Moved LD2410C proof of concept to solder-free UART2 RXD
+
+- Reconsidered the GPIO4/GPIO6 choice against a physical photograph of the
+  Waveshare V1.2 PCB, its schematic and the GT911 interface behaviour.
+- Rejected Sensor AD/GPIO4 after review: GPIO4 is both the exposed AD pin and
+  the GT911 interrupt line, is actively driven during touch reset, and can be
+  driven by the touch controller during operation. A series resistor would
+  limit contention current but would not make the shared signal reliable.
+- Selected the exposed UART2 `RXD` pin, which the physical UART selector routes
+  to ESP32 GPIO44, as the solder-free digital input. The LD2410C still uses its
+  3.3 V `OUT`; its UART protocol and TX/RX pins remain unused.
+- Updated the default firmware pin and durable wiring/design documentation.
+  The required bench arrangement is UART selector at `UART2`, LD2410C powered
+  from regulated 5 V with common ground, and `OUT` connected to UART2 `RXD`.
+- All three host tests passed with `-Wall -Wextra -Werror`; the complete
+  ESP-IDF 5.5.5 rebuild passed at `0x15a920` with 66% application-partition
+  space free. Status is validated locally pending physical test. No firmware
+  was flashed and no device, boat or external configuration changed; no
+  recovery step was required.
+
 ## 2026-08-02 - Prepared LD2410C presence-input proof of concept
 
 - Added a local LD2410C digital-presence input to the native Waveshare LVGL
-  firmware, using the planned GPIO6 with a 50 ms sample interval and 250 ms
-  stable-state debounce.
+  firmware, initially using the planned GPIO6 with a 50 ms sample interval and
+  250 ms stable-state debounce. This pin choice was superseded later the same
+  day by the solder-free UART2 RXD/GPIO44 connection documented above.
 - Added transition-only serial diagnostics for `PRESENT` and `CLEAR`. Presence
   does not yet affect the locked Overview UI, Signal K, alarms, power state or
   other automation.

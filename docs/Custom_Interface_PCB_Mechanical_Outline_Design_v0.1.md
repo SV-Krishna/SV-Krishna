@@ -212,14 +212,14 @@ GND
 3.3 V
 SDA / GPIO8
 SCL / GPIO9
-LD2410C OUT / GPIO6
+LD2410C OUT / UART2 RXD / GPIO44
 ```
 
-The Waveshare V1.2 schematic and published connector list do not expose
-GPIO6 on a PH2.0 peripheral connector. Before freezing the harness or PCB,
-identify and physically verify an accessible GPIO6 solder/test point. Do not
-substitute the Sensor AD/GPIO4 connector: GPIO4 is shared with the GT911 touch
-interrupt/reset sequence in the current board and firmware.
+The solder-free connection uses the Waveshare UART2 PH2.0 header with its
+physical selector in the `UART2` position. RXD is repurposed as a digital
+GPIO44 input; this proof of concept does not enable the LD2410C UART protocol.
+Do not substitute Sensor AD/GPIO4 because GPIO4 is shared with the actively
+driven GT911 touch interrupt/reset sequence.
 
 Nominal connector zone:
 
