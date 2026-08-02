@@ -4,6 +4,8 @@ idf_component_register(
          "telemetry/sd_storage.c"
          "telemetry/telemetry_service.c"
          "telemetry/telemetry_state.c"
+         "sensors/presence_filter.c"
+         "sensors/presence_sensor.c"
          "ui/overview_screen.c"
          "ui/anchor_watch_screen.c"
     INCLUDE_DIRS "."

@@ -90,6 +90,13 @@ Hi-Link LD2410C using digital OUT to GPIO6.
 - GND
 - OUT → GPIO6
 
+GPIO6 is not exposed on the documented Waveshare PH2.0 peripheral
+connectors. This connection therefore requires a physically verified GPIO6
+solder/test point or the custom interface PCB. The exposed Sensor AD connector
+is GPIO4 and must not be substituted because GPIO4 is shared with the GT911
+touch interrupt/reset sequence. The first proof of concept uses only the
+LD2410C 3.3 V digital `OUT`; its UART pins remain disconnected.
+
 ### Connectors
 
 - WAGO 221 for power distribution.

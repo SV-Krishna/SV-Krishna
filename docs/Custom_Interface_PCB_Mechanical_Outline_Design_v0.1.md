@@ -215,6 +215,12 @@ SCL / GPIO9
 LD2410C OUT / GPIO6
 ```
 
+The Waveshare V1.2 schematic and published connector list do not expose
+GPIO6 on a PH2.0 peripheral connector. Before freezing the harness or PCB,
+identify and physically verify an accessible GPIO6 solder/test point. Do not
+substitute the Sensor AD/GPIO4 connector: GPIO4 is shared with the GT911 touch
+interrupt/reset sequence in the current board and firmware.
+
 Nominal connector zone:
 
 ```text

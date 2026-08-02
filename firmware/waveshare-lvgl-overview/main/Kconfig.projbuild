@@ -27,6 +27,22 @@ menu "Example Configuration"
             POSIX TZ value applied to Signal K UTC update timestamps. The
             default is Europe/London including daylight-saving transitions.
 
+    config KRISHNA_PRESENCE_GPIO
+        int "LD2410C digital OUT GPIO"
+        range 0 48
+        default 6
+        help
+            GPIO receiving the LD2410C 3.3 V digital OUT signal. GPIO6 is not
+            exposed on the documented Waveshare PH2.0 connectors; use it only
+            through a physically verified GPIO6 solder/test point or interface
+            PCB. Do not substitute the Sensor AD/GPIO4 connector because it is
+            shared with the GT911 touch interrupt/reset sequence.
+
+    config KRISHNA_PRESENCE_DEBOUNCE_MS
+        int "LD2410C presence debounce (ms)"
+        range 0 5000
+        default 250
+
     menu "Display"
         config EXAMPLE_LCD_RGB_BOUNCE_BUFFER_HEIGHT
             int "RGB Bounce buffer height"

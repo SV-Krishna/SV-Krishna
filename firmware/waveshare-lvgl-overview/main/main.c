@@ -7,12 +7,14 @@
 #include "waveshare_rgb_lcd_port.h"
 #include "telemetry/sd_storage.h"
 #include "telemetry/telemetry_service.h"
+#include "sensors/presence_sensor.h"
 #include "ui/overview_screen.h"
 #include "ui/anchor_watch_screen.h"
 
 void app_main()
 {
     waveshare_esp32_s3_rgb_lcd_init();
+    ESP_ERROR_CHECK(presence_sensor_start());
 
     runtime_config_t runtime_config;
     runtime_config_defaults(&runtime_config);

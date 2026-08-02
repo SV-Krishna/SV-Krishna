@@ -22,6 +22,8 @@ request or a verified defect correction.
   inactive/within/warning/critical/stale/unavailable/fault states
 - four-tier Wi-Fi RSSI, Signal K freshness, and GPS freshness indicators
 - local display time derived from Signal K UTC delta timestamps
+- local LD2410C digital presence proof of concept with debounced transition
+  logging; it does not yet drive the UI or any automation
 - 32 GB microSD support for portable Signal K endpoint configuration
 
 The current workstation test feed supplies the dashboard telemetry but does
@@ -48,6 +50,39 @@ or anchor safety decisions.
 The display, touch, and LVGL port began from Waveshare's official
 `ESP32-S3-Touch-LCD-7-Demo/ESP-IDF/08_lvgl_Porting` example. The marine UI is
 implemented separately under `main/ui/`.
+
+## LD2410C proof-of-concept wiring
+
+The initial integration uses only the LD2410C digital `OUT` signal. The
+manufacturer specifies a 5 V supply capable of at least 200 mA and a 3.3 V
+digital output. Follow the labels on the physical LD2410C rather than assuming
+its orientation from a photograph:
+
+| LD2410C | Connection |
+| --- | --- |
+| `VCC` | Regulated 5 V supply shared with the display supply |
+| `GND` | Supply ground and Waveshare ground (all common) |
+| `OUT` | Waveshare ESP32-S3 GPIO6 |
+| `UART_TX` | Not connected for this proof of concept |
+| `UART_RX` | Not connected for this proof of concept |
+
+GPIO6 is free in the current firmware, but the Waveshare schematic and
+published connector list do not expose it on a PH2.0 peripheral connector.
+Connect `OUT` only to a physically verified GPIO6 solder/test point or through
+the planned interface PCB. Do not connect it to the exposed Sensor AD pin:
+Sensor AD is GPIO4 and is shared with the GT911 touch interrupt/reset sequence.
+Do not power the LD2410C from the Waveshare 3.3 V I2C or Sensor AD connector.
+
+On boot, the firmware configures GPIO6 as an input with a pull-down and logs
+the initial state. A state that remains changed for 250 ms produces one of:
+
+```text
+LD2410C presence changed: PRESENT
+LD2410C presence changed: CLEAR
+```
+
+This milestone deliberately performs no screen blanking, alarm, Signal K
+publication, or other consequential action.
 
 ## Build
 

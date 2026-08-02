@@ -14,6 +14,33 @@ Entries should be appended in reverse chronological order unless a different ord
 
 ---
 
+## 2026-08-02 - Prepared LD2410C presence-input proof of concept
+
+- Added a local LD2410C digital-presence input to the native Waveshare LVGL
+  firmware, using the planned GPIO6 with a 50 ms sample interval and 250 ms
+  stable-state debounce.
+- Added transition-only serial diagnostics for `PRESENT` and `CLEAR`. Presence
+  does not yet affect the locked Overview UI, Signal K, alarms, power state or
+  other automation.
+- Added host tests for stable transitions, input bounce and the 32-bit
+  millisecond timer wrapping; `presence_filter_test`, `telemetry_state_test`
+  and `signalk_delta_test` all passed with `-Wall -Wextra -Werror`.
+- The complete ESP-IDF 5.5.5 build passed and produced a `0x15a920` application
+  image with 66% of the smallest application partition free.
+- Reviewed the manufacturer documentation and Waveshare V1.2 schematic. The
+  LD2410C uses a 5 V supply and 3.3 V digital output, but GPIO6 is not exposed
+  on the Waveshare board's documented PH2.0 connectors. Sensor AD/GPIO4 is not
+  a safe substitute because it is shared with the GT911 touch reset/interrupt
+  sequence.
+- Updated the firmware README and system/interface design notes with the bench
+  wiring and this connector limitation. No credentials or external
+  configuration changed.
+- Status: validated locally, not flashed or physically wired. No device or
+  boat state changed and no recovery step was required. Physical validation
+  remains blocked on identifying a verified GPIO6 connection point, wiring the
+  common-ground 5 V bench supply, flashing with the existing recovery image
+  available, and observing presence transitions on the real device.
+
 ## 2026-08-02 - Reviewed and prepared live-boat documentation backlog
 
 - Reviewed the uncommitted 2026-08-01 operational notes and retained them as
