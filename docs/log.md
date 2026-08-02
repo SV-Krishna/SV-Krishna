@@ -14,6 +14,24 @@ Entries should be appended in reverse chronological order unless a different ord
 
 ---
 
+## 2026-08-02 - Flashed LD2410C proof of concept; UART selector correction pending
+
+- Confirmed the existing 16 MB full-flash recovery image and checksum, then
+  flashed the GPIO44 LD2410C proof-of-concept build to the attached Waveshare
+  V1.2 board.
+- Esptool verified bootloader, partition-table and application hashes. Serial
+  read-back confirmed the intended application boot, PSRAM, GT911, SD, Wi-Fi,
+  Signal K subscription and complete dashboard telemetry readiness.
+- Presence monitoring started on GPIO44, but the initial `PRESENT` was not a
+  valid sensor result: the board was still selected to `UART1`, whose CH343
+  receive path held GPIO44 high.
+- Status: deployed but not physically accepted. The remaining controlled test
+  is to power off, move the physical selector to `UART2`, reconnect logging via
+  native `USB`, and observe real LD2410C `CLEAR`/`PRESENT` transitions.
+- Detailed commands, recovery and read-back evidence are in
+  `execution-logs/waveshare-ld2410c-uart2-poc-2026-08-02.md`. No boat or Signal
+  K configuration changed; recovery was prepared but not exercised.
+
 ## 2026-08-02 - Moved LD2410C proof of concept to solder-free UART2 RXD
 
 - Reconsidered the GPIO4/GPIO6 choice against a physical photograph of the
