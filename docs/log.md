@@ -14,6 +14,23 @@ Entries should be appended in reverse chronological order unless a different ord
 
 ---
 
+## 2026-08-02 - LD2410C solder-free presence detection physically observed
+
+- Completed the solder-free bench wiring with a separate regulated 5 V sensor
+  supply, common ground to Waveshare UART2 GND, and LD2410C `OUT` to UART2
+  `RXD`/GPIO44.
+- Verified native USB enumeration after the USB/CAN mux correction.
+- Removing only `OUT` drove the debounced input to `CLEAR`, confirming the
+  GPIO44 pull-down and UART2 path. Reconnecting established a clean `CLEAR`
+  baseline, and movement in front of the sensor produced a stable `PRESENT`.
+- The sensor did not return to `CLEAR` during a subsequent 35-second
+  empty-field observation. Positive detection is physically observed, but
+  absence clearing remains unaccepted pending hold-time, background-target and
+  sensitivity/zone investigation.
+- Updated the existing execution record with the observed sequence. No Signal
+  K, boat or other external configuration changed; the existing recovery image
+  remains available and was not exercised.
+
 ## 2026-08-02 - Added presence-input commissioning heartbeat
 
 - Native USB enumerated successfully after the CH422G mux correction and the

@@ -57,3 +57,23 @@ Status: deployed but not physically accepted.
 - Next controlled check: disconnect only LD2410C `OUT` from UART2 `RXD`. GPIO44
   should fall to `raw=0 stable=CLEAR` through its configured pull-down. This
   distinguishes a continuously asserted sensor output from a board/input fault.
+
+## Solder-free wiring and physical result
+
+The LD2410C was powered from a separate regulated 5 V breadboard supply. Its
+ground was joined to Waveshare UART2 ground and `OUT` was connected to UART2
+`RXD`/GPIO44.
+
+Observed sequence:
+
+- removing only `OUT` drove GPIO44 to `CLEAR`, proving the input, pull-down,
+  UART2 routing and shared-ground path;
+- reconnection established a stable `CLEAR` baseline;
+- movement in front of the sensor produced a debounced `PRESENT` transition
+  and stable raw high state;
+- after the person stepped away, the sensor remained `PRESENT` throughout a
+  further 35-second observation.
+
+Status: deployed and positive presence detection physically observed. Absence
+clearing is not yet accepted; the sensor may be detecting another target,
+using a longer configured hold time, or require sensitivity/zone tuning.
