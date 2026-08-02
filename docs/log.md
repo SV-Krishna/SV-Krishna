@@ -14,6 +14,24 @@ Entries should be appended in reverse chronological order unless a different ord
 
 ---
 
+## 2026-08-02 - Corrected native USB/CAN mux for UART2 sensor testing
+
+- Diagnosed the missing native USB device after the board was moved to the
+  UART2 sensor position. The firmware enabled its secondary USB Serial/JTAG
+  console, but the Waveshare touch-reset sequence left CH422G `USB_SEL` high,
+  routing the ESP32-S3 native USB pins to the CAN transceiver instead of the
+  USB-C connector.
+- Changed the final CH422G output state from `0x2E` to `0x0E`, preserving the
+  touch/display outputs while holding `EXIO5/USB_SEL` low for native USB.
+- Updated the firmware wiring documentation. No board, boat or external
+  configuration changed in this code-preparation step; the already verified
+  recovery image remains applicable.
+- The presence-filter host test and complete ESP-IDF 5.5.5 build passed; the
+  application remains `0x15a920` with 66% free. Status is validated locally.
+  Physical acceptance remains pending flash via UART1, return to the UART2
+  selector position, native-USB enumeration and observed LD2410C
+  `CLEAR`/`PRESENT` transitions.
+
 ## 2026-08-02 - Flashed LD2410C proof of concept; UART selector correction pending
 
 - Confirmed the existing 16 MB full-flash recovery image and checksum, then

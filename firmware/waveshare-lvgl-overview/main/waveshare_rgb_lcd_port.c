@@ -63,7 +63,14 @@ void waveshare_esp32_s3_touch_reset()
     esp_rom_delay_us(100 * 1000);
     gpio_set_level(GPIO_INPUT_IO_4, 0);
     esp_rom_delay_us(100 * 1000);
-    write_buf = 0x2E;
+    /*
+     * Keep EXIO5/USB_SEL low after the touch reset. The Waveshare V1.2
+     * schematic routes the ESP32-S3 native USB pins to the USB-C connector
+     * only while USB_SEL is low; high selects the onboard CAN transceiver.
+     * The previous 0x2E state left bit 5 high and made the native USB socket
+     * disappear as soon as this initialization ran.
+     */
+    write_buf = 0x0E;
     i2c_master_write_to_device(I2C_MASTER_NUM, 0x38, &write_buf, 1, I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
     esp_rom_delay_us(200 * 1000);
 }

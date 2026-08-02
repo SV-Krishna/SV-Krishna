@@ -79,7 +79,9 @@ Do not power the LD2410C from either header's 3.3 V pin.
 
 Moving the selector to `UART2` disconnects the CH343 USB-to-UART path used by
 the `UART1` USB-C connector. Use the board's native `USB` connector for the
-ESP-IDF secondary USB Serial/JTAG log while testing this build.
+ESP-IDF secondary USB Serial/JTAG log while testing this build. The display
+initialization explicitly holds CH422G `USB_SEL` low after touch reset so the
+native USB pins remain routed to that connector rather than to CAN.
 
 On boot, the firmware configures GPIO44 as an input with a pull-down and logs
 the initial state. A state that remains changed for 250 ms produces one of:
