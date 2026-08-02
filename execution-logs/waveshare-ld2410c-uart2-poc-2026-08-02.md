@@ -77,3 +77,19 @@ Observed sequence:
 Status: deployed and positive presence detection physically observed. Absence
 clearing is not yet accepted; the sensor may be detecting another target,
 using a longer configured hold time, or require sensitivity/zone tuning.
+
+## Complete empty-room acceptance cycle
+
+A subsequent controlled test removed the operator from the room rather than
+only moving to the side of the sensor's broad field:
+
+- the input began at stable `PRESENT`;
+- after approximately 44 seconds with the room empty, it changed to stable
+  `CLEAR`;
+- after the operator returned and moved within approximately 1-2 m, it changed
+  back to `PRESENT`.
+
+Status: end-to-end accepted for the basic local presence-detection concept.
+The approximately 44-second observed absence delay should be treated as a
+commissioning value to review before presence controls display power or other
+automation.

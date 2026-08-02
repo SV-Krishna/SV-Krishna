@@ -14,6 +14,23 @@ Entries should be appended in reverse chronological order unless a different ord
 
 ---
 
+## 2026-08-02 - LD2410C complete presence/absence cycle accepted
+
+- Ran a controlled empty-room test with the Waveshare selector at UART2 and
+  native USB diagnostics active.
+- After the operator left the room, the sensor remained `PRESENT` for about
+  44 seconds and then produced a stable debounced `CLEAR` state.
+- On return, walking/waving within approximately 1-2 m produced a debounced
+  `PRESENT` transition.
+- This physically confirms the complete LD2410C `PRESENT` -> `CLEAR` ->
+  `PRESENT` concept through the separate 5 V supply, shared ground, UART2
+  RXD/GPIO44 input and firmware debounce path.
+- Status: end-to-end accepted for basic local presence detection. The observed
+  absence delay remains a commissioning characteristic to tune before presence
+  controls display power or any other automation.
+- Updated the existing execution record. No Signal K, boat or other external
+  configuration changed; recovery was not required.
+
 ## 2026-08-02 - LD2410C solder-free presence detection physically observed
 
 - Completed the solder-free bench wiring with a separate regulated 5 V sensor
