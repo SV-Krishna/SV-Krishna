@@ -21,6 +21,10 @@ powered Waveshare USB hub. It is no longer the Signal K data path.
 | A026 MAC address | `84:0D:8E:A2:C9:A5` | Router reservation identity |
 | A026 NMEA endpoint | TCP port `2000` | Signal K input stream |
 
+The boat-router administrator credential is stored locally for later use in
+`local/router-credentials.env`. The entire `local/` directory is ignored by
+Git; do not copy the credential into tracked documentation.
+
 The router DHCP pool is `192.168.1.100–192.168.1.199`. The A026 address
 therefore sits outside the dynamic pool. An enabled router address reservation
 also maps the A026 MAC address to `192.168.1.99`.

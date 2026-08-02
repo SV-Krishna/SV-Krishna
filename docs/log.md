@@ -14,6 +14,70 @@ Entries should be appended in reverse chronological order unless a different ord
 
 ---
 
+## 2026-08-02 - Reviewed and prepared live-boat documentation backlog
+
+- Reviewed the uncommitted 2026-08-01 operational notes and retained them as
+  relevant durable evidence of live IMU, watchdog and NMEA 2000 work.
+- Corrected the Quark A026 network table so the local credential-storage note
+  does not break its Markdown structure.
+- Updated the IMU to-do status to distinguish the completed boat swing and
+  heading alignment from the remaining stability, semantics and multi-heading
+  validation work.
+- Reordered the new diary entries to preserve reverse chronology.
+- Documentation only in this review; no firmware, service, Signal K, boat or
+  other external configuration was changed. No recovery step was required.
+- Validation was limited to whitespace, Markdown structure, ignored-local-file
+  checks and review of the staged diff; no runtime or live validation was run.
+
+## 2026-08-01 - Temporary outbound NMEA 2000 System Time test
+
+- Backed up the live `sk-to-nmea2000.json` configuration on Krishna as
+  `sk-to-nmea2000.json.bak.20260801-162741`.
+- Enabled `signalk-to-nmea2000` v2.24.0 with only `SYSTEM_TIMEv2` active;
+  explicitly disabled all other outbound conversions to keep the test scoped.
+- Enabled plugin debug logging and restarted Signal K.
+- Verified repeated `nmea2000JsonOut` events for PGN `126992` at one-second
+  intervals, with advancing UTC time values and no plugin write errors.
+- This remains a temporary live test pending confirmation that the intended
+  physical NMEA 2000 receiver observes the System Time PGN.
+
+## 2026-08-01 - NMEA 2000 unplug exposed watchdog recovery race
+
+- A deliberate unplug of the CH341 NMEA 2000 serial adapter removed
+  `/dev/ttyOP_nmea2000` at `15:06:49`.
+- The deployed USB watchdog treated the required link as failed, rescanned udev,
+  and restarted Signal K at approximately `15:07:07` and `15:07:27` while the
+  adapter was still absent.
+- The adapter returned at `15:07:45`; because the symlink then existed, the
+  watchdog no longer took recovery action even though Signal K had started too
+  early to receive data.
+- Manually restarted Signal K at `15:11:12` with the adapter present. Signal K
+  opened `/dev/ttyUSB1`, but no speed-through-water or depth PGNs arrived, so
+  Polar Recorder continued to report TWA, TWS and STW as undefined.
+- Added a follow-up investigation covering restart timing, reconnection-aware
+  recovery, and data-freshness checks for present-but-silent adapters.
+
+## 2026-08-01 - Live boat IMU magnetometer swing and heading alignment
+
+- Connected to live boat Pi `Krishna` at `pi@192.168.195.206` over ZeroTier.
+- Confirmed `signalk.service`, `imu-bridge.service`, and `imu-sender.service`
+  were active and retained the prior attitude offsets.
+- Found the saved magnetometer calibration was an invalid placeholder with
+  zero ranges and unity scales; backed it up on the Pi before recalibration.
+- Paused `imu-sender.service` and collected 1,745 AK09916 samples during a
+  slow full-vessel turn using the deployed 90-second calibration tool.
+- Saved hard-iron offsets `mx=83.0`, `my=-131.5`, `mz=-352.0`; the horizontal
+  X/Y ranges were useful, while the narrow Z range and resulting `2.224` Z
+  scale remain provisional because the vessel stayed broadly level.
+- With the vessel held at `292 deg` on its trusted magnetic compass, averaged
+  30 IMU samples to a circular mean of `144.52 deg` and applied a bridge
+  heading alignment offset of `+147.483 deg`.
+- Verified the next live Signal K magnetic-heading publication at `290.4 deg`,
+  approximately `1.6 deg` from the trusted compass reference.
+- The remaining IMU work is circular heading smoothing/fusion, magnetic/true
+  publication semantics, and validation at several headings rather than only
+  the alignment heading.
+
 ## 2026-07-31 - Waveshare LVGL work parked for Anchor Watch handover
 
 - Added `docs/agent-handover-2026-07-31-waveshare-lvgl-anchor-watch.md` with
