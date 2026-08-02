@@ -217,7 +217,7 @@ LD2410C OUT / UART2 RXD / GPIO44
 
 The solder-free connection uses the Waveshare UART2 PH2.0 header with its
 physical selector in the `UART2` position. RXD is repurposed as a digital
-GPIO44 input; this proof of concept does not enable the LD2410C UART protocol.
+GPIO44 input; this integration does not enable the LD2410C UART protocol.
 Do not substitute Sensor AD/GPIO4 because GPIO4 is shared with the actively
 driven GT911 touch interrupt/reset sequence.
 

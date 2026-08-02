@@ -14,6 +14,30 @@ Entries should be appended in reverse chronological order unless a different ord
 
 ---
 
+## 2026-08-02 - Tidied presence integration and prepared startup-stack correction
+
+- Audited all ten local Waveshare/LD2410C commits against the repository,
+  current-state documentation, execution evidence, ignored-file rules and
+  recovery references. The worktree contained no unrelated or uncommitted
+  user changes before this cleanup.
+- Replaced superseded proof-of-concept language in maintained current-state
+  documents while preserving the chronological wording in historical diary and
+  execution sections.
+- Added the LD2410C/backlight execution record to the docs index and captured
+  reboot/current-draw/no-person timing follow-ups in the operational to-do list.
+- Diagnosed the observed startup overflow against the generated ESP-IDF
+  configuration: the deployed application used the 3,584-byte default main-task
+  stack while `app_main` creates two LVGL screens and starts local services.
+  Added a reproducible 8 KiB main-task stack to `sdkconfig.defaults`; the local
+  ignored `sdkconfig` was aligned for validation without exposing credentials.
+- `presence_filter_test` passed with `-Wall -Wextra -Werror`. A complete
+  ESP-IDF 5.5.5 rebuild passed with the generated stack value confirmed at
+  8,192 bytes. The application remains `0x15ab70` bytes with 66% free and has
+  SHA-256 `816a04a8f53adbcfc12ae6510522a4a621b0144b3edbabaefb951ee28c6917be`.
+- No device, boat or external configuration changed in this preparation step;
+  recovery was not required. Status is validated locally pending flash and
+  repeated physical reboot observation.
+
 ## 2026-08-02 - Presence-controlled backlight physically accepted
 
 - Confirmed the existing 16 MB recovery image before deployment; SHA-256

@@ -1,5 +1,29 @@
 # SV Krishna operational to-do list
 
+## Waveshare display reboot robustness and power commissioning
+
+Status: main-task stack correction prepared after physical event on 2026-08-02
+
+- Validate the checked-in 8 KiB main-task stack on the physical Waveshare with
+  repeated cold boots and native-USB monitor attachment.
+- Confirm each boot reaches display/touch initialization, SD mount, Wi-Fi,
+  Signal K subscription, dashboard readiness and presence monitoring without a
+  panic, watchdog reset or stack-overflow report.
+- Measure actual 5 V current with the display backlight on and off, including
+  Wi-Fi activity and LD2410C load, before finalising the enclosure supply and
+  fuse.
+- Retest the installed no-person interval from the operator's actual departure;
+  the current app setting is 1.5 m range with a nominal 15-second delay, but the
+  bench acceptance timestamps did not isolate the precise departure time.
+
+Acceptance checks:
+
+- Five consecutive cold boots and five monitor/reset cycles complete without
+  restart or stack exhaustion.
+- Presence still produces a complete on/off/on backlight cycle after reboot.
+- Measured peak and steady-state currents are recorded and remain within the
+  selected regulator, wiring and fuse margins.
+
 ## Signal K USB-watchdog restart policy and NMEA 2000 recovery
 
 Status: investigation required after live event on 2026-08-01

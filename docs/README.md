@@ -47,8 +47,12 @@ The documentation is operational rather than promotional. It is intended to help
 ## Voice, Audio, And UI
 
 - [Waveshare native LVGL Overview firmware](/home/antony-slack/Documents/repos/SV-Krishna/firmware/waveshare-lvgl-overview/README.md)
-  Build, deployment, recovery, hardware baseline, current static-screen scope,
-  and validation boundary for the first native `800 x 480` marine Overview.
+  Build, deployment, recovery, hardware baseline, current screen scope,
+  LD2410C wiring, and presence-controlled backlight behaviour.
+
+- [Waveshare LD2410C UART2 and backlight deployment evidence](/home/antony-slack/Documents/repos/SV-Krishna/execution-logs/waveshare-ld2410c-uart2-poc-2026-08-02.md)
+  Solder-free GPIO44 wiring decision, native-USB correction, presence cycles,
+  backlight acceptance, recovery point, and remaining reboot risk.
 
 - [Waveshare LVGL Overview deployment evidence](/home/antony-slack/Documents/repos/SV-Krishna/execution-logs/waveshare-lvgl-overview-deployment-2026-07-30.md)
   Full-flash recovery checkpoint, pinned toolchain and dependencies, exact

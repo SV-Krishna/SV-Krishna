@@ -91,7 +91,7 @@ to GPIO44.
 - GND
 - OUT → UART2 RXD / GPIO44
 
-Set the board's physical UART selector to `UART2`; the proof of concept treats
+Set the board's physical UART selector to `UART2`; the integration treats
 RXD as an ordinary digital input rather than enabling the LD2410C serial
 protocol. The exposed Sensor AD connector remains unsuitable because GPIO4 is
 shared with the actively driven GT911 touch interrupt/reset sequence. The

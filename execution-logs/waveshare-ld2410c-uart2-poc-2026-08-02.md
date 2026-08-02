@@ -126,3 +126,12 @@ LD2410C diagnostic: raw=1 stable=PRESENT
   The automatic restart completed successfully and the device remained stable
   through the acceptance cycle, but reboot robustness remains unaccepted and
   requires investigation.
+
+## Main-task stack correction prepared
+
+Review found that the deployed image retained ESP-IDF's 3,584-byte main-task
+stack while `app_main` initializes the display, storage, telemetry and both
+LVGL screens. The checked-in defaults now explicitly allocate 8 KiB. This is a
+targeted correction for the observed startup overflow; it does not alter the
+presence policy. Build, flash and repeated physical reboot results are recorded
+below when executed.

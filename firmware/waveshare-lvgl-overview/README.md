@@ -51,7 +51,7 @@ The display, touch, and LVGL port began from Waveshare's official
 `ESP32-S3-Touch-LCD-7-Demo/ESP-IDF/08_lvgl_Porting` example. The marine UI is
 implemented separately under `main/ui/`.
 
-## LD2410C proof-of-concept wiring
+## LD2410C wiring and display policy
 
 The initial integration uses only the LD2410C digital `OUT` signal. The
 manufacturer specifies a 5 V supply capable of at least 200 mA and a 3.3 V
@@ -63,12 +63,12 @@ its orientation from a photograph:
 | `VCC` | Regulated 5 V supply shared with the display supply |
 | `GND` | Supply ground and Waveshare ground (all common) |
 | `OUT` | Waveshare `UART2` header `RXD` (ESP32 GPIO44) |
-| `UART_TX` | Not connected for this proof of concept |
-| `UART_RX` | Not connected for this proof of concept |
+| `UART_TX` | Not connected for the digital-output integration |
+| `UART_RX` | Not connected for the digital-output integration |
 
 With power off, move the Waveshare slide selector from `UART1` to `UART2`.
-This routes the four-pin `UART2` header to ESP32 GPIO43/GPIO44. The proof of
-concept repurposes only its `RXD`/GPIO44 pin as a digital input; `TXD` remains
+This routes the four-pin `UART2` header to ESP32 GPIO43/GPIO44. The integration
+repurposes only its `RXD`/GPIO44 pin as a digital input; `TXD` remains
 unused. The LD2410C `OUT` signal is 3.3 V, so it can connect directly to RXD.
 
 Do not connect `OUT` to the exposed Sensor AD pin. Sensor AD is GPIO4 and is
@@ -112,7 +112,10 @@ idf.py build
 
 The checked-in defaults select the ESP32-S3 target, 240 MHz CPU, QIO flash,
 16 MB flash capacity, 80 MHz octal PSRAM, LVGL tearing avoidance, and the
-Montserrat font sizes used by the interface.
+Montserrat font sizes used by the interface. They also allocate an 8 KiB main
+task stack because application startup creates both LVGL screens and starts the
+local services before `app_main` returns; the ESP-IDF 3,584-byte default proved
+insufficient during physical reboot testing.
 
 Wi-Fi credentials and the fallback Signal K endpoint are ESP-IDF Kconfig
 values stored only in the ignored local `sdkconfig`. Do not commit credentials.

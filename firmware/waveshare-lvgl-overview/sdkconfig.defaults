@@ -14,6 +14,9 @@ CONFIG_SPIRAM_RODATA=y
 CONFIG_SPIRAM_SPEED_80M=y
 CONFIG_FREERTOS_HZ=1000
 CONFIG_ESP32S3_DATA_CACHE_LINE_64B=y
+# UI creation and service startup run on app_main before the task returns.
+# ESP-IDF's 3584-byte default overflowed once during physical reboot testing.
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192
 
 CONFIG_EXAMPLE_LVGL_PORT_TASK_CORE=1
 CONFIG_EXAMPLE_LVGL_PORT_AVOID_TEAR_ENABLE=y
