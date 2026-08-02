@@ -14,6 +14,34 @@ Entries should be appended in reverse chronological order unless a different ord
 
 ---
 
+## 2026-08-02 - Presence-controlled backlight physically accepted
+
+- Confirmed the existing 16 MB recovery image before deployment; SHA-256
+  remained `dc5bb9e7b4eb30ee9a920aeeac05b6b541bfc458ab7d1ec7eef369a7676d6ed1`.
+- Flashed the committed `0x15ab70` application over the Waveshare native USB
+  Serial/JTAG connection. Esptool verified the bootloader, partition-table and
+  application hashes.
+- Boot read-back confirmed the intended ELF SHA-256 prefix `7ceae4891`, 8 MB
+  PSRAM test, display/touch initialization, Wi-Fi association, Signal K
+  subscription and complete dashboard telemetry readiness.
+- A controlled occupied/empty/occupied cycle produced stable `PRESENT`, then
+  `CLEAR` with `Presence display policy: backlight OFF`, followed by `PRESENT`
+  with `Presence display policy: backlight ON`. The operator physically
+  confirmed the expected screen behaviour.
+- The monitored clear transition occurred roughly 48 seconds after the test
+  instruction, despite the LD2410C having been configured for a 15-second
+  no-person delay. Operator movement/timing and the sensor's broad detection
+  field mean this is not a precise hold-time measurement; final installation
+  commissioning must measure the interval from actual departure.
+- The first monitor-triggered reboot reported one main-task stack overflow
+  before presence-task startup. The automatic restart subsequently booted
+  completely and remained stable throughout the acceptance cycle. This is a
+  retained runtime risk requiring investigation; it does not invalidate the
+  observed backlight cycle but prevents treating reboot robustness as accepted.
+- No boat or Signal K configuration changed. Recovery was prepared but not
+  exercised. Status is end-to-end accepted for presence-controlled backlight
+  switching; reboot robustness and installed current draw remain follow-ups.
+
 ## 2026-08-02 - Prepared presence-controlled display backlight
 
 - Connected the accepted LD2410C digital presence state to the Waveshare LCD

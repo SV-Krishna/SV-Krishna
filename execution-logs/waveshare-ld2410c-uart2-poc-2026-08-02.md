@@ -93,3 +93,36 @@ Status: end-to-end accepted for the basic local presence-detection concept.
 The approximately 44-second observed absence delay should be treated as a
 commissioning value to review before presence controls display power or other
 automation.
+
+## Presence-controlled backlight deployment and acceptance
+
+- Recovery image verification passed with SHA-256
+  `dc5bb9e7b4eb30ee9a920aeeac05b6b541bfc458ab7d1ec7eef369a7676d6ed1`.
+- The `0x15ab70` presence-backlight application was flashed through native USB;
+  bootloader, partition-table and application writes passed esptool hash
+  verification.
+- Boot read-back identified ELF SHA-256 prefix `7ceae4891`, passed the 8 MB
+  PSRAM test, initialized display/touch, associated to Wi-Fi, subscribed to
+  Signal K and reached complete dashboard telemetry readiness.
+- During the controlled physical cycle, the relevant runtime sequence was:
+
+```text
+LD2410C diagnostic: raw=1 stable=PRESENT
+LD2410C presence changed: CLEAR
+Presence display policy: backlight OFF
+LD2410C diagnostic: raw=0 stable=CLEAR
+LD2410C presence changed: PRESENT
+Presence display policy: backlight ON
+LD2410C diagnostic: raw=1 stable=PRESENT
+```
+
+- The operator confirmed that the display went dark and illuminated again as
+  expected. This accepts the complete sensor-to-backlight behaviour.
+- The clear transition was logged roughly 48 seconds after the leave
+  instruction, not a precise measurement from actual departure. The installed
+  sensor remains configured for a 1.5 m range and nominal 15-second no-person
+  delay; installed commissioning must retest the actual clear interval.
+- One preceding monitor-triggered reboot reported a main-task stack overflow.
+  The automatic restart completed successfully and the device remained stable
+  through the acceptance cycle, but reboot robustness remains unaccepted and
+  requires investigation.
